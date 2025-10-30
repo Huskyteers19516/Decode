@@ -116,8 +116,8 @@ public class StarterBotAuto extends OpMode
 
     double robotRotationAngle = 45;
 
-    double DISTANCE_DOWN = 10;
-    double DISTANCE_LEFT = 30;
+    double DISTANCE_DOWN = 12;
+    double DISTANCE_LEFT = 8;
     double DISTANCE_UP   = 0;
     double DISTANCE_RIGHT= 0;
 
@@ -133,8 +133,7 @@ public class StarterBotAuto extends OpMode
     // Declare OpMode members.
     private DcMotor leftDrive = null;
     private DcMotor rightDrive = null;
-    private DcMotorEx leftlauncher = null;
-    private DcMotorEx rightlauncher= null;
+    private DcMotorEx launcher = null;
     private CRServo leftFeeder = null;
     private CRServo rightFeeder = null;
 
@@ -219,8 +218,7 @@ public class StarterBotAuto extends OpMode
          */
         leftDrive  = hardwareMap.get(DcMotor.class, "left_drive");
         rightDrive = hardwareMap.get(DcMotor.class, "right_drive");
-        leftlauncher = hardwareMap.get(DcMotorEx.class,"left_launcher");
-        rightlauncher= hardwareMap.get(DcMotorEx.class,"right_launcher");
+        launcher = hardwareMap.get(DcMotorEx.class,"right_launcher");
         leftFeeder = hardwareMap.get(CRServo.class, "left_feeder");
         rightFeeder = hardwareMap.get(CRServo.class, "right_feeder");
 
@@ -248,8 +246,7 @@ public class StarterBotAuto extends OpMode
          */
         leftDrive.setZeroPowerBehavior(BRAKE);
         rightDrive.setZeroPowerBehavior(BRAKE);
-        leftlauncher.setZeroPowerBehavior(BRAKE);
-        rightlauncher.setZeroPowerBehavior(BRAKE);
+        launcher.setZeroPowerBehavior(BRAKE);
 
 
         /*
@@ -258,14 +255,14 @@ public class StarterBotAuto extends OpMode
          * right to a number much higher than your set point, make sure that your encoders are plugged
          * into the port right beside the motor itself.
          */
-        leftlauncher.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        rightlauncher.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+        launcher.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         /*
          * Here we set the aforementioned PID coefficients. You shouldn't have to do this for any
          * other motors on this robot.
          */
-        leftlauncher.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER,new PIDFCoefficients(Config.PID_P, Config.PID_I, Config.PID_D, Config.PID_F));
-        leftlauncher.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER,new PIDFCoefficients(Config.PID_P, Config.PID_I, Config.PID_D, Config.PID_F));
+        launcher.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER,new PIDFCoefficients(Config.PID_P, Config.PID_I, Config.PID_D, Config.PID_F));
+
 
         /*
          * Much like our drivetrain motors, we set the left feeder servo to reverse so that they
@@ -287,7 +284,7 @@ public class StarterBotAuto extends OpMode
          * We also set the servo power to 0 here to make sure that the servo controller is booted
          * up and ready to go.
          */
-        rightFeeder.setPower(0);
+
         leftFeeder.setPower(0);
 
 
@@ -359,8 +356,7 @@ public class StarterBotAuto extends OpMode
                     } else {
                         leftDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                         rightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-                        leftlauncher.setVelocity(0);
-                        rightlauncher.setVelocity(0);
+                        launcher.setVelocity(0);
 
                         autonomousState = AutonomousState.DRIVING_AWAY_FROM_GOAL;
                     }
@@ -465,9 +461,8 @@ public class StarterBotAuto extends OpMode
                 break;
             case PREPARE:
                 //both launcher setup
-                leftlauncher.setVelocity(LAUNCHER_TARGET_VELOCITY);
-                rightlauncher.setVelocity(LAUNCHER_TARGET_VELOCITY);
-                if (leftlauncher.getVelocity() > LAUNCHER_MIN_VELOCITY && rightlauncher.getVelocity()>LAUNCHER_MIN_VELOCITY) {
+                launcher.setVelocity(LAUNCHER_TARGET_VELOCITY);
+                if (launcher.getVelocity()>LAUNCHER_MIN_VELOCITY) {
                     launchState = LaunchState.LAUNCH;
                     leftFeeder.setPower(1);
                     rightFeeder.setPower(1);
