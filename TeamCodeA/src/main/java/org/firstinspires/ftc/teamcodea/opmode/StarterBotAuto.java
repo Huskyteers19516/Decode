@@ -117,7 +117,7 @@ public class StarterBotAuto extends OpMode
     double robotRotationAngle = 45;
 
     double DISTANCE_DOWN = 10;
-    double DISTANCE_LEFT = 20;
+    double DISTANCE_LEFT = 30;
     double DISTANCE_UP   = 0;
     double DISTANCE_RIGHT= 0;
 
