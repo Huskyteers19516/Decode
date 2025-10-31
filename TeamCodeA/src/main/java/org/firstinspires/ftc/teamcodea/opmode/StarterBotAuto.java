@@ -172,11 +172,12 @@ public class StarterBotAuto extends OpMode
         ROTATING,
         DRIVING_OFF_LINE,
         COMPLETE,
-        DRIVe_UP,
+        DRIVE_UP,
         DRIVE_DOWN,
         DRIVE_LEFT,
         ROTATE_LEFT,
-        DRIVE_RIGHT;
+        DRIVE_RIGHT,
+        ROTATE_RIGHT;
 
 
     }
@@ -400,7 +401,7 @@ public class StarterBotAuto extends OpMode
                 if(drive(DRIVE_SPEED, -downInches, DistanceUnit.INCH,0.6)){
                     rightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                     leftDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-                    autonomousState=AutonomousState.ROTATE_LEFT;
+                    autonomousState=AutonomousState.COMPLETE;
                 }
                 break;
 
@@ -416,7 +417,30 @@ public class StarterBotAuto extends OpMode
                 if(drive(DRIVE_SPEED,-leftInches,DistanceUnit.INCH,0.6)){
                     autonomousState = AutonomousState.COMPLETE;
                 }
+                    break;
+            case ROTATE_RIGHT:
+                if(rotate(DRIVE_SPEED,90, AngleUnit.DEGREES, 0.5)){
+                    leftDrive.setMode((DcMotor.RunMode.STOP_AND_RESET_ENCODER));
+                    rightDrive.setMode((DcMotor.RunMode.STOP_AND_RESET_ENCODER));
+                    autonomousState= AutonomousState. DRIVE_RIGHT;
+                }
                 break;
+
+            case DRIVE_RIGHT:
+                double rightInches = DISTANCE_RIGHT*12.0;
+                        if(drive(DRIVE_SPEED, rightInches, DistanceUnit.INCH, 0.6)){
+                            autonomousState = autonomousState.COMPLETE;
+                        }
+                break;
+
+            case DRIVE_UP:
+                double upInches = DISTANCE_UP*12.0;
+                    if(drive(DRIVE_SPEED,-upInches,DistanceUnit.INCH, 0.6)){
+                        rightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                        leftDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                        autonomousState= AutonomousState.COMPLETE;
+                    }
+                    break;
         }
 
         /*

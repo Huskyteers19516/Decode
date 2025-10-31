@@ -34,7 +34,8 @@ package org.firstinspires.ftc.teamcodea.opmode;
 
 import static com.qualcomm.robotcore.hardware.DcMotor.ZeroPowerBehavior.BRAKE;
 
-import com.bylazar.configurables.annotations.Configurable;
+
+//import com.bylazar.configurables.annotations.Configurable;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.CRServo;
@@ -61,8 +62,9 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 @TeleOp(name = "StarterBotTeleop", group = "StarterBot")
 //@Disabled
+
 public class StarterBotTeleop extends OpMode {
-    @Configurable
+    //@configurable
     static class Config {
         static double launcherTargetVelocity = 1125;
         static double launcherMinVelocity = 1075;
