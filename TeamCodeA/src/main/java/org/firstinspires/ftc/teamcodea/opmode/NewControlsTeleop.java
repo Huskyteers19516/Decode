@@ -61,11 +61,9 @@ import org.firstinspires.ftc.teamcodea.Constants;
  * are a better fit for our application.
  */
 
-@TeleOp(name = "StarterBotTeleop", group = "StarterBot")
+@TeleOp(name = "NewControlsTeleop", group = "StarterBot")
 //@Disabled
-public class StarterBotTeleop extends OpMode {
-
-
+public class NewControlsTeleop extends OpMode {
     /*
      * When we control our launcher motor, we are using encoders. These allow the control system
      * to read the current speed of the motor and apply more or less power to keep it at a constant
@@ -107,6 +105,12 @@ public class StarterBotTeleop extends OpMode {
 
     private LaunchState launchState;
 
+    private enum DriveState {
+        TOWARDS_LOADING_ZONE,
+        TOWARDS_GOAL
+    }
+    private DriveState driveState;
+
     // Setup a variable for each drive wheel to save power level for telemetry
     double leftPower;
     double rightPower;
@@ -117,6 +121,7 @@ public class StarterBotTeleop extends OpMode {
     @Override
     public void init() {
         launchState = LaunchState.IDLE;
+        driveState = DriveState.TOWARDS_LOADING_ZONE;
 
         /*
          * Initialize the hardware variables. Note that the strings used here as parameters
@@ -205,22 +210,27 @@ public class StarterBotTeleop extends OpMode {
          * both motors work to rotate the robot. Combinations of these inputs can be used to create
          * more complex maneuvers.
          */
-        arcadeDrive(-gamepad1.left_stick_y, gamepad1.right_stick_x);
+        double direction = (driveState.equals(DriveState.TOWARDS_GOAL) ? 1 : -1);
+        arcadeDrive(-gamepad1.left_stick_y, direction * gamepad1.right_stick_x);
 
         /*
          * Here we give the user control of the speed of the launcher motor without automatically
          * queuing a shot.
          */
         if (gamepad1.y) {
+            driveState = DriveState.TOWARDS_GOAL;
             launcher.setVelocity(Constants.LAUNCHER_TARGET_VELOCITY);
-        } else if (gamepad1.b) { // stop flywheel
+        } else if (gamepad1.a) { // stop flywheel
+            driveState = DriveState.TOWARDS_LOADING_ZONE;
             launcher.setVelocity(Constants.STOP_SPEED);
         }
 
         /*
          * Now we call our "Launch" function.
          */
-        launch(gamepad1.rightBumperWasPressed());
+        if (driveState.equals(DriveState.TOWARDS_GOAL)) {
+            launch(gamepad1.rightBumperWasPressed());
+        }
 
         /*
          * Show the state and motor powers
