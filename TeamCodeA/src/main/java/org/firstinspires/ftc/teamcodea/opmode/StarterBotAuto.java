@@ -148,7 +148,7 @@ public class StarterBotAuto extends OpMode
          * Later in our code, we will progress through the state machine by moving to other enum members.
          * We do the same for our launcher state machine, setting it to IDLE before we use it later.
          */
-        autonomousState = AutonomousState.LAUNCH;
+        autonomousState = AutonomousState.DRIVING_AWAY_FROM_GOAL;
         launchState = LaunchState.IDLE;
 
 
@@ -296,7 +296,7 @@ public class StarterBotAuto extends OpMode
                         leftDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                         rightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                         launcher.setVelocity(0);
-                        autonomousState = AutonomousState.DRIVING_AWAY_FROM_GOAL;
+                        autonomousState = AutonomousState.ROTATING;
                     }
                 }
                 break;
@@ -307,10 +307,10 @@ public class StarterBotAuto extends OpMode
                  * the robot has been within a tolerance of the target position for "holdSeconds."
                  * Once the function returns "true" we reset the encoders again and move on.
                  */
-                if(drive(Constants.DRIVE_SPEED, -4, DistanceUnit.INCH, 1)){
+                if(drive(Constants.DRIVE_SPEED, -8, DistanceUnit.INCH, 2)){
                     leftDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                     rightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-                    autonomousState = AutonomousState.ROTATING;
+                    autonomousState = AutonomousState.LAUNCH;
                 }
                 break;
 
@@ -329,7 +329,7 @@ public class StarterBotAuto extends OpMode
                 break;
 
             case DRIVING_OFF_LINE:
-                if(drive(Constants.DRIVE_SPEED, -26, DistanceUnit.INCH, 1)){
+                if(drive(Constants.DRIVE_SPEED, -40, DistanceUnit.INCH, 1)){
                     autonomousState = AutonomousState.COMPLETE;
                 }
                 break;
