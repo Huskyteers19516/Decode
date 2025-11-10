@@ -3,7 +3,7 @@ package org.firstinspires.ftc.teamcodea;
 import com.acmerobotics.dashboard.config.Config;
 
 @Config
-public class Constants {
+public class OpModeConstants {
     public static double PID_P = 300;
     public static double PID_I = 0;
     public static double PID_D = 0;
