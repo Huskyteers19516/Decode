@@ -75,7 +75,7 @@ public class RobotAutoShort extends OpMode {
             Path2 = follower
                     .pathBuilder()
                     .addPath(new BezierCurve(
-                            new Pose(113.752, 112.626),
+                            new Pose(113.753, 112.636),
                             new Pose(93.801, 85.113),
                             new Pose(86.883, 10.780)
                     ))

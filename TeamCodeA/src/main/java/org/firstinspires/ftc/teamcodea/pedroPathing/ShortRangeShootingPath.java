@@ -26,7 +26,7 @@ public class ShortRangeShootingPath extends OpMode {
                     .pathBuilder()
                     .addPath(new BezierLine(
                             new Pose(127.428, 125.819),
-                            new Pose(113.752, 112.626)
+                            new Pose(113.753, 112.636)
                     ))
                     .setTangentHeadingInterpolation()
                     .build();
