@@ -66,20 +66,20 @@ public class RobotAutoShort extends OpMode {
             Path1 = follower
                     .pathBuilder()
                     .addPath(new BezierLine(
-                            new Pose(128.876, 127.911),
-                            new Pose(118.901, 117.774)))
-                    .setLinearHeadingInterpolation(Math.toRadians(45), Math.toRadians(45))
+                            new Pose(127.428, 125.819),
+                            new Pose(113.752, 112.626)
+                    ))
+                    .setTangentHeadingInterpolation()
                     .build();
 
             Path2 = follower
                     .pathBuilder()
                     .addPath(new BezierCurve(
-                            new Pose(118.901, 117.774),
-                            new Pose(110.212, 70.472),
-                            new Pose(42.798, 85.917),
-                            new Pose(101.202, 10.780),
-                            new Pose(17.216, 13.837)))
-                    .setLinearHeadingInterpolation(Math.toRadians(45), Math.toRadians(60))
+                            new Pose(113.752, 112.626),
+                            new Pose(93.801, 85.113),
+                            new Pose(86.883, 10.780)
+                    ))
+                    .setTangentHeadingInterpolation()
                     .build();
         }
     }
