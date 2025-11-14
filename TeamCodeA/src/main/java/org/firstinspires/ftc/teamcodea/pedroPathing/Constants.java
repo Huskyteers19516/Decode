@@ -13,8 +13,8 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 public class Constants {
     public static FollowerConstants followerConstants = new FollowerConstants()
             .mass(3.5)
-            .forwardZeroPowerAcceleration(-57.63)
-            .lateralZeroPowerAcceleration(-110.2);
+            .forwardZeroPowerAcceleration(-44.73)
+            .lateralZeroPowerAcceleration(-90.57);
     public static MecanumConstants driveConstants = new MecanumConstants()
             .maxPower(1)
             .rightFrontMotorName("front_right")
@@ -25,8 +25,8 @@ public class Constants {
             .leftRearMotorDirection(DcMotorSimple.Direction.FORWARD)
             .rightFrontMotorDirection(DcMotorSimple.Direction.REVERSE)
             .rightRearMotorDirection(DcMotorSimple.Direction.REVERSE)
-            .xVelocity(57.036)
-            .yVelocity(56.6);
+            .xVelocity(52)
+            .yVelocity(52.9);
 
     public static PathConstraints pathConstraints = new PathConstraints(0.99, 100, 1, 1);
 
@@ -42,9 +42,9 @@ public class Constants {
             .rightRearEncoderDirection(Encoder.REVERSE)
             .robotWidth(16.299)
             .robotLength(9.449)
-            .forwardTicksToInches(0.00548)
+            .forwardTicksToInches(0.00561)
             .strafeTicksToInches(0.00599)
-            .turnTicksToInches(0.011542);
+            .turnTicksToInches(0.01142);
 
     public static Follower createFollower(HardwareMap hardwareMap) {
         return new FollowerBuilder(followerConstants, hardwareMap)
