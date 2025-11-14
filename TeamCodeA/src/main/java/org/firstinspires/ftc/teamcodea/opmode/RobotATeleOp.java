@@ -84,7 +84,7 @@ public class RobotATeleOp extends OpMode {
                 -gamepad1.left_stick_y,
                 -gamepad1.left_stick_x,
                 -gamepad1.right_stick_x,
-                false // Robot Centric
+                true // Robot Centric
         );
 
             //This is how it looks with slowMode on
@@ -92,15 +92,15 @@ public class RobotATeleOp extends OpMode {
                 -gamepad1.left_stick_y * slowModeMultiplier,
                 -gamepad1.left_stick_x * slowModeMultiplier,
                 -gamepad1.right_stick_x * slowModeMultiplier,
-                false // Robot Centric
+                true // Robot Centric
         );
 
-        if (gamepad1.squareWasPressed()) {
+        if (gamepad1.startWasPressed()) {
             follower.setPose(new Pose());
         }
 
         if (gamepad1.yWasPressed()) {
-            launcher.setVelocity(1600);
+            launcher.setVelocity(OpModeConstants.LAUNCHER_TARGET_VELOCITY);
         }
         if (gamepad1.bWasPressed()) {
             launcher.setVelocity(0);

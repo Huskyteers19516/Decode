@@ -17,12 +17,8 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.teamcodea.OpModeConstants;
 import org.firstinspires.ftc.teamcodea.pedroPathing.Constants;
 
-@Autonomous(name="StarterBotAuto_Pedro", group="StarterBot")
+@Autonomous(name="Use This Auto", group="StarterBot")
 public class RobotAutoShort extends OpMode {
-
-    final double FEED_TIME = 0.22;
-    final double TIME_BETWEEN_SHOTS = 2;
-
     private ElapsedTime shotTimer = new ElapsedTime();
     private ElapsedTime feederTimer = new ElapsedTime();
 
@@ -101,6 +97,8 @@ public class RobotAutoShort extends OpMode {
         telemetry.addData("Status","Initialized");
     }
 
+    private int shotsToFire = 3;
+
     @Override
     public void loop() {
         follower.update();
@@ -122,8 +120,15 @@ public class RobotAutoShort extends OpMode {
                 break;
 
             case WAIT_FOR_LAUNCH:
+                shotsToFire -= 1;
+
                 if (launch(false)) {
-                    autoState = AutoState.PEDRO_PATH2;
+                    if (shotsToFire > 0) {
+                        autoState = AutoState.LAUNCH;
+                    } else {
+                        launcher.setVelocity(0);
+                        autoState = AutoState.PEDRO_PATH2;
+                    }
                 }
                 break;
 
@@ -145,6 +150,8 @@ public class RobotAutoShort extends OpMode {
         telemetry.addData("State", autoState);
         telemetry.addData("Launcher State", launchState);
         telemetry.addData("Launcher Velocity", launcher.getVelocity());
+        telemetry.addData("Shot Timer", shotTimer.seconds());
+        telemetry.addData("Feed Timer", feederTimer.seconds());
         telemetry.update();
     }
 
@@ -168,10 +175,10 @@ public class RobotAutoShort extends OpMode {
                 break;
 
             case LAUNCH:
-                if (feederTimer.seconds() > FEED_TIME) {
+                if (feederTimer.seconds() > OpModeConstants.FEED_TIME) {
                     leftFeeder.setPower(0);
                     rightFeeder.setPower(0);
-                    if (shotTimer.seconds() > TIME_BETWEEN_SHOTS) {
+                    if (shotTimer.seconds() > OpModeConstants.TIME_BETWEEN_SHOTS) {
                         launchState = LaunchState.IDLE;
                         return true;
                     }

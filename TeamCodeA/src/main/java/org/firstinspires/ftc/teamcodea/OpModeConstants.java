@@ -1,8 +1,8 @@
 package org.firstinspires.ftc.teamcodea;
 
-import com.acmerobotics.dashboard.config.Config;
+import com.bylazar.configurables.annotations.Configurable;
 
-@Config
+@Configurable
 public class OpModeConstants {
     public static double PID_P = 300;
     public static double PID_I = 0;
@@ -12,7 +12,7 @@ public class OpModeConstants {
     public static double FEED_TIME_SECONDS = 0.20; //The feeder servos run this long when a shot is requested.
     public static double STOP_SPEED = 0.0; //We send this power to the servos when we want them to stop.
     public static double FULL_SPEED = 1.0;
-    public static double FEED_TIME = 0.20; //The feeder servos run this long when a shot is requested.
+    public static double FEED_TIME = 0.30; //The feeder servos run this long when a shot is requested.
 
     /*
      * When we control our launcher motor, we are using encoders. These allow the control system
