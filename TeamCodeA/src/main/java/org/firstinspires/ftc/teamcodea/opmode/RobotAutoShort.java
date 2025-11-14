@@ -14,30 +14,19 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.teamcodea.OpModeConstants;
 import org.firstinspires.ftc.teamcodea.pedroPathing.Constants;
 
 @Autonomous(name="StarterBotAuto_Pedro", group="StarterBot")
 public class RobotAutoShort extends OpMode {
 
-    static class Config {
-        static double launcherTargetVelocity = 1125;
-        static double launcherMinVelocity = 1075;
-        static double PID_P = 300;
-        static double PID_I = 0;
-        static double PID_D = 0;
-        static double PID_F = 10;
-    }
-
     final double FEED_TIME = 0.20;
-    final double LAUNCHER_TARGET_VELOCITY = 1125;
-    final double LAUNCHER_MIN_VELOCITY = 1075;
     final double TIME_BETWEEN_SHOTS = 2;
 
     private ElapsedTime shotTimer = new ElapsedTime();
     private ElapsedTime feederTimer = new ElapsedTime();
 
-    private DcMotorEx leftlauncher;
-    private DcMotorEx rightlauncher;
+    private DcMotorEx launcher;
     private CRServo leftFeeder;
     private CRServo rightFeeder;
 
@@ -59,56 +48,54 @@ public class RobotAutoShort extends OpMode {
     private Paths paths;
 
     public static class Paths {
-        public final PathChain Path1;
-        public final PathChain Path2;
+
+        public PathChain Path1;
+        public PathChain Path2;
 
         public Paths(Follower follower) {
             Path1 = follower
                     .pathBuilder()
-                    .addPath(new BezierLine(
-                            new Pose(127.428, 125.819),
-                            new Pose(113.752, 112.626)
-                    ))
-                    .setTangentHeadingInterpolation()
+                    .addPath(
+                            new BezierLine(new Pose(127.428, 125.819), new Pose(113.752, 112.626))
+                    )
+                    .setLinearHeadingInterpolation(Math.toRadians(45), Math.toRadians(45))
                     .build();
 
             Path2 = follower
                     .pathBuilder()
-                    .addPath(new BezierCurve(
-                            new Pose(113.753, 112.636),
-                            new Pose(93.801, 85.113),
-                            new Pose(86.883, 10.780)
-                    ))
-                    .setTangentHeadingInterpolation()
+                    .addPath(
+                            new BezierCurve(
+                                    new Pose(113.752, 112.626),
+                                    new Pose(93.801, 85.113),
+                                    new Pose(96.054, 10.780)
+                            )
+                    )
+                    .setLinearHeadingInterpolation(Math.toRadians(45), Math.toRadians(180))
                     .build();
         }
     }
 
+
     @Override
     public void init() {
-        autoState = AutoState.LAUNCH;
+        autoState = AutoState.PEDRO_PATH1;
         launchState = LaunchState.IDLE;
 
-        leftlauncher = hardwareMap.get(DcMotorEx.class,"left_launcher");
-        rightlauncher = hardwareMap.get(DcMotorEx.class,"right_launcher");
+        launcher = hardwareMap.get(DcMotorEx.class,"launcher");
         leftFeeder = hardwareMap.get(CRServo.class,"left_feeder");
         rightFeeder = hardwareMap.get(CRServo.class,"right_feeder");
 
-        leftlauncher.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
-        rightlauncher.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
+        launcher.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
 
-        leftlauncher.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
-        rightlauncher.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+        launcher.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
 
-        leftlauncher.setPIDFCoefficients(DcMotorEx.RunMode.RUN_USING_ENCODER,
-                new PIDFCoefficients(Config.PID_P,Config.PID_I,Config.PID_D,Config.PID_F));
-        rightlauncher.setPIDFCoefficients(DcMotorEx.RunMode.RUN_USING_ENCODER,
-                new PIDFCoefficients(Config.PID_P,Config.PID_I,Config.PID_D,Config.PID_F));
+        launcher.setPIDFCoefficients(DcMotorEx.RunMode.RUN_USING_ENCODER,
+                new PIDFCoefficients(OpModeConstants.PID_P,OpModeConstants.PID_I,OpModeConstants.PID_D,OpModeConstants.PID_F));
 
         leftFeeder.setDirection(DcMotorSimple.Direction.REVERSE);
 
         follower = Constants.createFollower(hardwareMap);
-        follower.setStartingPose(new Pose(72, 8, Math.toRadians(90)));
+        follower.setStartingPose(new Pose(127.42793296089386, 125.81899441340782, Math.toRadians(45)));
         paths = new Paths(follower);
 
         telemetry.addData("Status","Initialized");
@@ -119,17 +106,6 @@ public class RobotAutoShort extends OpMode {
         follower.update();
 
         switch (autoState) {
-            case LAUNCH:
-                launch(true);
-                autoState = AutoState.WAIT_FOR_LAUNCH;
-                break;
-
-            case WAIT_FOR_LAUNCH:
-                if (launch(false)) {
-                    autoState = AutoState.PEDRO_PATH1;
-                }
-                break;
-
             case PEDRO_PATH1:
                 follower.followPath(paths.Path1);
                 autoState = AutoState.PEDRO_PATH1_WAIT;
@@ -137,6 +113,16 @@ public class RobotAutoShort extends OpMode {
 
             case PEDRO_PATH1_WAIT:
                 if (!follower.isBusy()) {
+                    autoState = AutoState.LAUNCH;
+                }
+                break;
+            case LAUNCH:
+                launch(true);
+                autoState = AutoState.WAIT_FOR_LAUNCH;
+                break;
+
+            case WAIT_FOR_LAUNCH:
+                if (launch(false)) {
                     autoState = AutoState.PEDRO_PATH2;
                 }
                 break;
@@ -157,6 +143,8 @@ public class RobotAutoShort extends OpMode {
         }
 
         telemetry.addData("State", autoState);
+        telemetry.addData("Launcher State", launchState);
+        telemetry.addData("Launcher Velocity", launcher.getVelocity());
         telemetry.update();
     }
 
@@ -170,10 +158,8 @@ public class RobotAutoShort extends OpMode {
                 break;
 
             case PREPARE:
-                leftlauncher.setVelocity(LAUNCHER_TARGET_VELOCITY);
-                rightlauncher.setVelocity(LAUNCHER_TARGET_VELOCITY);
-                if (leftlauncher.getVelocity() > LAUNCHER_MIN_VELOCITY &&
-                        rightlauncher.getVelocity() > LAUNCHER_MIN_VELOCITY) {
+                launcher.setVelocity(OpModeConstants.LAUNCHER_TARGET_VELOCITY);
+                if (launcher.getVelocity() > OpModeConstants.LAUNCHER_MIN_VELOCITY) {
                     launchState = LaunchState.LAUNCH;
                     leftFeeder.setPower(1);
                     rightFeeder.setPower(1);
