@@ -20,7 +20,7 @@ import org.firstinspires.ftc.teamcodea.pedroPathing.Constants;
 @Autonomous(name="StarterBotAuto_Pedro", group="StarterBot")
 public class RobotAutoShort extends OpMode {
 
-    final double FEED_TIME = 0.20;
+    final double FEED_TIME = 0.22;
     final double TIME_BETWEEN_SHOTS = 2;
 
     private ElapsedTime shotTimer = new ElapsedTime();
