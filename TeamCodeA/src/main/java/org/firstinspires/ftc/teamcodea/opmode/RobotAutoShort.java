@@ -21,6 +21,7 @@ import org.firstinspires.ftc.teamcodea.pedroPathing.Constants;
 public class RobotAutoShort extends OpMode {
     private ElapsedTime shotTimer = new ElapsedTime();
     private ElapsedTime feederTimer = new ElapsedTime();
+    private ElapsedTime autoTimer = new ElapsedTime();
 
     private DcMotorEx launcher;
     private CRServo leftFeeder;
@@ -36,6 +37,9 @@ public class RobotAutoShort extends OpMode {
         PEDRO_PATH1_WAIT,
         PEDRO_PATH2,
         PEDRO_PATH2_WAIT,
+        PEDRO_PATH3,
+        PEDRO_PATH3_WAIT,
+        WAIT,
         COMPLETE
     }
     private AutoState autoState;
@@ -52,24 +56,21 @@ public class RobotAutoShort extends OpMode {
             Path1 = follower
                     .pathBuilder()
                     .addPath(
-                            new BezierLine(new Pose(127.428, 125.819), new Pose(113.752, 112.626))
+                            new BezierLine(new Pose(122.238, 121.003), new Pose(100.630, 100.013))
                     )
-                    .setLinearHeadingInterpolation(Math.toRadians(45), Math.toRadians(45))
+                    .setConstantHeadingInterpolation(Math.toRadians(45))
                     .build();
 
             Path2 = follower
                     .pathBuilder()
                     .addPath(
-                            new BezierCurve(
-                                    new Pose(113.752, 112.626),
-                                    new Pose(93.801, 85.113),
-                                    new Pose(96.054, 10.780)
-                            )
+                            new BezierLine(new Pose(100.630, 100.013), new Pose(83.035, 40.437))
                     )
-                    .setLinearHeadingInterpolation(Math.toRadians(45), Math.toRadians(180))
+                    .setTangentHeadingInterpolation()
                     .build();
         }
     }
+
 
 
     @Override
@@ -91,7 +92,7 @@ public class RobotAutoShort extends OpMode {
         leftFeeder.setDirection(DcMotorSimple.Direction.REVERSE);
 
         follower = Constants.createFollower(hardwareMap);
-        follower.setStartingPose(new Pose(127.42793296089386, 125.81899441340782, Math.toRadians(45)));
+        follower.setStartingPose(new Pose(122.238, 121.003, Math.toRadians(45)));
         paths = new Paths(follower);
 
         telemetry.addData("Status","Initialized");
@@ -105,6 +106,7 @@ public class RobotAutoShort extends OpMode {
 
         switch (autoState) {
             case PEDRO_PATH1:
+                autoTimer.reset();
                 follower.followPath(paths.Path1);
                 autoState = AutoState.PEDRO_PATH1_WAIT;
                 break;
@@ -120,9 +122,10 @@ public class RobotAutoShort extends OpMode {
                 break;
 
             case WAIT_FOR_LAUNCH:
-                shotsToFire -= 1;
 
                 if (launch(false)) {
+                    shotsToFire -= 1;
+
                     if (shotsToFire > 0) {
                         autoState = AutoState.LAUNCH;
                     } else {
@@ -142,7 +145,20 @@ public class RobotAutoShort extends OpMode {
                     autoState = AutoState.COMPLETE;
                 }
                 break;
-
+//            case WAIT:
+//                if (autoTimer.seconds() > 25) {
+//                    autoState= AutoState.PEDRO_PATH3;
+//                }
+//            case PEDRO_PATH3:
+//                follower.followPath(paths.Path3);
+//                autoState= AutoState.PEDRO_PATH3_WAIT;
+//                break;
+//
+//            case PEDRO_PATH3_WAIT:
+//                if (!follower.isBusy()) {
+//                    autoState = AutoState.COMPLETE;
+//                }
+//                break;
             case COMPLETE:
                 break;
         }
