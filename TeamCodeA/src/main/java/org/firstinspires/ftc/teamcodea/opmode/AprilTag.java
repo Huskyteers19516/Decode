@@ -46,6 +46,7 @@ public class AprilTag {
     }
 
     public void detectionTelemetry(AprilTagDetection detectID){
+
         if(detectID==null){
             return;
         }

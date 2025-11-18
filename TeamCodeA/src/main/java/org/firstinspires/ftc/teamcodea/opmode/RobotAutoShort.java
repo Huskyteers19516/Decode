@@ -1,5 +1,10 @@
 package org.firstinspires.ftc.teamcodea.opmode;
 
+
+import static org.firstinspires.ftc.teamcodea.OpModeConstants.START_P1;
+import static org.firstinspires.ftc.teamcodea.OpModeConstants.START_P2;
+
+
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.BezierCurve;
 import com.pedropathing.geometry.BezierLine;
@@ -14,7 +19,10 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.robotcore.internal.camera.delegating.DelegatingCaptureSequence;
+import org.firstinspires.ftc.teamcodea.pedroPathing.BlueHaveIntakeShortShoot;
 import org.firstinspires.ftc.teamcodea.OpModeConstants;
+import org.firstinspires.ftc.teamcodea.pedroPathing.Constants;
 import org.firstinspires.ftc.teamcodea.pedroPathing.Constants;
 
 @Autonomous(name="Use This Auto", group="StarterBot")
@@ -29,7 +37,11 @@ public class RobotAutoShort extends OpMode {
 
     private enum LaunchState { IDLE, PREPARE, LAUNCH }
     private LaunchState launchState;
-
+    private enum Alliance{
+        RED,
+        BLUE,
+    }
+    private Alliance alliance = Alliance.RED;
     private enum AutoState {
         LAUNCH,
         WAIT_FOR_LAUNCH,
@@ -46,7 +58,8 @@ public class RobotAutoShort extends OpMode {
 
     private Follower follower;
     private Paths paths;
-
+    public static boolean redOrNot = true;
+    public static boolean waitOrNot = false;
     public static class Paths {
 
         public PathChain Path1;
@@ -75,6 +88,26 @@ public class RobotAutoShort extends OpMode {
 
     @Override
     public void init() {
+
+        if (gamepad1.b) {
+        alliance = Alliance.RED;
+        redOrNot= true;
+    } else if (gamepad1.x) {
+        alliance = Alliance.BLUE;
+        redOrNot = false;
+    }
+
+        if(redOrNot= true){
+            follower.setStartingPose(START_P1);
+        }else{
+            follower.setStartingPose(START_P2);
+        }
+
+        telemetry.addData("Press X", "for BLUE");
+        telemetry.addData("Press B", "for RED");
+        telemetry.addData("Selected Alliance", alliance);
+
+
         autoState = AutoState.PEDRO_PATH1;
         launchState = LaunchState.IDLE;
 
@@ -92,10 +125,12 @@ public class RobotAutoShort extends OpMode {
         leftFeeder.setDirection(DcMotorSimple.Direction.REVERSE);
 
         follower = Constants.createFollower(hardwareMap);
-        follower.setStartingPose(new Pose(122.238, 121.003, Math.toRadians(45)));
+        //follower.setStartingPose();
         paths = new Paths(follower);
 
         telemetry.addData("Status","Initialized");
+
+
     }
 
     private int shotsToFire = 3;
@@ -142,23 +177,29 @@ public class RobotAutoShort extends OpMode {
 
             case PEDRO_PATH2_WAIT:
                 if (!follower.isBusy()) {
+                    if(pathNumber >2&& waitOrNot=true){
+                        autoState = AutoState.WAIT;
+                    }else(pathNumber >2 && waitOrNot =false){
+                        autoState = AutoState.PEDRO_PATH3;
+                    }else(pathNumber<2){
+                        autoState = AutoState.COMPLETE;
+                    }
+                }
+                break;
+            case WAIT:
+                if (autoTimer.seconds() > 25) {
+                    autoState= AutoState.PEDRO_PATH3;
+                }
+            case PEDRO_PATH3:
+                follower.followPath(paths.Path3);
+                autoState= AutoState.PEDRO_PATH3_WAIT;
+                break;
+
+            case PEDRO_PATH3_WAIT:
+                if (!follower.isBusy()) {
                     autoState = AutoState.COMPLETE;
                 }
                 break;
-//            case WAIT:
-//                if (autoTimer.seconds() > 25) {
-//                    autoState= AutoState.PEDRO_PATH3;
-//                }
-//            case PEDRO_PATH3:
-//                follower.followPath(paths.Path3);
-//                autoState= AutoState.PEDRO_PATH3_WAIT;
-//                break;
-//
-//            case PEDRO_PATH3_WAIT:
-//                if (!follower.isBusy()) {
-//                    autoState = AutoState.COMPLETE;
-//                }
-//                break;
             case COMPLETE:
                 break;
         }

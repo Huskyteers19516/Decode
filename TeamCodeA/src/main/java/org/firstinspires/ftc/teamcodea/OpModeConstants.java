@@ -1,6 +1,13 @@
 package org.firstinspires.ftc.teamcodea;
 
 import com.bylazar.configurables.annotations.Configurable;
+import com.pedropathing.follower.Follower;
+import com.pedropathing.geometry.Pose;
+
+import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.vision.VisionPortal;
+import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
+import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 
 @Configurable
 public class OpModeConstants {
@@ -45,6 +52,20 @@ public class OpModeConstants {
     public static double ENCODER_TICKS_PER_REV = 537.7;
     public static double TICKS_PER_MM = (ENCODER_TICKS_PER_REV / (WHEEL_DIAMETER_MM * Math.PI));
     public static double TRACK_WIDTH_MM = 404;
+    public static final Pose START_P1=
+            new Pose(122.238, 121.003, Math.toRadians(45));
 
+    public static final Pose START_P2 =
+            new Pose(122.238, 121.003, Math.toRadians(45));
+
+    private double pathNumber = 8;
+
+    private static final int DESIRED_TAG_ID = -1;
+    private static final boolean USE_WEBCAM = true;
+
+    private AprilTagProcessor aprilTagProcessor;
+    private AprilTagDetection aprilTagDetection;
+    private VisionPortal visionPortal;
+    private Telemetry telemetry;
 
 }

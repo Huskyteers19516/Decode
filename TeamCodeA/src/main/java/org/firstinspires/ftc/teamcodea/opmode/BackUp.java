@@ -69,12 +69,9 @@ public class RobotATeleOp extends OpMode {
         follower.startTeleopDrive();
         launchState = LaunchState.IDLE;
     }
-    public boolean faceToGoal = false;
+
     @Override
     public void loop() {
-        if(gamepad1.b){
-           faceToGoal= true;
-        }
         //Call this once per loop
         follower.update();
         telemetryM.update();
