@@ -176,32 +176,32 @@ public class RobotAutoShort extends OpMode {
                 break;
 
             case PEDRO_PATH2_WAIT:
-                if (!follower.isBusy()) {
-                    if(pathNumber >2&& waitOrNot=true){
-                        autoState = AutoState.WAIT;
-                    }else(pathNumber >2 && waitOrNot =false){
-                        autoState = AutoState.PEDRO_PATH3;
-                    }else(pathNumber<2){
-                        autoState = AutoState.COMPLETE;
-                    }
-                }
+//                if (!follower.isBusy()) {
+//                    if(pathNumber >2&& waitOrNot=true){
+//                        autoState = AutoState.WAIT;
+//                    }else(pathNumber >2 && waitOrNot =false){
+//                        autoState = AutoState.PEDRO_PATH3;
+//                    }else(pathNumber<2){
+//                        autoState = AutoState.COMPLETE;
+//                    }
+//                }
                 break;
-            case WAIT:
-                if (autoTimer.seconds() > 25) {
-                    autoState= AutoState.PEDRO_PATH3;
-                }
-            case PEDRO_PATH3:
-                follower.followPath(paths.Path3);
-                autoState= AutoState.PEDRO_PATH3_WAIT;
-                break;
-
-            case PEDRO_PATH3_WAIT:
-                if (!follower.isBusy()) {
-                    autoState = AutoState.COMPLETE;
-                }
-                break;
-            case COMPLETE:
-                break;
+//            case WAIT:
+//                if (autoTimer.seconds() > 25) {
+//                    autoState= AutoState.PEDRO_PATH3;
+//                }
+//            case PEDRO_PATH3:
+//                follower.followPath(paths.Path3);
+//                autoState= AutoState.PEDRO_PATH3_WAIT;
+//                break;
+//
+//            case PEDRO_PATH3_WAIT:
+//                if (!follower.isBusy()) {
+//                    autoState = AutoState.COMPLETE;
+//                }
+//                break;
+//            case COMPLETE:
+//                break;
         }
 
         telemetry.addData("State", autoState);

@@ -63,9 +63,5 @@ public class OpModeConstants {
     private static final int DESIRED_TAG_ID = -1;
     private static final boolean USE_WEBCAM = true;
 
-    private AprilTagProcessor aprilTagProcessor;
-    private AprilTagDetection aprilTagDetection;
-    private VisionPortal visionPortal;
-    private Telemetry telemetry;
 
 }

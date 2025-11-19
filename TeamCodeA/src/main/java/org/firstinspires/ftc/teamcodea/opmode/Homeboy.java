@@ -15,7 +15,7 @@ import org.firstinspires.ftc.teamcodea.pedroPathing.Constants;
 
 @Configurable
 @TeleOp
-public class RobotATeleOp extends OpMode {
+public class Homeboy extends OpMode {
     private Follower follower;
     public static Pose startingPose; //See ExampleAuto to understand how to use this
     private TelemetryManager telemetryM;
