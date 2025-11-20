@@ -24,19 +24,24 @@ import org.firstinspires.ftc.teamcodea.pedroPathing.BlueHaveIntakeShortShoot;
 import org.firstinspires.ftc.teamcodea.OpModeConstants;
 import org.firstinspires.ftc.teamcodea.pedroPathing.Constants;
 import org.firstinspires.ftc.teamcodea.pedroPathing.Constants;
-
+import org.firstinspires.ftc.teamcodea.pedroPathing.Paths;
 @Autonomous(name="Use This Auto", group="StarterBot")
 public class RobotAutoShort extends OpMode {
     private ElapsedTime shotTimer = new ElapsedTime();
     private ElapsedTime feederTimer = new ElapsedTime();
     private ElapsedTime autoTimer = new ElapsedTime();
 
+    private double pathNumber = 8;
+    private double pathAlready = 0;
+    private double waitTime  = 0;
+    private double targetWaitTime =0;
     private DcMotorEx launcher;
     private CRServo leftFeeder;
     private CRServo rightFeeder;
 
     private enum LaunchState { IDLE, PREPARE, LAUNCH }
     private LaunchState launchState;
+
     private enum Alliance{
         RED,
         BLUE,
@@ -51,6 +56,16 @@ public class RobotAutoShort extends OpMode {
         PEDRO_PATH2_WAIT,
         PEDRO_PATH3,
         PEDRO_PATH3_WAIT,
+        PEDRO_PATH4,
+        PEDRO_PATH4_WAIT,
+        PEDRO_PATH5,
+        PEDRO_PATH5_WAIT,
+        PEDRO_PATH6,
+        PEDRO_PATH6_WAIT,
+        PEDRO_PATH7,
+        PEDRO_PATH7_WAIT,
+        PEDRO_PATH8,
+        PEDRO_PATH8_WAIT,
         WAIT,
         COMPLETE
     }
@@ -60,29 +75,7 @@ public class RobotAutoShort extends OpMode {
     private Paths paths;
     public static boolean redOrNot = true;
     public static boolean waitOrNot = false;
-    public static class Paths {
 
-        public PathChain Path1;
-        public PathChain Path2;
-
-        public Paths(Follower follower) {
-            Path1 = follower
-                    .pathBuilder()
-                    .addPath(
-                            new BezierLine(new Pose(122.238, 121.003), new Pose(100.630, 100.013))
-                    )
-                    .setConstantHeadingInterpolation(Math.toRadians(45))
-                    .build();
-
-            Path2 = follower
-                    .pathBuilder()
-                    .addPath(
-                            new BezierLine(new Pose(100.630, 100.013), new Pose(83.035, 40.437))
-                    )
-                    .setTangentHeadingInterpolation()
-                    .build();
-        }
-    }
 
 
 
@@ -126,7 +119,8 @@ public class RobotAutoShort extends OpMode {
 
         follower = Constants.createFollower(hardwareMap);
         //follower.setStartingPose();
-        paths = new Paths(follower);
+        //-----------------------------------------------------------------------------------------------------------------------------
+        paths = new org.firstinspires.ftc.teamcodea.pedroPathing.Paths(follower,1);
 
         telemetry.addData("Status","Initialized");
 
@@ -144,6 +138,7 @@ public class RobotAutoShort extends OpMode {
                 autoTimer.reset();
                 follower.followPath(paths.Path1);
                 autoState = AutoState.PEDRO_PATH1_WAIT;
+                pathAlready+=1;
                 break;
 
             case PEDRO_PATH1_WAIT:
@@ -173,35 +168,118 @@ public class RobotAutoShort extends OpMode {
             case PEDRO_PATH2:
                 follower.followPath(paths.Path2);
                 autoState = AutoState.PEDRO_PATH2_WAIT;
+                pathAlready+=1;
                 break;
 
             case PEDRO_PATH2_WAIT:
-//                if (!follower.isBusy()) {
-//                    if(pathNumber >2&& waitOrNot=true){
-//                        autoState = AutoState.WAIT;
-//                    }else(pathNumber >2 && waitOrNot =false){
-//                        autoState = AutoState.PEDRO_PATH3;
-//                    }else(pathNumber<2){
-//                        autoState = AutoState.COMPLETE;
-//                    }
-//                }
+                if (!follower.isBusy()) {
+
+                    if (pathNumber > 2 && waitOrNot) {
+                        autoState = AutoState.WAIT;
+                    }
+                    else if (pathNumber > 2 && !waitOrNot) {
+                        autoState = AutoState.PEDRO_PATH3;
+                    }
+                    else {   // pathNumber <= 2
+                        autoState = AutoState.COMPLETE;
+                    }
+                }
                 break;
-//            case WAIT:
-//                if (autoTimer.seconds() > 25) {
-//                    autoState= AutoState.PEDRO_PATH3;
-//                }
-//            case PEDRO_PATH3:
-//                follower.followPath(paths.Path3);
-//                autoState= AutoState.PEDRO_PATH3_WAIT;
-//                break;
-//
-//            case PEDRO_PATH3_WAIT:
-//                if (!follower.isBusy()) {
-//                    autoState = AutoState.COMPLETE;
-//                }
-//                break;
-//            case COMPLETE:
-//                break;
+
+            case PEDRO_PATH3:
+                follower.followPath(paths.Path3);
+                autoState= AutoState.PEDRO_PATH3_WAIT;
+                pathAlready+=1;
+                break;
+
+            case PEDRO_PATH3_WAIT:
+                if (!follower.isBusy()) {
+
+                    if (pathNumber > 3 && waitOrNot) {
+                        autoState = AutoState.WAIT;
+                    }
+                    else if (pathNumber > 3 && !waitOrNot) {
+                        autoState = AutoState.PEDRO_PATH4;
+                    }
+                    else {   // pathNumber <= 2
+                        autoState = AutoState.COMPLETE;
+                    }
+                }
+                break;
+
+
+            case PEDRO_PATH4:
+                follower.followPath(paths.Path4);
+                autoState= AutoState.PEDRO_PATH4_WAIT;
+                pathAlready+=1;
+                break;
+
+            case PEDRO_PATH4_WAIT:
+                if (!follower.isBusy()) {
+
+                    if (pathNumber > 3 && waitOrNot) {
+                        autoState = AutoState.WAIT;
+                    }
+                    else if (pathNumber > 3 && !waitOrNot) {
+                        autoState = AutoState.PEDRO_PATH5;
+                    }
+                    else {   // pathNumber <= 2
+                        autoState = AutoState.COMPLETE;
+                    }
+                }
+                break;
+
+            case PEDRO_PATH5:
+                follower.followPath(paths.Path3);
+                autoState= AutoState.PEDRO_PATH3_WAIT;
+                pathAlready+=1;
+                break;
+
+            case PEDRO_PATH5_WAIT:
+                if (!follower.isBusy()) {
+
+                    if (pathNumber > 5 && waitOrNot) {
+                        autoState = AutoState.WAIT;
+                    }
+                    else if (pathNumber > 5 && !waitOrNot) {
+                        autoState = AutoState.PEDRO_PATH4;
+                    }
+                    else {   // pathNumber <= 2
+                        autoState = AutoState.COMPLETE;
+                    }
+                }
+                break;
+            case WAIT:
+                    if(pathAlready==1) {
+                        if(waitTime == targetWaitTime){
+                            autoState = AutoState.PEDRO_PATH2;
+                        }
+
+                    }else if(pathAlready==2) {
+                        if(waitTime == targetWaitTime){
+                            autoState = AutoState.PEDRO_PATH3;
+                        }
+
+                }else if(pathAlready==3) {
+                        if(waitTime == targetWaitTime){
+                            autoState = AutoState.PEDRO_PATH4;
+                        }
+
+                }else if(pathAlready==4) {
+                        if(waitTime == targetWaitTime){
+                            autoState = AutoState.PEDRO_PATH5;
+                        }
+
+                }else if(pathAlready==5) {
+                        if(waitTime == targetWaitTime){
+                            autoState = AutoState.PEDRO_PATH6;
+                        }
+
+                    }
+                break;
+
+            case COMPLETE:
+                break;
         }
 
         telemetry.addData("State", autoState);

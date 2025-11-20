@@ -58,10 +58,11 @@ public class OpModeConstants {
     public static final Pose START_P2 =
             new Pose(122.238, 121.003, Math.toRadians(45));
 
-    private double pathNumber = 8;
+
 
     private static final int DESIRED_TAG_ID = -1;
     private static final boolean USE_WEBCAM = true;
+
 
 
 }
