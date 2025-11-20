@@ -26,7 +26,6 @@ import java.util.List;
 public class RobotATeleOp extends OpMode {
     private AprilTagProcessor aprilTagProcessor;
     private VisionPortal visionPortal;
-    private Telemetry telemetry;
 
 
     private Follower follower;
@@ -46,7 +45,6 @@ public class RobotATeleOp extends OpMode {
     private boolean targetFound = false;
     private AprilTagDetection desiredTag = null;
     public static int DESIRED_TAG_ID = -1;
-    private List<AprilTagDetection> currentDetections;
 
     private enum LaunchState { IDLE, SPIN_UP, LAUNCH, LAUNCHING }
     private LaunchState launchState;
@@ -67,8 +65,9 @@ public class RobotATeleOp extends OpMode {
         rightFeeder = hardwareMap.get(CRServo.class, "right_feeder");
         camera = hardwareMap.get(WebcamName.class, "Webcam 1");
         aprilTagProcessor = new AprilTagProcessor.Builder().build();
-        visionPortal = new VisionPortal.Builder().setCamera(camera).setAutoStartStreamOnBuild(true).addProcessor(aprilTagProcessor).build();
-
+        visionPortal = new VisionPortal.Builder().setCamera(camera).setAutoStartStreamOnBuild(true).enableLiveView(true).addProcessor(aprilTagProcessor).build();
+        visionPortal.resumeStreaming();
+        visionPortal.resumeLiveView();
         launcher.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         launcher.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(300, 0, 0, 10));
 
@@ -122,11 +121,11 @@ public class RobotATeleOp extends OpMode {
             telemetry.addLine("April tag not spotted");
         }
 
-        if (currentDetections != null) {
+        if (detections != null) {
             targetFound = false;
             desiredTag = null;
 
-            for (AprilTagDetection detection : currentDetections) {
+            for (AprilTagDetection detection : detections) {
                 if (detection.metadata != null) {
                     if (DESIRED_TAG_ID < 0 || detection.id == DESIRED_TAG_ID) {
                         targetFound = true;
