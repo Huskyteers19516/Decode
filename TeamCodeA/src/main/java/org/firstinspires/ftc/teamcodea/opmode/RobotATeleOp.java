@@ -10,7 +10,6 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.*;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.teamcodea.OpModeConstants;
 import org.firstinspires.ftc.teamcodea.pedroPathing.Constants;
@@ -24,32 +23,28 @@ import java.util.List;
 @Configurable
 @TeleOp
 public class RobotATeleOp extends OpMode {
+
     private AprilTagProcessor aprilTagProcessor;
     private VisionPortal visionPortal;
-
+    private boolean aprilTagDetected = false;
+    private AprilTagDetection desiredTag = null;
+    private boolean apriltagRed = false;
 
     private Follower follower;
-
     public static Pose startingPose;
     private TelemetryManager telemetryM;
-
-    private WebcamName camera;
 
     private DcMotorEx launcher;
     private CRServo leftFeeder, rightFeeder;
     private ElapsedTime feederTimer = new ElapsedTime();
 
-    private boolean slowMode = false;
-    private final double slowModeMultiplier = 0.6;
-
-    private boolean targetFound = false;
-    private AprilTagDetection desiredTag = null;
-    public static int DESIRED_TAG_ID = -1;
-
     private enum LaunchState { IDLE, SPIN_UP, LAUNCH, LAUNCHING }
     private LaunchState launchState;
 
-    public boolean faceToGoal = false;
+    private boolean slowMode = false;
+    private final double slowModeMultiplier = 0.6;
+
+    private boolean redAlliance = false;
 
     @Override
     public void init() {
@@ -63,17 +58,26 @@ public class RobotATeleOp extends OpMode {
         launcher = hardwareMap.get(DcMotorEx.class, "launcher");
         leftFeeder = hardwareMap.get(CRServo.class, "left_feeder");
         rightFeeder = hardwareMap.get(CRServo.class, "right_feeder");
-        camera = hardwareMap.get(WebcamName.class, "Webcam 1");
+
+        WebcamName camera = hardwareMap.get(WebcamName.class, "Webcam 1");
         aprilTagProcessor = new AprilTagProcessor.Builder().build();
-        visionPortal = new VisionPortal.Builder().setCamera(camera).setAutoStartStreamOnBuild(true).enableLiveView(true).addProcessor(aprilTagProcessor).build();
-        visionPortal.resumeStreaming();
-        visionPortal.resumeLiveView();
+        visionPortal = new VisionPortal.Builder()
+                .setCamera(camera)
+                .addProcessor(aprilTagProcessor)
+                .setAutoStartStreamOnBuild(true)
+                .build();
+
         launcher.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        launcher.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(300, 0, 0, 10));
+        launcher.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER,
+                new PIDFCoefficients(300, 0, 0, 10));
 
         leftFeeder.setDirection(DcMotorSimple.Direction.REVERSE);
+
         leftFeeder.setPower(OpModeConstants.STOP_SPEED);
         rightFeeder.setPower(OpModeConstants.STOP_SPEED);
+
+        telemetry.addLine("Press X = BLUE, Y = RED");
+        telemetry.update();
     }
 
     @Override
@@ -84,8 +88,8 @@ public class RobotATeleOp extends OpMode {
 
     @Override
     public void loop() {
-        List<AprilTagDetection> detections = aprilTagProcessor.getDetections();
 
+        List<AprilTagDetection> detections = aprilTagProcessor.getDetections();
         follower.update();
         telemetryM.update();
 
@@ -108,53 +112,71 @@ public class RobotATeleOp extends OpMode {
         if (gamepad1.leftBumperWasPressed()) slowMode = !slowMode;
         if (gamepad1.startWasPressed()) follower.setPose(new Pose());
 
-        if (gamepad1.yWasPressed()) launcher.setVelocity(OpModeConstants.LAUNCHER_TARGET_VELOCITY);
-        if (gamepad1.bWasPressed()) launcher.setVelocity(0);
+        if (gamepad1.x) {
+            redAlliance = false;
+            telemetry.addLine("Alliance: BLUE");
+        }
+        if (gamepad1.y) {
+            redAlliance = true;
+            telemetry.addLine("Alliance: RED");
+        }
+
+        if (gamepad1.aWasPressed())
+            launcher.setVelocity(OpModeConstants.LAUNCHER_TARGET_VELOCITY);
+
+        if (gamepad1.backWasPressed())
+            launcher.setVelocity(0);
 
         launch(gamepad1.rightBumperWasPressed());
 
-        if (gamepad1.bWasPressed() && targetFound) {
-            telemetry.addLine("April tag spotted");
-            double targetHeading = desiredTag.ftcPose.bearing;
-            follower.turnTo(follower.getPose().getHeading() + Math.toRadians(targetHeading));
-        }else{
-            telemetry.addLine("April tag not spotted");
-        }
+        aprilTagDetected = false;
+        desiredTag = null;
 
         if (detections != null) {
-            targetFound = false;
-            desiredTag = null;
-
             for (AprilTagDetection detection : detections) {
-                if (detection.metadata != null) {
-                    if (DESIRED_TAG_ID < 0 || detection.id == DESIRED_TAG_ID) {
-                        targetFound = true;
-                        desiredTag = detection;
-                        break;
-                    } else {
-                        telemetry.addData("Skipping", "Tag ID %d not desired", detection.id);
-                    }
-                } else {
-                    telemetry.addData("Unknown", "Tag ID %d not in library", detection.id);
-                }
-            }
 
-            if (targetFound) {
+                desiredTag = detection;
+                aprilTagDetected = true;
+
+                if (detection.id == 20) apriltagRed = true;
+                else if (detection.id == 24) apriltagRed = false;
+
                 telemetry.addData("Found", "ID %d (%s)", desiredTag.id, desiredTag.metadata.name);
-                telemetry.addData("Range", "%.1f in", desiredTag.ftcPose.range);
-                telemetry.addData("Bearing", "%.0f°", desiredTag.ftcPose.bearing);
-                telemetry.addData("Yaw", "%.0f°", desiredTag.ftcPose.yaw);
-            } else {
-                telemetry.addData(">", "Use joysticks to find AprilTag");
+                telemetry.addData("Range", detection.ftcPose.range);
+                telemetry.addData("Bearing", detection.ftcPose.bearing);
+                telemetry.addData("Yaw", detection.ftcPose.yaw);
+
+                break;
             }
         }
 
+        if (gamepad1.a) {
+
+            if (!aprilTagDetected) {
+                follower.turnTo(follower.getPose().getHeading() + Math.toRadians(180));
+            } else if (redAlliance) {
+                if (!apriltagRed) {
+                    follower.turnTo(follower.getPose().getHeading() + Math.toRadians(90));
+                } else {
+                    telemetry.addLine("Correct RED AprilTag detected");
+                }
+            } else {
+                if (apriltagRed) {
+                    follower.turnTo(follower.getPose().getHeading() - Math.toRadians(90));
+                } else {
+                    telemetry.addLine("Correct BLUE AprilTag detected");
+                }
+            }
+        }
+        // unsolve one
+        telemetry.update();
         telemetryM.debug("position", follower.getPose());
         telemetryM.debug("velocity", follower.getVelocity());
     }
 
     void launch(boolean shotRequested) {
         switch (launchState) {
+
             case IDLE:
                 if (shotRequested) launchState = LaunchState.SPIN_UP;
                 break;
