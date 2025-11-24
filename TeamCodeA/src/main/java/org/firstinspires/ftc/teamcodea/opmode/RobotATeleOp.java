@@ -23,6 +23,20 @@ import java.util.List;
 @Configurable
 @TeleOp
 public class RobotATeleOp extends OpMode {
+// gamepad 1
+    //    A =====> central shooting position assistance
+    //    B =====> facing goal assistance
+    //    X =====> stop central shooting position assistance
+    //    Y =====> stop facing goal assistance
+    // start=====> direction pose
+// gamepad 2
+    //    A =====> start the launcher
+    //    B =====> stop the launcher
+    //    X =====>  red alliance
+    //    Y =====>  blue alliance
+    // right bumper  =====> shoot
+
+
 
     private AprilTagProcessor aprilTagProcessor;
     private VisionPortal visionPortal;
@@ -112,22 +126,22 @@ public class RobotATeleOp extends OpMode {
         if (gamepad1.leftBumperWasPressed()) slowMode = !slowMode;
         if (gamepad1.startWasPressed()) follower.setPose(new Pose());
 
-        if (gamepad1.x) {
+        if (gamepad2.y) {
             redAlliance = false;
             telemetry.addLine("Alliance: BLUE");
         }
-        if (gamepad1.y) {
+        if (gamepad2.x) {
             redAlliance = true;
             telemetry.addLine("Alliance: RED");
         }
 
-        if (gamepad1.aWasPressed())
+        if (gamepad2.aWasPressed())
             launcher.setVelocity(OpModeConstants.LAUNCHER_TARGET_VELOCITY);
 
-        if (gamepad1.backWasPressed())
+        if (gamepad2.backWasPressed())
             launcher.setVelocity(0);
 
-        launch(gamepad1.rightBumperWasPressed());
+        launch(gamepad2.rightBumperWasPressed());
 
         aprilTagDetected = false;
         desiredTag = null;
@@ -150,28 +164,39 @@ public class RobotATeleOp extends OpMode {
             }
         }
 
-        if (gamepad1.a) {
+        if (gamepad1.b) {
 
             if (!aprilTagDetected) {
                 follower.turnTo(follower.getPose().getHeading() + Math.toRadians(180));
-            } else if (redAlliance) {
-                if (!apriltagRed) {
-                    follower.turnTo(follower.getPose().getHeading() + Math.toRadians(90));
-                } else {
-                    telemetry.addLine("Correct RED AprilTag detected");
-                }
-            } else {
-                if (apriltagRed) {
-                    follower.turnTo(follower.getPose().getHeading() - Math.toRadians(90));
-                } else {
-                    telemetry.addLine("Correct BLUE AprilTag detected");
+            } else if (aprilTagDetected) {
+                if(redAlliance){
+                    if(!apriltagRed) {
+                       follower.turnTo(follower.getPose().getHeading() + Math.toRadians(90));
+                    } else {
+                        telemetry.addLine("Correct RED AprilTag detected");
+                    }
+                }else if(!redAlliance){
+                    if (apriltagRed) {
+                        follower.turnTo(follower.getPose().getHeading() - Math.toRadians(90));
+                    } else {
+                        telemetry.addLine("Correct BLUE AprilTag detected");
+                    }
                 }
             }
+
+
         }
-        // unsolve one
-        telemetry.update();
-        telemetryM.debug("position", follower.getPose());
-        telemetryM.debug("velocity", follower.getVelocity());
+        // unfinished one
+        if(gamepad1.a){
+            telemetry.update();
+            telemetryM.debug("position", follower.getPose());
+            telemetryM.debug("velocity", follower.getVelocity());
+
+
+        }
+
+
+
     }
 
     void launch(boolean shotRequested) {

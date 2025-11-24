@@ -90,7 +90,7 @@ public class RobotAutoShort extends OpMode {
         redOrNot = false;
     }
 
-        if(redOrNot= true){
+        if(redOrNot == true){
             follower.setStartingPose(START_P1);
         }else{
             follower.setStartingPose(START_P2);
@@ -231,7 +231,7 @@ public class RobotAutoShort extends OpMode {
 
             case PEDRO_PATH5:
                 follower.followPath(paths.Path3);
-                autoState= AutoState.PEDRO_PATH3_WAIT;
+                autoState= AutoState.PEDRO_PATH6_WAIT;
                 pathAlready+=1;
                 break;
 
@@ -242,13 +242,65 @@ public class RobotAutoShort extends OpMode {
                         autoState = AutoState.WAIT;
                     }
                     else if (pathNumber > 5 && !waitOrNot) {
-                        autoState = AutoState.PEDRO_PATH4;
+                        autoState = AutoState.PEDRO_PATH6;
                     }
                     else {   // pathNumber <= 2
                         autoState = AutoState.COMPLETE;
                     }
                 }
                 break;
+            case PEDRO_PATH6:
+                follower.followPath(paths.Path3);
+                autoState= AutoState.PEDRO_PATH3_WAIT;
+                pathAlready+=1;
+                break;
+
+            case PEDRO_PATH6_WAIT:
+                if (!follower.isBusy()) {
+
+                    if (pathNumber > 6 && waitOrNot) {
+                        autoState = AutoState.WAIT;
+                    }
+                    else if (pathNumber > 6 && !waitOrNot) {
+                        autoState = AutoState.PEDRO_PATH7;
+                    }
+                    else {   // pathNumber <= 2
+                        autoState = AutoState.COMPLETE;
+                    }
+                }
+                break;
+            case PEDRO_PATH7:
+                follower.followPath(paths.Path3);
+                autoState= AutoState.PEDRO_PATH8_WAIT;
+                pathAlready+=1;
+                break;
+
+            case PEDRO_PATH7_WAIT:
+                if (!follower.isBusy()) {
+
+                    if (pathNumber > 7 && waitOrNot) {
+                        autoState = AutoState.WAIT;
+                    }
+                    else if (pathNumber > 7 && !waitOrNot) {
+                        autoState = AutoState.PEDRO_PATH8;
+                    }
+                    else {   // pathNumber <= 2
+                        autoState = AutoState.COMPLETE;
+                    }
+                }
+                break;
+            case PEDRO_PATH8:
+                follower.followPath(paths.Path8);
+                autoState= AutoState.PEDRO_PATH8_WAIT;
+                pathAlready+=1;
+                break;
+
+            case PEDRO_PATH8_WAIT:
+                if (!follower.isBusy()) {
+                    autoState = AutoState.COMPLETE;
+                }
+                break;
+
             case WAIT:
                     if(pathAlready==1) {
                         if(waitTime == targetWaitTime){
