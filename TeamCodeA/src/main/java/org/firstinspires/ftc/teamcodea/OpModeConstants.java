@@ -58,6 +58,12 @@ public class OpModeConstants {
     public static final Pose START_P2 =
             new Pose(122.238, 121.003, Math.toRadians(45));
 
+    public static final Pose TARGET_P1 =
+            new Pose(122.238, 121.003, Math.toRadians(45));
+
+    public static final Pose TARGET_P2 =
+            new Pose(122.238, 121.003, Math.toRadians(45));
+
 
 
     private static final int DESIRED_TAG_ID = -1;

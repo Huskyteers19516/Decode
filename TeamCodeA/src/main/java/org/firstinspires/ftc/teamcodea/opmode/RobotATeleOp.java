@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcodea.opmode;
 
+
 import com.bylazar.configurables.annotations.Configurable;
 import com.bylazar.telemetry.PanelsTelemetry;
 import com.bylazar.telemetry.TelemetryManager;
@@ -37,6 +38,12 @@ public class RobotATeleOp extends OpMode {
     // right bumper  =====> shoot
 
 
+    public static final Pose TARGET_P1 =
+            new Pose(122.238, 121.003, Math.toRadians(45));
+
+    public static final Pose TARGET_P2 =
+            new Pose(122.238, 121.003, Math.toRadians(45));
+
 
     private AprilTagProcessor aprilTagProcessor;
     private VisionPortal visionPortal;
@@ -52,7 +59,8 @@ public class RobotATeleOp extends OpMode {
     private CRServo leftFeeder, rightFeeder;
     private ElapsedTime feederTimer = new ElapsedTime();
 
-    private enum LaunchState { IDLE, SPIN_UP, LAUNCH, LAUNCHING }
+    private enum LaunchState {IDLE, SPIN_UP, LAUNCH, LAUNCHING}
+
     private LaunchState launchState;
 
     private boolean slowMode = false;
@@ -169,13 +177,13 @@ public class RobotATeleOp extends OpMode {
             if (!aprilTagDetected) {
                 follower.turnTo(follower.getPose().getHeading() + Math.toRadians(180));
             } else if (aprilTagDetected) {
-                if(redAlliance){
-                    if(!apriltagRed) {
-                       follower.turnTo(follower.getPose().getHeading() + Math.toRadians(90));
+                if (redAlliance) {
+                    if (!apriltagRed) {
+                        follower.turnTo(follower.getPose().getHeading() + Math.toRadians(90));
                     } else {
                         telemetry.addLine("Correct RED AprilTag detected");
                     }
-                }else if(!redAlliance){
+                } else if (!redAlliance) {
                     if (apriltagRed) {
                         follower.turnTo(follower.getPose().getHeading() - Math.toRadians(90));
                     } else {
@@ -185,12 +193,36 @@ public class RobotATeleOp extends OpMode {
             }
 
 
-        }
+
         // unfinished one
-        if(gamepad1.a){
+        if (gamepad1.a) {
+
+            Pose pose = follower.getPose();
+            telemetry.addData("Robot X", pose.getX());
+            telemetry.addData("Robot Y", pose.getY());
+            telemetry.addData("Robot Heading (deg)", Math.toDegrees(pose.getHeading()));
+
+            Pose target = redAlliance ? TARGET_P1 : TARGET_P2;
+
+            telemetry.addData("Target X", target.getX());
+            telemetry.addData("Target Y", target.getY());
+            telemetry.addData("Target Heading (deg)", Math.toDegrees(target.getHeading()));
+
+            double dx = target.getX() - pose.getX();
+            double dy = target.getY() - pose.getY();
+            double dHeading = target.getHeading() - pose.getHeading();
+
+            telemetry.addData("suggested X ", dx);
+            telemetry.addData("suggested Y", dy);
+            telemetry.addData("suggested Heading", Math.toDegrees(dHeading));
+        }
+
+
+
             telemetry.update();
             telemetryM.debug("position", follower.getPose());
             telemetryM.debug("velocity", follower.getVelocity());
+
 
 
         }
