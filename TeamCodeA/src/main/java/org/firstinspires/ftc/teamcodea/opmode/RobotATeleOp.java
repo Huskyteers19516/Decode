@@ -64,7 +64,7 @@ public class RobotATeleOp extends OpMode {
     private LaunchState launchState;
 
     private boolean slowMode = false;
-    private final double slowModeMultiplier = 0.6;
+    private final double slowModeMultiplier = 0.5;
 
     private boolean redAlliance = false;
 
