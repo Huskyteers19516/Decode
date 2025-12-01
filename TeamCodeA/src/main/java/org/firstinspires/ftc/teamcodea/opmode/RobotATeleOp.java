@@ -24,6 +24,12 @@ import java.util.List;
 @TeleOp
 public class RobotATeleOp extends OpMode {
 
+    public static final Pose TARGET_P1 =
+            new Pose(122.238, 121.003, Math.toRadians(45));
+
+    public static final Pose TARGET_P2 =
+            new Pose(122.238, 121.003, Math.toRadians(45));
+
     private AprilTagProcessor aprilTagProcessor;
     private VisionPortal visionPortal;
     private boolean aprilTagDetected = false;
@@ -38,13 +44,17 @@ public class RobotATeleOp extends OpMode {
     private CRServo leftFeeder, rightFeeder;
     private ElapsedTime feederTimer = new ElapsedTime();
 
-    private enum LaunchState { IDLE, SPIN_UP, LAUNCH, LAUNCHING }
+    private enum LaunchState {IDLE, SPIN_UP, LAUNCH, LAUNCHING}
     private LaunchState launchState;
 
     private boolean slowMode = false;
     private final double slowModeMultiplier = 0.5;
 
     private boolean redAlliance = false;
+
+    private final double kP_AIM = 0.02;
+    private final double MAX_TURN = 0.2;
+    private final double AIM_THRESHOLD = 2;
 
     @Override
     public void init() {
@@ -68,15 +78,15 @@ public class RobotATeleOp extends OpMode {
                 .build();
 
         launcher.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        launcher.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER,
-                new PIDFCoefficients(300, 0, 0, 10));
+        launcher.setPIDFCoefficients(
+                DcMotor.RunMode.RUN_USING_ENCODER,
+                new PIDFCoefficients(300, 0, 0, 10)
+        );
 
         leftFeeder.setDirection(DcMotorSimple.Direction.REVERSE);
-
         leftFeeder.setPower(OpModeConstants.STOP_SPEED);
         rightFeeder.setPower(OpModeConstants.STOP_SPEED);
 
-        telemetry.addLine("Press X = BLUE, Y = RED");
         telemetry.update();
     }
 
@@ -92,6 +102,8 @@ public class RobotATeleOp extends OpMode {
         List<AprilTagDetection> detections = aprilTagProcessor.getDetections();
         follower.update();
         telemetryM.update();
+
+        boolean autoAiming = false;
 
         if (!slowMode) {
             follower.setTeleOpDrive(
@@ -109,25 +121,22 @@ public class RobotATeleOp extends OpMode {
             );
         }
 
-        if (gamepad1.leftBumperWasPressed()) slowMode = !slowMode;
-        if (gamepad1.startWasPressed()) follower.setPose(new Pose());
+        if (gamepad1.leftBumperWasPressed())
+            slowMode = !slowMode;
 
-        if (gamepad1.x) {
-            redAlliance = false;
-            telemetry.addLine("Alliance: BLUE");
-        }
-        if (gamepad1.y) {
-            redAlliance = true;
-            telemetry.addLine("Alliance: RED");
-        }
+        if (gamepad1.startWasPressed())
+            follower.setPose(new Pose());
 
-        if (gamepad1.aWasPressed())
+        if (gamepad2.y) redAlliance = false;
+        if (gamepad2.x) redAlliance = true;
+
+        if (gamepad2.aWasPressed())
             launcher.setVelocity(OpModeConstants.LAUNCHER_TARGET_VELOCITY);
 
-        if (gamepad1.backWasPressed())
+        if (gamepad2.backWasPressed())
             launcher.setVelocity(0);
 
-        launch(gamepad1.rightBumperWasPressed());
+        launch(gamepad2.rightBumperWasPressed());
 
         aprilTagDetected = false;
         desiredTag = null;
@@ -138,37 +147,52 @@ public class RobotATeleOp extends OpMode {
                 desiredTag = detection;
                 aprilTagDetected = true;
 
-                if (detection.id == 20) apriltagRed = true;
-                else if (detection.id == 24) apriltagRed = false;
+                if (detection.id == 24) apriltagRed = true;
+                else if (detection.id == 20) apriltagRed = false;
 
-                telemetry.addData("Found", "ID %d (%s)", desiredTag.id, desiredTag.metadata.name);
-                telemetry.addData("Range", detection.ftcPose.range);
+                telemetry.addData("Found", detection.id);
                 telemetry.addData("Bearing", detection.ftcPose.bearing);
+                telemetry.addData("Range", detection.ftcPose.range);
                 telemetry.addData("Yaw", detection.ftcPose.yaw);
 
                 break;
             }
         }
 
-        if (gamepad1.a) {
+        if (gamepad1.b && aprilTagDetected) {
 
-            if (!aprilTagDetected) {
-                follower.turnTo(follower.getPose().getHeading() + Math.toRadians(180));
-            } else if (redAlliance) {
-                if (!apriltagRed) {
-                    follower.turnTo(follower.getPose().getHeading() + Math.toRadians(90));
-                } else {
-                    telemetry.addLine("Correct RED AprilTag detected");
-                }
-            } else {
-                if (apriltagRed) {
-                    follower.turnTo(follower.getPose().getHeading() - Math.toRadians(90));
-                } else {
-                    telemetry.addLine("Correct BLUE AprilTag detected");
-                }
-            }
+            autoAiming = true;
+
+            double bearing = desiredTag.ftcPose.bearing;
+            double turnPower = kP_AIM * bearing;
+            turnPower = Math.max(-MAX_TURN, Math.min(MAX_TURN, turnPower));
+
+            follower.setTeleOpDrive(0, 0, turnPower, true);
+
+            telemetry.addData("AIM bearing", bearing);
+            telemetry.addData("turn", turnPower);
+
+            if (Math.abs(bearing) < AIM_THRESHOLD)
+                telemetry.addLine("LOCKED");
         }
-        // unsolve one
+
+        else if (gamepad1.b && !aprilTagDetected) {
+            follower.turnTo(
+                    follower.getPose().getHeading() + Math.toRadians(180)
+            );
+        }
+
+        if (gamepad1.a) {
+            Pose pose = follower.getPose();
+            Pose target = redAlliance ? TARGET_P1 : TARGET_P2;
+            double dx = target.getX() - pose.getX();
+            double dy = target.getY() - pose.getY();
+            double dHeading = target.getHeading() - pose.getHeading();
+            telemetry.addData("dx", dx);
+            telemetry.addData("dy", dy);
+            telemetry.addData("dh", Math.toDegrees(dHeading));
+        }
+
         telemetry.update();
         telemetryM.debug("position", follower.getPose());
         telemetryM.debug("velocity", follower.getVelocity());
@@ -176,7 +200,6 @@ public class RobotATeleOp extends OpMode {
 
     void launch(boolean shotRequested) {
         switch (launchState) {
-
             case IDLE:
                 if (shotRequested) launchState = LaunchState.SPIN_UP;
                 break;

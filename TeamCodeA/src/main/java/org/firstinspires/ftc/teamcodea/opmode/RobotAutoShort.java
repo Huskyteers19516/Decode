@@ -180,7 +180,7 @@ public class RobotAutoShort extends OpMode {
                     else if (pathNumber > 2 && !waitOrNot) {
                         autoState = AutoState.PEDRO_PATH3;
                     }
-                    else {   // pathNumber <= 2
+                    else {
                         autoState = AutoState.COMPLETE;
                     }
                 }
@@ -201,7 +201,7 @@ public class RobotAutoShort extends OpMode {
                     else if (pathNumber > 3 && !waitOrNot) {
                         autoState = AutoState.PEDRO_PATH4;
                     }
-                    else {   // pathNumber <= 2
+                    else {
                         autoState = AutoState.COMPLETE;
                     }
                 }
@@ -223,7 +223,7 @@ public class RobotAutoShort extends OpMode {
                     else if (pathNumber > 3 && !waitOrNot) {
                         autoState = AutoState.PEDRO_PATH5;
                     }
-                    else {   // pathNumber <= 2
+                    else {
                         autoState = AutoState.COMPLETE;
                     }
                 }
@@ -244,7 +244,7 @@ public class RobotAutoShort extends OpMode {
                     else if (pathNumber > 5 && !waitOrNot) {
                         autoState = AutoState.PEDRO_PATH6;
                     }
-                    else {   // pathNumber <= 2
+                    else {
                         autoState = AutoState.COMPLETE;
                     }
                 }
@@ -264,7 +264,7 @@ public class RobotAutoShort extends OpMode {
                     else if (pathNumber > 6 && !waitOrNot) {
                         autoState = AutoState.PEDRO_PATH7;
                     }
-                    else {   // pathNumber <= 2
+                    else {
                         autoState = AutoState.COMPLETE;
                     }
                 }
