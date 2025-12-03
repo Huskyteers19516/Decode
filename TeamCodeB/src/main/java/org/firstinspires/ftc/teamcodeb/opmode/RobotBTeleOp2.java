@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcodea.opmode;
+package org.firstinspires.ftc.teamcodeb.opmode;
 
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.bylazar.configurables.annotations.Configurable;
@@ -15,8 +15,8 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Position;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
-import org.firstinspires.ftc.teamcodea.OpModeConstants;
-import org.firstinspires.ftc.teamcodea.pedroPathing.Constants;
+import org.firstinspires.ftc.teamcodeb.OpModeConstants;
+import org.firstinspires.ftc.teamcodeb.pedroPathing.Constants;
 import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
@@ -26,7 +26,7 @@ import java.util.Optional;
 
 @Configurable
 @TeleOp
-public class RobotATeleOp extends OpMode {
+public class RobotBTeleOp2 extends OpMode {
     /*
     Gamepad.1
                 Left Bumper             slow mode
@@ -60,6 +60,7 @@ public class RobotATeleOp extends OpMode {
     private TelemetryManager telemetryM;
 
     private DcMotorEx launcher;
+    private DcMotorEx intake;
     private CRServo leftFeeder, rightFeeder;
     private ElapsedTime feederTimer = new ElapsedTime();
 
@@ -89,6 +90,7 @@ public class RobotATeleOp extends OpMode {
         launcher = hardwareMap.get(DcMotorEx.class, "launcher");
         leftFeeder = hardwareMap.get(CRServo.class, "left_feeder");
         rightFeeder = hardwareMap.get(CRServo.class, "right_feeder");
+        intake = hardwareMap.get(DcMotorEx.class,"intake");
 
         WebcamName camera = hardwareMap.get(WebcamName.class, "Webcam 1");
         Position cameraPosition = new Position(DistanceUnit.INCH, 1.5,9,13,0);
@@ -119,8 +121,10 @@ public class RobotATeleOp extends OpMode {
         double y = d.robotPose.getPosition().y;
         double heading = d.robotPose.getOrientation().getYaw(AngleUnit.RADIANS);
 
+
         return new Pose(x, y, heading);
     }
+
 
     @Override
     public void start() {
@@ -136,7 +140,7 @@ public class RobotATeleOp extends OpMode {
 
     @Override
     public void loop() {
-
+        if(gamepad1.xWasPressed()) intake.setVelocity(OpModeConstants.INTAKE_TARGET_VELOCITY);
         if (gamepad1.leftBumperWasPressed()) slowMode = !slowMode;
         if (gamepad1.startWasPressed()) follower.setPose(new Pose());
         if (gamepad2.aWasPressed()) launcher.setVelocity(OpModeConstants.LAUNCHER_TARGET_VELOCITY);
@@ -189,9 +193,11 @@ public class RobotATeleOp extends OpMode {
     void launch(boolean shotRequested) {
         switch (launchState) {
             case IDLE:
+                intake.setVelocity(OpModeConstants.INTAKE_TARGET_VELOCITY);
                 if (shotRequested) launchState = LaunchState.SPIN_UP;
                 break;
             case SPIN_UP:
+                intake.setVelocity(0);
                 launcher.setVelocity(OpModeConstants.LAUNCHER_TARGET_VELOCITY);
                 if (launcher.getVelocity() > OpModeConstants.LAUNCHER_MIN_VELOCITY) launchState = LaunchState.LAUNCH;
                 break;
