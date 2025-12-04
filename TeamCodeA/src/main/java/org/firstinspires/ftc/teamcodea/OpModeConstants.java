@@ -56,7 +56,7 @@ public class OpModeConstants {
             new Pose(122.238, 121.003, Math.toRadians(45));
 
     public static final Pose START_P2 =
-            new Pose(122.238, 121.003, Math.toRadians(45));
+            new Pose(21.7, 120.6, Math.toRadians(135));
 
     public static final Pose TARGET_P1 =
             new Pose(122.238, 121.003, Math.toRadians(45));

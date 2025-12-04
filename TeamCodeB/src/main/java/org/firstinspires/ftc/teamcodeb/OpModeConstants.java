@@ -14,6 +14,7 @@ public class OpModeConstants {
     public static double FEED_TIME_SECONDS = 0.20;
     public static double STOP_SPEED = 0.0;
     public static double FULL_SPEED = 1.0;
+    public static double FEED_TIME = 0.3;
 
     public static double LAUNCHER_TARGET_VELOCITY = 1300;
     public static double LAUNCHER_MIN_VELOCITY = 1200;
