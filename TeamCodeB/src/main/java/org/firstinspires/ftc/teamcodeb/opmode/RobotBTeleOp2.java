@@ -43,12 +43,13 @@ public class RobotBTeleOp2 extends OpMode {
                 right bumper            shoot
                 Y                       choose for red alliance
                 X                       choose for blue alliance
-
+                B                       set back to target velocity
+                right stick             increase/decrease current velocity
 
 
                 leftover bottom which can be use
                     gamepad1  X A
-                    gamepad2  B
+                    gamepad2
      */
     public static final Pose TARGET_P1 = new Pose(122.238, 121.003, Math.toRadians(45));
     public static final Pose TARGET_P2 = new Pose(122.238, 121.003, Math.toRadians(45));
@@ -219,7 +220,7 @@ public class RobotBTeleOp2 extends OpMode {
         double newVelocity = currentVelocity + delta;
 
 
-        newVelocity = Math.max(0, Math.min(newVelocity, 3000));
+        newVelocity = Math.max(0, Math.min(newVelocity, 4000));
 
         launcher.setVelocity(newVelocity);
 

@@ -9,7 +9,7 @@ import com.pedropathing.ftc.localization.constants.DriveEncoderConstants;
 import com.pedropathing.paths.PathConstraints;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
-
+import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 public class Constants {
     public static FollowerConstants followerConstants = new FollowerConstants()
             .mass(3.5)
