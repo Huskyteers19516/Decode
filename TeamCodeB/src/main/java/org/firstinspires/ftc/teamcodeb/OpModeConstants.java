@@ -18,7 +18,7 @@ public class OpModeConstants {
 
     public static double LAUNCHER_TARGET_VELOCITY = 1300;
     public static double LAUNCHER_MIN_VELOCITY = 1200;
-
+    public static double LAUNCHER_MAX_VELOCITY= 2000;
     public static double INTAKE_TARGET_VELOCITY =100;
     public static double INTAKE_MIN_VELOCITY =50;
     public static double TIME_BETWEEN_SHOTS = 2;
