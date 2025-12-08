@@ -53,7 +53,7 @@ public class OpModeConstants {
     public static double TICKS_PER_MM = (ENCODER_TICKS_PER_REV / (WHEEL_DIAMETER_MM * Math.PI));
     public static double TRACK_WIDTH_MM = 404;
     public static final Pose START_P1=
-            new Pose(122.238, 121.003, Math.toRadians(45));
+            new Pose(62.7486033519553, 8.044692737430175, Math.toRadians(90));
 
     public static final Pose START_P2 =
             new Pose(21.7, 120.6, Math.toRadians(135));

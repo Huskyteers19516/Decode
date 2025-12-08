@@ -213,20 +213,20 @@ public class RobotBTeleOp2 extends OpMode {
         follower.update();
         telemetryM.update();
 
-        double stick = -gamepad2.right_stick_y;
-        double delta = stick * 200;
-
-        double currentVelocity = launcher.getVelocity();
-        double newVelocity = currentVelocity + delta;
-
-
-        newVelocity = Math.max(0, Math.min(newVelocity, 4000));
-
-        launcher.setVelocity(newVelocity);
-
-        telemetry.addData("Launcher Current", currentVelocity);
-        telemetry.addData("Launcher New", newVelocity);
-        if(gamepad1.bWasPressed())launcher.setVelocity(OpModeConstants.LAUNCHER_TARGET_VELOCITY);
+//        double stick = -gamepad2.right_stick_y;
+//        double delta = stick * 200;
+//
+//        double currentVelocity = launcher.getVelocity();
+//        double newVelocity = currentVelocity + delta;
+//
+//
+//        newVelocity = Math.max(0, Math.min(newVelocity, 4000));
+//
+//        launcher.setVelocity(newVelocity);
+//
+//        telemetry.addData("Launcher Current", currentVelocity);
+//        telemetry.addData("Launcher New", newVelocity);
+//        if(gamepad1.bWasPressed())launcher.setVelocity(OpModeConstants.LAUNCHER_TARGET_VELOCITY);
     }
 
     void launch(boolean shotRequested) {

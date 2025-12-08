@@ -18,40 +18,16 @@ import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 import org.firstinspires.ftc.teamcodea.OpModeConstants;
 import org.firstinspires.ftc.teamcodea.pedroPathing.Constants;
 import org.firstinspires.ftc.vision.VisionPortal;
-import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
-import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
+import org.firstinspires.ftc.vision.apriltag.*;
 
 import java.util.List;
-import java.util.Optional;
 
 @Configurable
 @TeleOp
 public class RobotATeleOp extends OpMode {
-    /*
-    Gamepad.1
-                Left Bumper             slow mode
-                Start                   reset bot
-                left stick              move forth and back
-                right stick             turn around
-                B                       auto located Apriltag goal
-                Y                       auto closed location for shooting and drive to that position
-                            ( Warning: to avoid crashing on others bot, this function should be only use in small adjustment )
-            Gamepad.2
-                A                       start firewheel to target location
-                Back                    shot the firewheel
-                right bumper            shoot
-                Y                       choose for red alliance
-                X                       choose for blue alliance
 
-
-
-                leftover bottom which can be use
-                    gamepad1  X A
-                    gamepad2  B
-     */
     public static final Pose TARGET_P1 = new Pose(122.238, 121.003, Math.toRadians(45));
     public static final Pose TARGET_P2 = new Pose(122.238, 121.003, Math.toRadians(45));
-
 
     private AprilTagProcessor aprilTagProcessor;
     private VisionPortal visionPortal;
@@ -72,10 +48,6 @@ public class RobotATeleOp extends OpMode {
     private enum Alliance {RED, BLUE}
     private Alliance alliance = Alliance.RED;
 
-    private final double kP_AIM = 0.02;
-    private final double MAX_TURN = 0.5;
-    private final double AIM_THRESHOLD = 2;
-
     private boolean autoDrive29 = false;
 
     @Override
@@ -91,11 +63,18 @@ public class RobotATeleOp extends OpMode {
         rightFeeder = hardwareMap.get(CRServo.class, "right_feeder");
 
         WebcamName camera = hardwareMap.get(WebcamName.class, "Webcam 1");
-        Position cameraPosition = new Position(DistanceUnit.INCH, 1.5,9,13,0);
-        YawPitchRollAngles angle = new YawPitchRollAngles(AngleUnit.DEGREES, 0,115,0,0);
+        Position cameraPosition = new Position(DistanceUnit.INCH, -1.5, 9, 13, 0);
+        YawPitchRollAngles angle = new YawPitchRollAngles(AngleUnit.DEGREES, 0, 115, 0, 0);
 
-        aprilTagProcessor = new AprilTagProcessor.Builder().setCameraPose(cameraPosition, angle).build();
-        visionPortal = new VisionPortal.Builder().setCamera(camera).addProcessor(aprilTagProcessor).setAutoStartStreamOnBuild(true).build();
+        aprilTagProcessor = new AprilTagProcessor.Builder()
+                .setCameraPose(cameraPosition, angle)
+                .build();
+
+        visionPortal = new VisionPortal.Builder()
+                .setCamera(camera)
+                .addProcessor(aprilTagProcessor)
+                .setAutoStartStreamOnBuild(true)
+                .build();
 
         launcher.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         launcher.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(300, 0, 0, 10));
@@ -105,21 +84,6 @@ public class RobotATeleOp extends OpMode {
         rightFeeder.setPower(OpModeConstants.STOP_SPEED);
 
         telemetry.update();
-    }
-
-    private Pose getPoseFromCamera() {
-        aprilTagProcessor.getDetections().forEach(detection -> {
-            detection.robotPose.getPosition();
-        });
-        List<AprilTagDetection> detections = aprilTagProcessor.getDetections();
-        if (detections == null || detections.isEmpty()) return null;
-
-        AprilTagDetection d = detections.get(0);
-        double x = d.robotPose.getPosition().x;
-        double y = d.robotPose.getPosition().y;
-        double heading = d.robotPose.getOrientation().getYaw(AngleUnit.RADIANS);
-
-        return new Pose(x, y, heading);
     }
 
     @Override
@@ -148,30 +112,46 @@ public class RobotATeleOp extends OpMode {
 
         if (gamepad1.yWasPressed()) autoDrive29 = true;
 
+        boolean driverOverride =
+                Math.abs(gamepad1.left_stick_y) > 0.05 ||
+                        Math.abs(gamepad1.left_stick_x) > 0.05 ||
+                        Math.abs(gamepad1.right_stick_x) > 0.05;
+
+        if (driverOverride) autoDrive29 = false;
+
+        if (gamepad1.yWasPressed()) autoDrive29 = !autoDrive29;
+
         if (autoDrive29) {
+
+            AprilTagDetection tag = null;
+
             if (detections != null && !detections.isEmpty()) {
-                AprilTagDetection tag = null;
                 for (AprilTagDetection d : detections) {
                     if (d.id == 20 || d.id == 24) {
                         tag = d;
                         break;
                     }
                 }
-                if (tag != null) {
-                    double currentDist = tag.ftcPose.range;
-                    double error = currentDist - 29;
-                    double power = error * 0.03;
-                    power = Math.max(-0.35, Math.min(0.35, power));
+            }
 
-                    if (Math.abs(error) < 1.0) {
-                        follower.setTeleOpDrive(0,0,0,true);
-                        autoDrive29 = false;
-                    } else {
-                        follower.setTeleOpDrive(power,0,0,true);
-                    }
+            if (tag == null) {
+                autoDrive29 = false;
+            } else {
+                double currentDist = tag.ftcPose.range;
+                double error = currentDist - 29;
+                double power = 0.3;
+
+                if (Math.abs(error) < 15.0) {
+                    follower.setTeleOpDrive(0, 0, 0, true);
+                    autoDrive29 = false;
+                } else {
+                    if (error < 0) follower.setTeleOpDrive(-power, 0, 0, true);
+                    else if (error > 0) follower.setTeleOpDrive(power, 0, 0, true);
                 }
             }
-        } else {
+        }
+
+        if (!autoDrive29) {
             follower.setTeleOpDrive(
                     -gamepad1.left_stick_y * (slowMode ? slowModeMultiplier : 1),
                     -gamepad1.left_stick_x * (slowMode ? slowModeMultiplier : 1),
@@ -181,8 +161,6 @@ public class RobotATeleOp extends OpMode {
         }
 
         follower.update();
-        telemetryM.debug("position", follower.getPose());
-        telemetryM.debug("velocity", follower.getVelocity());
         telemetryM.update();
     }
 
@@ -191,16 +169,20 @@ public class RobotATeleOp extends OpMode {
             case IDLE:
                 if (shotRequested) launchState = LaunchState.SPIN_UP;
                 break;
+
             case SPIN_UP:
                 launcher.setVelocity(OpModeConstants.LAUNCHER_TARGET_VELOCITY);
-                if (launcher.getVelocity() > OpModeConstants.LAUNCHER_MIN_VELOCITY) launchState = LaunchState.LAUNCH;
+                if (launcher.getVelocity() > OpModeConstants.LAUNCHER_MIN_VELOCITY)
+                    launchState = LaunchState.LAUNCH;
                 break;
+
             case LAUNCH:
                 leftFeeder.setPower(OpModeConstants.FULL_SPEED);
                 rightFeeder.setPower(OpModeConstants.FULL_SPEED);
                 feederTimer.reset();
                 launchState = LaunchState.LAUNCHING;
                 break;
+
             case LAUNCHING:
                 if (feederTimer.seconds() > OpModeConstants.FEED_TIME_SECONDS) {
                     leftFeeder.setPower(OpModeConstants.STOP_SPEED);
