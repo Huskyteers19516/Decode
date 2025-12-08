@@ -18,7 +18,7 @@ import org.firstinspires.ftc.teamcodeb.pedroPathing.Constants;
 import org.firstinspires.ftc.teamcodeb.pedroPathing.Paths;
 
 @Autonomous(name = "Auto for intake ", group = "Bot2")
-public class RobotBAuto extends OpMode {
+public class IntakeAutoRobotB extends OpMode {
 
     private ElapsedTime shotTimer = new ElapsedTime();
     private ElapsedTime feederTimer = new ElapsedTime();
