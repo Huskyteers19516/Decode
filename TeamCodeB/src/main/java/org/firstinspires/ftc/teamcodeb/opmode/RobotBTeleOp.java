@@ -20,6 +20,9 @@ import org.firstinspires.ftc.teamcodeb.pedroPathing.Constants;
 import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
+import org.firstinspires.ftc.teamcodeb.functions.FlyWheelVelocity;
+import org.firstinspires.ftc.teamcodeb.functions.CenterAprilTag;
+import org.firstinspires.ftc.teamcodeb.functions.DistanceAdjust;
 
 import java.util.List;
 
@@ -57,29 +60,29 @@ public class RobotBTeleOp extends OpMode {
 
     private AprilTagProcessor aprilTagProcessor;
     private VisionPortal visionPortal;
-    private Follower follower;
+    public Follower follower;
     public static Pose startingPose;
     private TelemetryManager telemetryM;
 
-    private DcMotorEx launcher;
-    private DcMotorEx intake;
-    private CRServo leftFeeder, rightFeeder;
-    private ElapsedTime feederTimer = new ElapsedTime();
+    public DcMotorEx launcher;
+    public DcMotorEx intake;
+    public CRServo leftFeeder, rightFeeder;
+    public ElapsedTime feederTimer = new ElapsedTime();
 
-    private enum LaunchState {IDLE, SPIN_UP, LAUNCH, LAUNCHING}
-    private LaunchState launchState;
+    public enum LaunchState {IDLE, SPIN_UP, LAUNCH, LAUNCHING}
+    public LaunchState launchState;
 
-    private boolean slowMode = false;
-    private final double slowModeMultiplier = 0.5;
+    public boolean slowMode = false;
+    public final double slowModeMultiplier = 0.5;
 
-    private enum Alliance {RED, BLUE}
-    private Alliance alliance = Alliance.RED;
+    public enum Alliance {RED, BLUE}
+    public Alliance alliance = Alliance.RED;
 
-    private final double kP_AIM = 0.02;
-    private final double MAX_TURN = 0.5;
-    private final double AIM_THRESHOLD = 2;
+    public final double kP_AIM = 0.02;
+    public final double MAX_TURN = 0.5;
+    public final double AIM_THRESHOLD = 2;
 
-    private boolean autoDrive29 = false;
+    public boolean autoDrive29 = false;
 
     @Override
     public void init() {
@@ -142,7 +145,7 @@ public class RobotBTeleOp extends OpMode {
 
     @Override
     public void loop() {
-        if(gamepad1.xWasPressed()) intake.setVelocity(OpModeConstants.INTAKE_TARGET_VELOCITY);
+        if (gamepad1.xWasPressed()) intake.setVelocity(OpModeConstants.INTAKE_TARGET_VELOCITY);
         if (gamepad1.leftBumperWasPressed()) slowMode = !slowMode;
         if (gamepad1.startWasPressed()) follower.setPose(new Pose());
         if (gamepad2.aWasPressed()) launcher.setVelocity(OpModeConstants.LAUNCHER_TARGET_VELOCITY);
@@ -154,52 +157,8 @@ public class RobotBTeleOp extends OpMode {
 
         if (gamepad1.yWasPressed()) autoDrive29 = true;
 
-        boolean driverOverride =
-                Math.abs(gamepad1.left_stick_y) > 0.05 ||
-                        Math.abs(gamepad1.left_stick_x) > 0.05 ||
-                        Math.abs(gamepad1.right_stick_x) > 0.05;
 
-        if (driverOverride) {
-            autoDrive29 = false;
-        }
 
-        if (gamepad1.yWasPressed()) {
-            autoDrive29 = !autoDrive29;
-        }
-
-        if (autoDrive29) {
-
-            AprilTagDetection tag = null;
-
-            if (detections != null && !detections.isEmpty()) {
-                for (AprilTagDetection d : detections) {
-                    if (d.id == 20 || d.id == 24) {
-                        tag = d;
-                        break;
-                    }
-                }
-            }
-
-            if (tag == null) {
-                autoDrive29 = false;
-            } else {
-                double currentDist = tag.ftcPose.range;
-                double error = currentDist - 29;
-                double power = 0.3;
-
-                if (Math.abs(error) < 15.0) {
-                    follower.setTeleOpDrive(0,0,0,true);
-                    autoDrive29 = false;
-                } else {
-                    if(error<0){
-                        follower.setTeleOpDrive(-power,0,0,true);
-                    }else if(error>0){
-                        follower.setTeleOpDrive(power,0,0,true);
-                    }
-
-                }
-            }
-        }
         if (!slowMode) follower.setTeleOpDrive(
                 -gamepad1.left_stick_y,
                 -gamepad1.left_stick_x,
@@ -245,20 +204,7 @@ public class RobotBTeleOp extends OpMode {
         follower.update();
         telemetryM.update();
 
-        double stick = -gamepad2.right_stick_y;
-        double delta = stick * 200;
 
-        double currentVelocity = launcher.getVelocity();
-        double newVelocity = currentVelocity + delta;
-
-
-        newVelocity = Math.max(0, Math.min(newVelocity, 4000));
-
-        launcher.setVelocity(newVelocity);
-
-        telemetry.addData("Launcher Current", currentVelocity);
-        telemetry.addData("Launcher New", newVelocity);
-        if(gamepad1.bWasPressed())launcher.setVelocity(OpModeConstants.LAUNCHER_TARGET_VELOCITY);
     }
 
     void launch(boolean shotRequested) {

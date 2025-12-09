@@ -17,7 +17,11 @@ import org.firstinspires.ftc.teamcodeb.OpModeConstants;
 import org.firstinspires.ftc.teamcodeb.pedroPathing.Constants;
 import org.firstinspires.ftc.teamcodeb.pedroPathing.Paths;
 
-@Autonomous(name = "Auto for intake ", group = "Bot2")
+import org.firstinspires.ftc.vision.apriltag.*;
+
+import java.util.List;
+
+@Autonomous(name = "Auto for intake", group = "Bot2")
 public class IntakeAutoRobotB extends OpMode {
 
     private ElapsedTime shotTimer = new ElapsedTime();
@@ -29,6 +33,8 @@ public class IntakeAutoRobotB extends OpMode {
     private CRServo leftFeeder;
     private CRServo rightFeeder;
 
+    private AprilTagProcessor aprilTagProcessor;
+
     private enum LaunchState { IDLE, PREPARE, LAUNCH }
     private LaunchState launchState;
 
@@ -37,6 +43,7 @@ public class IntakeAutoRobotB extends OpMode {
 
     private enum AutoState {
         PEDRO_PATH1,
+        ALIGN_TO_TAG,
         LAUNCH,
         WAIT_FOR_LAUNCH,
         PEDRO_PATH2,
@@ -62,6 +69,7 @@ public class IntakeAutoRobotB extends OpMode {
 
     @Override
     public void init() {
+
         launcher = hardwareMap.get(DcMotorEx.class, "launcher");
         leftFeeder = hardwareMap.get(CRServo.class, "left_feeder");
         rightFeeder = hardwareMap.get(CRServo.class, "right_feeder");
@@ -81,9 +89,9 @@ public class IntakeAutoRobotB extends OpMode {
 
         leftFeeder.setDirection(DcMotorSimple.Direction.REVERSE);
 
+        aprilTagProcessor = AprilTagProcessor.easyCreateWithDefaults();
+
         follower = Constants.createFollower(hardwareMap);
-
-
 
         autoState = AutoState.PEDRO_PATH1;
         launchState = LaunchState.IDLE;
@@ -109,7 +117,6 @@ public class IntakeAutoRobotB extends OpMode {
 
     @Override
     public void start() {
-
         autoTimer.reset();
     }
 
@@ -122,7 +129,14 @@ public class IntakeAutoRobotB extends OpMode {
 
             case PEDRO_PATH1:
                 follower.followPath(paths.Path1);
-                autoState = AutoState.LAUNCH;
+                autoState = AutoState.ALIGN_TO_TAG;
+                break;
+
+            case ALIGN_TO_TAG:
+                if (autoAlignAlliance(29)) {
+                    follower.setTeleOpDrive(0,0,0,true);
+                    autoState = AutoState.LAUNCH;
+                }
                 break;
 
             case LAUNCH:
@@ -135,7 +149,6 @@ public class IntakeAutoRobotB extends OpMode {
                     shotsToFire--;
                     routineOfShooting++;
                     launcher.setVelocity(0);
-
                     switch (routineOfShooting) {
                         case 1: autoState = AutoState.PEDRO_PATH2; break;
                         case 2: autoState = AutoState.PEDRO_PATH5; break;
@@ -159,7 +172,7 @@ public class IntakeAutoRobotB extends OpMode {
             case PEDRO_PATH4:
                 intake.setVelocity(0);
                 follower.followPath(paths.Path4);
-                autoState = AutoState.LAUNCH;
+                autoState = AutoState.ALIGN_TO_TAG;
                 break;
 
             case PEDRO_PATH5:
@@ -177,7 +190,7 @@ public class IntakeAutoRobotB extends OpMode {
             case PEDRO_PATH7:
                 intake.setVelocity(0);
                 follower.followPath(paths.Path7);
-                autoState = AutoState.LAUNCH;
+                autoState = AutoState.ALIGN_TO_TAG;
                 break;
 
             case PEDRO_PATH8:
@@ -195,7 +208,7 @@ public class IntakeAutoRobotB extends OpMode {
             case PEDRO_PATH10:
                 intake.setVelocity(0);
                 follower.followPath(paths.Path10);
-                autoState = AutoState.LAUNCH;
+                autoState = AutoState.ALIGN_TO_TAG;
                 break;
 
             case PEDRO_PATH11:
@@ -212,6 +225,52 @@ public class IntakeAutoRobotB extends OpMode {
         telemetry.addData("Launcher", launchState);
         telemetry.update();
     }
+
+    private boolean autoAlignAlliance(double targetDist) {
+
+        List<AprilTagDetection> detections = aprilTagProcessor.getDetections();
+        if (detections == null || detections.isEmpty()) return false;
+
+        AprilTagDetection tag = null;
+
+        for (AprilTagDetection d : detections) {
+            if (alliance == Alliance.RED && d.id == 20) {
+                tag = d;
+                break;
+            }
+            if (alliance == Alliance.BLUE && d.id == 22) {
+                tag = d;
+                break;
+            }
+        }
+
+        if (tag == null) return false;
+
+        double x = tag.ftcPose.x;
+        double y = tag.ftcPose.range;
+        double yaw = tag.ftcPose.yaw;
+
+        double ef = y - targetDist;
+        double es = -x;
+        double et = -yaw;
+
+        double k = 0.02;
+
+        double pf = ef * k;
+        double ps = es * k;
+        double pt = et * k;
+
+        pf = Math.max(-0.25, Math.min(pf, 0.25));
+        ps = Math.max(-0.25, Math.min(ps, 0.25));
+        pt = Math.max(-0.20, Math.min(pt, 0.20));
+
+        follower.setTeleOpDrive(pf, ps, pt, true);
+
+        return Math.abs(ef) < 1.0 &&
+                Math.abs(es) < 1.0 &&
+                Math.abs(et) < 2.0;
+    }
+
 
     boolean launch(boolean requested) {
         switch (launchState) {
@@ -244,7 +303,6 @@ public class IntakeAutoRobotB extends OpMode {
                 }
                 break;
         }
-
         return false;
     }
 }
