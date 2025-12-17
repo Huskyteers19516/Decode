@@ -1,6 +1,5 @@
 package org.firstinspires.ftc.teamcodeb.opmode;
 
-
 import com.bylazar.configurables.annotations.Configurable;
 import com.bylazar.telemetry.PanelsTelemetry;
 import com.bylazar.telemetry.TelemetryManager;
@@ -23,40 +22,13 @@ import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 import org.firstinspires.ftc.teamcodeb.functions.FlyWheelVelocity;
 import org.firstinspires.ftc.teamcodeb.functions.CenterAprilTag;
 import org.firstinspires.ftc.teamcodeb.functions.DistanceAdjust;
-
 import java.util.List;
-
 
 @Configurable
 @TeleOp
 public class RobotBTeleOp extends OpMode {
-    /*
-    Gamepad.1
-                Left Bumper             slow mode
-                Start                   reset bot
-                left stick              move forth and back
-                right stick             turn around
-                B                       auto located Apriltag goal d
-                Y                       auto closed location for shooting and drive to that position
-                                        double click or manual move the bot my joystick will stop this action
-                            ( Warning: to avoid crashing on others bot, this function should be only use in small adjustment )
-            Gamepad.2
-                A                       start firewheel to target location
-                Back                    shot the firewheel
-                right bumper            shoot
-                Y                       choose for red alliance
-                X                       choose for blue alliance
-                B                       set back to target velocity
-                right stick             increase/decrease current velocity
-
-
-                leftover bottom which can be use
-                    gamepad1  X A
-                    gamepad2
-     */
     public static final Pose TARGET_P1 = new Pose(122.238, 121.003, Math.toRadians(45));
     public static final Pose TARGET_P2 = new Pose(122.238, 121.003, Math.toRadians(45));
-
 
     private AprilTagProcessor aprilTagProcessor;
     private VisionPortal visionPortal;
@@ -68,6 +40,8 @@ public class RobotBTeleOp extends OpMode {
     public DcMotorEx intake;
     public CRServo leftFeeder, rightFeeder;
     public ElapsedTime feederTimer = new ElapsedTime();
+    private DistanceAdjust distanceAdjust;
+    private FlyWheelVelocity flyWheelVelocity;
 
     public enum LaunchState {IDLE, SPIN_UP, LAUNCH, LAUNCHING}
     public LaunchState launchState;
@@ -81,8 +55,6 @@ public class RobotBTeleOp extends OpMode {
     public final double kP_AIM = 0.02;
     public final double MAX_TURN = 0.5;
     public final double AIM_THRESHOLD = 2;
-
-    public boolean autoDrive29 = false;
 
     @Override
     public void init() {
@@ -103,6 +75,9 @@ public class RobotBTeleOp extends OpMode {
 
         aprilTagProcessor = new AprilTagProcessor.Builder().setCameraPose(cameraPosition, angle).build();
         visionPortal = new VisionPortal.Builder().setCamera(camera).addProcessor(aprilTagProcessor).setAutoStartStreamOnBuild(true).build();
+
+        distanceAdjust = new DistanceAdjust(this, aprilTagProcessor);
+        flyWheelVelocity = new FlyWheelVelocity(launcher, gamepad1, telemetry);
 
         launcher.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         launcher.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(300, 0, 0, 10));
@@ -126,10 +101,8 @@ public class RobotBTeleOp extends OpMode {
         double y = d.robotPose.getPosition().y;
         double heading = d.robotPose.getOrientation().getYaw(AngleUnit.RADIANS);
 
-
         return new Pose(x, y, heading);
     }
-
 
     @Override
     public void start() {
@@ -155,25 +128,34 @@ public class RobotBTeleOp extends OpMode {
 
         List<AprilTagDetection> detections = aprilTagProcessor.getDetections();
 
-        if (gamepad1.yWasPressed()) autoDrive29 = true;
+        if (gamepad1.yWasPressed()) {
+            distanceAdjust.startAutoDrive29();
+        }
 
+        distanceAdjust.update();
+        flyWheelVelocity.update();
 
+        double currentTargetVelocity = flyWheelVelocity.getTargetVelocity();
 
-        if (!slowMode) follower.setTeleOpDrive(
-                -gamepad1.left_stick_y,
-                -gamepad1.left_stick_x,
-                -gamepad1.right_stick_x,
-                true // Robot Centric
+        if (holdingPoint == null){
+            telemetry.addLine("not holding");
+            if (!slowMode) follower.setTeleOpDrive(
+                    -gamepad1.left_stick_y,
+                    -gamepad1.left_stick_x,
+                    -gamepad1.right_stick_x,
+                    true
 
-        );
-
-            //This is how it looks with slowMode on
-        else follower.setTeleOpDrive(
-                -gamepad1.left_stick_y * slowModeMultiplier,
-                -gamepad1.left_stick_x * slowModeMultiplier,
-                -gamepad1.right_stick_x * slowModeMultiplier,
-                true // Robot Centric
-        );
+            );
+            else follower.setTeleOpDrive(
+                    -gamepad1.left_stick_y * slowModeMultiplier,
+                    -gamepad1.left_stick_x * slowModeMultiplier,
+                    -gamepad1.right_stick_x * slowModeMultiplier,
+                    true
+            );
+        } else {
+            telemetry.addLine("Holding");
+            follower.holdPoint(holdingPoint);
+        }
 
         if (gamepad1.squareWasPressed()) {
             follower.setPose(new Pose());
@@ -188,34 +170,27 @@ public class RobotBTeleOp extends OpMode {
         launch(gamepad1.rightBumperWasPressed());
         intake.setPower(gamepad1.left_trigger);
 
-        //Slow Mode
         if (gamepad1.leftBumperWasPressed()) {
             slowMode = !slowMode;
-        }
-        if (!autoDrive29) {
-            follower.setTeleOpDrive(
-                    -gamepad1.left_stick_y * (slowMode ? slowModeMultiplier : 1),
-                    -gamepad1.left_stick_x * (slowMode ? slowModeMultiplier : 1),
-                    -gamepad1.right_stick_x * (slowMode ? slowModeMultiplier : 1),
-                    true
-            );
         }
 
         follower.update();
         telemetryM.update();
 
-
+        telemetry.update();
     }
 
+    private Pose holdingPoint;
     void launch(boolean shotRequested) {
         switch (launchState) {
             case IDLE:
+                holdingPoint = follower.getPose();
                 intake.setVelocity(OpModeConstants.INTAKE_TARGET_VELOCITY);
                 if (shotRequested) launchState = LaunchState.SPIN_UP;
                 break;
             case SPIN_UP:
                 intake.setVelocity(0);
-                launcher.setVelocity(OpModeConstants.LAUNCHER_TARGET_VELOCITY);
+                launcher.setVelocity(flyWheelVelocity.getTargetVelocity());
                 if (launcher.getVelocity() > OpModeConstants.LAUNCHER_MIN_VELOCITY) launchState = LaunchState.LAUNCH;
                 break;
             case LAUNCH:
@@ -229,6 +204,7 @@ public class RobotBTeleOp extends OpMode {
                     leftFeeder.setPower(OpModeConstants.STOP_SPEED);
                     rightFeeder.setPower(OpModeConstants.STOP_SPEED);
                     launchState = LaunchState.IDLE;
+                    holdingPoint = null;
                 }
                 break;
         }

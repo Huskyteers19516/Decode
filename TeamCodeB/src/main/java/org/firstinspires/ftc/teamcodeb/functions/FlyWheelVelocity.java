@@ -36,7 +36,7 @@ public class FlyWheelVelocity extends RobotBTeleOp {
         }
 
 
-        launcher.setVelocity(targetVelocity);
+
 
 
         telemetry.addLine("=== FlyWheel Tuner ===");
