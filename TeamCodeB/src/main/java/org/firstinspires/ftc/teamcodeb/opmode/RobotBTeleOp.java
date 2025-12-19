@@ -76,8 +76,9 @@ public class RobotBTeleOp extends OpMode {
         aprilTagProcessor = new AprilTagProcessor.Builder().setCameraPose(cameraPosition, angle).build();
         visionPortal = new VisionPortal.Builder().setCamera(camera).addProcessor(aprilTagProcessor).setAutoStartStreamOnBuild(true).build();
 
-        distanceAdjust = new DistanceAdjust(this, aprilTagProcessor);
-        flyWheelVelocity = new FlyWheelVelocity(launcher, gamepad1, telemetry);
+        distanceAdjust = new DistanceAdjust(follower, gamepad1, aprilTagProcessor);
+        flyWheelVelocity = new FlyWheelVelocity();
+        flyWheelVelocity.init(launcher, gamepad1, telemetry);
 
         launcher.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         launcher.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(300, 0, 0, 10));
@@ -121,53 +122,71 @@ public class RobotBTeleOp extends OpMode {
         if (gamepad1.xWasPressed()) intake.setVelocity(OpModeConstants.INTAKE_TARGET_VELOCITY);
         if (gamepad1.leftBumperWasPressed()) slowMode = !slowMode;
         if (gamepad1.startWasPressed()) follower.setPose(new Pose());
-        if (gamepad2.aWasPressed()) launcher.setVelocity(OpModeConstants.LAUNCHER_TARGET_VELOCITY);
-        if (gamepad2.backWasPressed()) launcher.setVelocity(0);
 
-        launch(gamepad2.rightBumperWasPressed());
+        if (gamepad2.aWasPressed()) {
+            flyWheelVelocity.setTargetVelocity(OpModeConstants.LAUNCHER_TARGET_VELOCITY);
+        }
 
-        List<AprilTagDetection> detections = aprilTagProcessor.getDetections();
+        if (gamepad2.bWasPressed()) {
+            flyWheelVelocity.resetToDefault();
+        }
+
+        if (gamepad2.backWasPressed()) {
+            launcher.setVelocity(0);
+            flyWheelVelocity.setTargetVelocity(0);
+        }
+
+        if (gamepad1.aWasPressed()) {
+            distanceAdjust.startAutoDrive29();
+        }
+
+        if (gamepad1.bWasPressed()) {
+            launcher.setVelocity(0);
+            flyWheelVelocity.setTargetVelocity(0);
+        }
 
         if (gamepad1.yWasPressed()) {
-            distanceAdjust.startAutoDrive29();
+            flyWheelVelocity.setTargetVelocity(1600);
+        }
+
+        if (gamepad2.rightBumperWasPressed() || gamepad1.rightBumperWasPressed()) {
+            launch(true);
         }
 
         distanceAdjust.update();
         flyWheelVelocity.update();
 
         double currentTargetVelocity = flyWheelVelocity.getTargetVelocity();
+        boolean isAutoDriveActive = distanceAdjust.isAutoDriveActive();
 
-        if (holdingPoint == null){
-            telemetry.addLine("not holding");
-            if (!slowMode) follower.setTeleOpDrive(
-                    -gamepad1.left_stick_y,
-                    -gamepad1.left_stick_x,
-                    -gamepad1.right_stick_x,
-                    true
-
-            );
-            else follower.setTeleOpDrive(
-                    -gamepad1.left_stick_y * slowModeMultiplier,
-                    -gamepad1.left_stick_x * slowModeMultiplier,
-                    -gamepad1.right_stick_x * slowModeMultiplier,
-                    true
-            );
-        } else {
-            telemetry.addLine("Holding");
-            follower.holdPoint(holdingPoint);
+        if (!isAutoDriveActive) {
+            if (holdingPoint == null){
+                telemetry.addLine("not holding");
+                if (!slowMode) {
+                    follower.setTeleOpDrive(
+                            -gamepad1.left_stick_y,
+                            -gamepad1.left_stick_x,
+                            -gamepad1.right_stick_x,
+                            true
+                    );
+                } else {
+                    follower.setTeleOpDrive(
+                            -gamepad1.left_stick_y * slowModeMultiplier,
+                            -gamepad1.left_stick_x * slowModeMultiplier,
+                            -gamepad1.right_stick_x * slowModeMultiplier,
+                            true
+                    );
+                }
+            } else {
+                telemetry.addLine("Holding");
+                follower.holdPoint(holdingPoint);
+            }
         }
 
         if (gamepad1.squareWasPressed()) {
             follower.setPose(new Pose());
         }
 
-        if (gamepad1.yWasPressed()) {
-            launcher.setVelocity(1600);
-        }
-        if (gamepad1.bWasPressed()) {
-            launcher.setVelocity(0);
-        }
-        launch(gamepad1.rightBumperWasPressed());
         intake.setPower(gamepad1.left_trigger);
 
         if (gamepad1.leftBumperWasPressed()) {
@@ -176,6 +195,10 @@ public class RobotBTeleOp extends OpMode {
 
         follower.update();
         telemetryM.update();
+
+        telemetry.addLine("=== Distance Adjust ===");
+        telemetry.addData("Auto Drive Active", isAutoDriveActive ? "YES" : "NO");
+        telemetry.addData("Trigger Button", "A Button (Gamepad1)");
 
         telemetry.update();
     }

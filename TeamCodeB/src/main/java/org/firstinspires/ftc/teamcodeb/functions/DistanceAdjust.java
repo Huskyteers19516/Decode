@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcodeb.functions;
 
+import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -8,15 +9,17 @@ import org.firstinspires.ftc.vision.apriltag.*;
 
 import java.util.List;
 
-public class DistanceAdjust extends RobotBTeleOp{
+public class DistanceAdjust {
 
     private AprilTagProcessor aprilTagProcessor;
-    private RobotBTeleOp robot;
+    private Follower follower;
+    private Gamepad gamepad;
 
     private boolean autoDrive29 = false;
 
-    public DistanceAdjust(RobotBTeleOp robot, AprilTagProcessor processor) {
-        this.robot = robot;
+    public DistanceAdjust(Follower follower, Gamepad gamepad, AprilTagProcessor processor) {
+        this.follower = follower;
+        this.gamepad = gamepad;
         this.aprilTagProcessor = processor;
     }
 
@@ -34,18 +37,17 @@ public class DistanceAdjust extends RobotBTeleOp{
     }
 
     public void update() {
+        if (!autoDrive29) return;
 
-        // override detection
         boolean driverOverride =
-                Math.abs(robot.gamepad1.left_stick_x) > 0.05 ||
-                        Math.abs(robot.gamepad1.left_stick_y) > 0.05 ||
-                        Math.abs(robot.gamepad1.right_stick_x) > 0.05;
+                Math.abs(gamepad.left_stick_x) > 0.05 ||
+                        Math.abs(gamepad.left_stick_y) > 0.05 ||
+                        Math.abs(gamepad.right_stick_x) > 0.05;
 
         if (driverOverride) autoDrive29 = false;
 
         if (!autoDrive29) return;
 
-        // Get detections
         List<AprilTagDetection> detections = aprilTagProcessor.getDetections();
         if (detections == null || detections.isEmpty()) {
             autoDrive29 = false;
@@ -69,10 +71,10 @@ public class DistanceAdjust extends RobotBTeleOp{
         double power = 0.3;
 
         if (Math.abs(error) < 2.0) {
-            robot.follower.setTeleOpDrive(0, 0, 0, true);
+            follower.setTeleOpDrive(0, 0, 0, true);
             autoDrive29 = false;
         } else {
-            robot.follower.setTeleOpDrive(
+            follower.setTeleOpDrive(
                     error > 0 ? power : -power,
                     0,
                     0,
@@ -83,5 +85,9 @@ public class DistanceAdjust extends RobotBTeleOp{
 
     public void startAutoDrive29() {
         autoDrive29 = true;
+    }
+
+    public boolean isAutoDriveActive() {
+        return autoDrive29;
     }
 }
