@@ -56,6 +56,9 @@ public class RobotBTeleOp extends OpMode {
     public final double MAX_TURN = 0.5;
     public final double AIM_THRESHOLD = 2;
 
+    private double lastLauncherVelocity = 0;
+    private boolean intakeActive = false;
+
     @Override
     public void init() {
         follower = Constants.createFollower(hardwareMap);
@@ -128,7 +131,7 @@ public class RobotBTeleOp extends OpMode {
         }
 
         if (gamepad2.bWasPressed()) {
-            flyWheelVelocity.resetToDefault();
+            flyWheelVelocity.setTargetVelocity(OpModeConstants.LAUNCHER_TARGET_VELOCITY);
         }
 
         if (gamepad2.backWasPressed()) {
@@ -147,10 +150,6 @@ public class RobotBTeleOp extends OpMode {
 
         if (gamepad1.yWasPressed()) {
             flyWheelVelocity.setTargetVelocity(1600);
-        }
-
-        if (gamepad2.rightBumperWasPressed() || gamepad1.rightBumperWasPressed()) {
-            launch(true);
         }
 
         distanceAdjust.update();
@@ -187,7 +186,22 @@ public class RobotBTeleOp extends OpMode {
             follower.setPose(new Pose());
         }
 
-        intake.setPower(gamepad1.left_trigger);
+        if (gamepad1.left_trigger > 0.1) {
+            intake.setPower(gamepad1.left_trigger);
+            intakeActive = true;
+        }
+
+        if (gamepad2.left_trigger > 0.1) {
+            intake.setVelocity(0);
+            intakeActive = false;
+            if (lastLauncherVelocity > 0) {
+                flyWheelVelocity.setTargetVelocity(lastLauncherVelocity);
+            }
+        }
+
+        if (gamepad2.rightBumperWasPressed() || gamepad1.rightBumperWasPressed()) {
+            launch(true);
+        }
 
         if (gamepad1.leftBumperWasPressed()) {
             slowMode = !slowMode;
@@ -198,6 +212,8 @@ public class RobotBTeleOp extends OpMode {
 
         telemetry.addLine("=== Distance Adjust ===");
         telemetry.addData("Auto Drive Active", isAutoDriveActive ? "YES" : "NO");
+        telemetry.addData("Intake Active", intakeActive ? "YES" : "NO");
+        telemetry.addData("Last Velocity", "%.0f ticks/s", lastLauncherVelocity);
         telemetry.addData("Trigger Button", "A Button (Gamepad1)");
 
         telemetry.update();
@@ -209,11 +225,14 @@ public class RobotBTeleOp extends OpMode {
             case IDLE:
                 holdingPoint = follower.getPose();
                 intake.setVelocity(OpModeConstants.INTAKE_TARGET_VELOCITY);
+                intakeActive = true;
                 if (shotRequested) launchState = LaunchState.SPIN_UP;
                 break;
             case SPIN_UP:
                 intake.setVelocity(0);
+                intakeActive = false;
                 launcher.setVelocity(flyWheelVelocity.getTargetVelocity());
+                lastLauncherVelocity = flyWheelVelocity.getTargetVelocity();
                 if (launcher.getVelocity() > OpModeConstants.LAUNCHER_MIN_VELOCITY) launchState = LaunchState.LAUNCH;
                 break;
             case LAUNCH:
@@ -226,6 +245,10 @@ public class RobotBTeleOp extends OpMode {
                 if (feederTimer.seconds() > OpModeConstants.FEED_TIME_SECONDS) {
                     leftFeeder.setPower(OpModeConstants.STOP_SPEED);
                     rightFeeder.setPower(OpModeConstants.STOP_SPEED);
+
+                    intake.setVelocity(OpModeConstants.INTAKE_TARGET_VELOCITY);
+                    intakeActive = true;
+
                     launchState = LaunchState.IDLE;
                     holdingPoint = null;
                 }

@@ -43,7 +43,8 @@ public class IntakeAutoRobotB extends OpMode {
 
     private enum AutoState {
         PEDRO_PATH1,
-        ALIGN_TO_TAG,
+        ALIGN_DISTANCE,
+        ALIGN_CENTER,
         LAUNCH,
         WAIT_FOR_LAUNCH,
         PEDRO_PATH2,
@@ -129,12 +130,18 @@ public class IntakeAutoRobotB extends OpMode {
 
             case PEDRO_PATH1:
                 follower.followPath(paths.Path1);
-                autoState = AutoState.ALIGN_TO_TAG;
+                autoState = AutoState.ALIGN_DISTANCE;
                 break;
 
-            case ALIGN_TO_TAG:
+            case ALIGN_DISTANCE:
                 if (autoAlignAlliance(29)) {
-                    follower.setTeleOpDrive(0,0,0,true);
+                    autoState = AutoState.ALIGN_CENTER;
+                }
+                break;
+
+            case ALIGN_CENTER:
+                int targetTagId = (alliance == Alliance.RED) ? 20 : 22;
+                if (centerAprilTag(targetTagId)) {
                     autoState = AutoState.LAUNCH;
                 }
                 break;
@@ -172,7 +179,7 @@ public class IntakeAutoRobotB extends OpMode {
             case PEDRO_PATH4:
                 intake.setVelocity(0);
                 follower.followPath(paths.Path4);
-                autoState = AutoState.ALIGN_TO_TAG;
+                autoState = AutoState.ALIGN_DISTANCE;
                 break;
 
             case PEDRO_PATH5:
@@ -190,7 +197,7 @@ public class IntakeAutoRobotB extends OpMode {
             case PEDRO_PATH7:
                 intake.setVelocity(0);
                 follower.followPath(paths.Path7);
-                autoState = AutoState.ALIGN_TO_TAG;
+                autoState = AutoState.ALIGN_DISTANCE;
                 break;
 
             case PEDRO_PATH8:
@@ -208,7 +215,7 @@ public class IntakeAutoRobotB extends OpMode {
             case PEDRO_PATH10:
                 intake.setVelocity(0);
                 follower.followPath(paths.Path10);
-                autoState = AutoState.ALIGN_TO_TAG;
+                autoState = AutoState.ALIGN_DISTANCE;
                 break;
 
             case PEDRO_PATH11:
@@ -271,6 +278,29 @@ public class IntakeAutoRobotB extends OpMode {
                 Math.abs(et) < 2.0;
     }
 
+    private boolean centerAprilTag(int tagId) {
+        List<AprilTagDetection> detections = aprilTagProcessor.getDetections();
+        if (detections == null) return false;
+
+        for (AprilTagDetection detection : detections) {
+            if (detection.id == tagId) {
+                double bearing = detection.ftcPose.bearing;
+
+                if (Math.abs(bearing) < 1.5) {
+                    follower.setTeleOpDrive(0, 0, 0, true);
+                    return true;
+                }
+
+                double power = -bearing * 0.02;
+                power = Math.max(-0.25, Math.min(0.25, power));
+
+                follower.setTeleOpDrive(0, 0, power, true);
+                return false;
+            }
+        }
+
+        return false;
+    }
 
     boolean launch(boolean requested) {
         switch (launchState) {
