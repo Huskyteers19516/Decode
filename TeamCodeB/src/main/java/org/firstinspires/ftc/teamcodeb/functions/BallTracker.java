@@ -1,7 +1,6 @@
 package org.firstinspires.ftc.teamcodeb.functions;
 
 import android.graphics.Canvas;
-import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.internal.camera.calibration.CameraCalibration;
 import org.firstinspires.ftc.vision.VisionProcessor;
 import org.opencv.core.*;
@@ -9,11 +8,10 @@ import org.opencv.imgproc.Imgproc;
 import java.util.ArrayList;
 import java.util.List;
 
-public class BallDistance implements VisionProcessor {
+public class BallTracker implements VisionProcessor {
 
     private volatile double distanceInches = 0;
     private volatile double offsetX = 0;
-    private volatile double centerX = 0;
     private volatile boolean ballFound = false;
 
     private final double ballRealSize;
@@ -23,12 +21,7 @@ public class BallDistance implements VisionProcessor {
     private Mat hsv = new Mat();
     private Mat mask = new Mat();
 
-    public BallDistance(double ballDiameter) {
-        this.ballRealSize = ballDiameter;
-    }
-
-
-    public BallDistance(WebcamName webcamName, double ballDiameter) {
+    public BallTracker(double ballDiameter) {
         this.ballRealSize = ballDiameter;
     }
 
@@ -64,24 +57,20 @@ public class BallDistance implements VisionProcessor {
             Point center = new Point();
             float[] radius = new float[1];
             MatOfPoint2f contour2f = new MatOfPoint2f(largestContour.toArray());
-
             Imgproc.minEnclosingCircle(contour2f, center, radius);
 
-            centerX = center.x;
             offsetX = (center.x - (frameWidth / 2.0)) / (frameWidth / 2.0);
-
             double pixelDiameter = radius[0] * 2;
+
             if (pixelDiameter > 5) {
                 distanceInches = (ballRealSize * focalLength) / pixelDiameter;
                 ballFound = true;
             }
-
             Imgproc.circle(frame, center, (int)radius[0], new Scalar(0, 255, 0), 2);
         } else {
             ballFound = false;
             distanceInches = 0;
             offsetX = 0;
-            centerX = frameWidth / 2.0;
         }
 
         hierarchy.release();
@@ -94,5 +83,4 @@ public class BallDistance implements VisionProcessor {
     public boolean isBallFound() { return ballFound; }
     public double getDistance() { return distanceInches; }
     public double getXOffset() { return offsetX; }
-    public double getX() { return centerX; }
 }

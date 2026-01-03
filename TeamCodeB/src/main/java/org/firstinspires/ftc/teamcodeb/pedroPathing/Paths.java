@@ -15,7 +15,7 @@ public class Paths {
 
     private final Follower follower;
     private final int routeSerial;
-
+    public Paths testingPath;
     public PathChain Path1, Path2, Path3, Path4, Path5, Path6, Path7, Path8, Path9, Path10, Path11;
 
     public Paths(Follower follower, int routeSerial) {
@@ -23,6 +23,7 @@ public class Paths {
         this.routeSerial = routeSerial;
         buildPaths();
     }
+
 
     private void buildPaths() {
 
