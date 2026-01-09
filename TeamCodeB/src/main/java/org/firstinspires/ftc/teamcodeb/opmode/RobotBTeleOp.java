@@ -15,6 +15,8 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Position;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 import org.firstinspires.ftc.teamcodeb.OpModeConstants;
+import org.firstinspires.ftc.teamcodeb.functions.AngleChanger;
+import org.firstinspires.ftc.teamcodeb.functions.DistanceTracker;
 import org.firstinspires.ftc.teamcodeb.pedroPathing.Constants;
 import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
@@ -23,13 +25,17 @@ import org.firstinspires.ftc.teamcodeb.functions.FlyWheelVelocity;
 import org.firstinspires.ftc.teamcodeb.functions.CenterAprilTag;
 import org.firstinspires.ftc.teamcodeb.functions.DistanceAdjust;
 import java.util.List;
-
+import org.firstinspires.ftc.teamcodeb.functions.LauncherController;
+import org.firstinspires.ftc.teamcodeb.functions.BallTracker;
+import com.qualcomm.robotcore.hardware.Servo;
 @Configurable
 @TeleOp
 public class RobotBTeleOp extends OpMode {
     public static final Pose TARGET_P1 = new Pose(122.238, 121.003, Math.toRadians(45));
     public static final Pose TARGET_P2 = new Pose(122.238, 121.003, Math.toRadians(45));
-
+    private LauncherController launcherController;
+    private DistanceTracker distanceTracker;
+    private AngleChanger angleChanger;
     private AprilTagProcessor aprilTagProcessor;
     private VisionPortal visionPortal;
     public Follower follower;
@@ -38,7 +44,10 @@ public class RobotBTeleOp extends OpMode {
 
     public DcMotorEx launcher;
     public DcMotorEx intake;
-    public CRServo leftFeeder, rightFeeder;
+    public CRServo FeederOne;
+    public CRServo FeederTwo;
+    public CRServo FeederThree;
+    public Servo AngleChanger;
     public ElapsedTime feederTimer = new ElapsedTime();
     private DistanceAdjust distanceAdjust;
     private FlyWheelVelocity flyWheelVelocity;
@@ -59,6 +68,11 @@ public class RobotBTeleOp extends OpMode {
     private double lastLauncherVelocity = 0;
     private boolean intakeActive = false;
 
+    public double targetRPM = launcherController.getLastTargetRPM();
+    public double currentRPM = launcher.getVelocity();
+    public double anglePos = angleChanger.getPosition();
+    public boolean readyToShoot = launcherController.isReadyToShoot(50);
+
     @Override
     public void init() {
         follower = Constants.createFollower(hardwareMap);
@@ -68,8 +82,10 @@ public class RobotBTeleOp extends OpMode {
         telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
 
         launcher = hardwareMap.get(DcMotorEx.class, "launcher");
-        leftFeeder = hardwareMap.get(CRServo.class, "left_feeder");
-        rightFeeder = hardwareMap.get(CRServo.class, "right_feeder");
+        FeederOne = hardwareMap.get(CRServo.class, "Feeder_One");
+        FeederTwo = hardwareMap.get(CRServo.class, "Feeder_Two");
+        FeederThree = hardwareMap.get(CRServo.class, "Feeder_Three");
+        AngleChanger = hardwareMap.get(Servo.class,"Angle_Changer");
         intake = hardwareMap.get(DcMotorEx.class,"intake");
 
         WebcamName camera = hardwareMap.get(WebcamName.class, "Webcam 1");
@@ -86,9 +102,10 @@ public class RobotBTeleOp extends OpMode {
         launcher.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         launcher.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(300, 0, 0, 10));
 
-        leftFeeder.setDirection(DcMotorSimple.Direction.REVERSE);
-        leftFeeder.setPower(OpModeConstants.STOP_SPEED);
-        rightFeeder.setPower(OpModeConstants.STOP_SPEED);
+
+        FeederOne.setPower(OpModeConstants.STOP_SPEED);
+        FeederTwo.setPower(OpModeConstants.STOP_SPEED);
+        FeederThree.setPower(OpModeConstants.STOP_SPEED);
 
         telemetry.update();
     }
@@ -122,6 +139,11 @@ public class RobotBTeleOp extends OpMode {
 
     @Override
     public void loop() {
+        int targetTagId = (alliance == Alliance.RED) ? 20 : 22;
+
+        launcherController.updateLauncher(targetTagId);
+
+        boolean ready = launcherController.isReadyToShoot(50);
         if (gamepad1.xWasPressed()) intake.setVelocity(OpModeConstants.INTAKE_TARGET_VELOCITY);
         if (gamepad1.leftBumperWasPressed()) slowMode = !slowMode;
         if (gamepad1.startWasPressed()) follower.setPose(new Pose());
@@ -236,15 +258,17 @@ public class RobotBTeleOp extends OpMode {
                 if (launcher.getVelocity() > OpModeConstants.LAUNCHER_MIN_VELOCITY) launchState = LaunchState.LAUNCH;
                 break;
             case LAUNCH:
-                leftFeeder.setPower(OpModeConstants.FULL_SPEED);
-                rightFeeder.setPower(OpModeConstants.FULL_SPEED);
+                FeederOne.setPower(OpModeConstants.FULL_SPEED);
+                FeederTwo.setPower(OpModeConstants.FULL_SPEED);
+                FeederThree.setPower(OpModeConstants.FULL_SPEED);
                 feederTimer.reset();
                 launchState = LaunchState.LAUNCHING;
                 break;
             case LAUNCHING:
                 if (feederTimer.seconds() > OpModeConstants.FEED_TIME_SECONDS) {
-                    leftFeeder.setPower(OpModeConstants.STOP_SPEED);
-                    rightFeeder.setPower(OpModeConstants.STOP_SPEED);
+                    FeederOne.setPower(OpModeConstants.STOP_SPEED);
+                    FeederTwo.setPower(OpModeConstants.STOP_SPEED);
+                    FeederThree.setPower(OpModeConstants.STOP_SPEED);
 
                     intake.setVelocity(OpModeConstants.INTAKE_TARGET_VELOCITY);
                     intakeActive = true;

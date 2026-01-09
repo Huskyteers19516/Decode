@@ -14,7 +14,6 @@ import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
-import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
@@ -24,106 +23,125 @@ import org.firstinspires.ftc.teamcodeb.functions.DistanceAdjust;
 import org.firstinspires.ftc.teamcodeb.pedroPathing.Constants;
 import org.firstinspires.ftc.teamcodeb.pedroPathing.TestingPaths;
 import org.firstinspires.ftc.vision.VisionPortal;
+import org.firstinspires.ftc.vision.VisionProcessor;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 
 import java.util.List;
 
-@Autonomous(name = "RobotB Auto Testing", group = "Test")
-public class RobotBAutoTestingVersion extends OpMode {
+@Autonomous(name = "Far Shooting Testing Auto", group = "Auto")
+public class FarShootingTestingAuto extends OpMode {
+
 
     private ElapsedTime shotTimer = new ElapsedTime();
     private ElapsedTime feederTimer = new ElapsedTime();
     private ElapsedTime autoTimer = new ElapsedTime();
     private ElapsedTime collectTimer = new ElapsedTime();
 
-    private DcMotorEx launcher;
-    private DcMotorEx intake;
-    private CRServo FeederOne;
-    private CRServo FeederTwo;
-    private CRServo FeederThree;
-    private Servo AngleChanger;
 
-    public DistanceAdjust distanceAdjust;
-    public CenterAprilTag centerAprilTag;
+    private DcMotorEx launcher, intake;
+    private CRServo leftFeeder, rightFeeder;
+
+
     private AprilTagProcessor aprilTagProcessor;
     private VisionPortal frontVisionPortal;
-    private BallProcessor rearProcessor;
     private VisionPortal rearVisionPortal;
+    private BallProcessor rearProcessor;
 
-    private LaunchState launchState;
-    public Alliance alliance = Alliance.RED;
+
+    private Follower follower;
+    private DistanceAdjust distanceAdjust;
+    private CenterAprilTag centerAprilTag;
     private TestingPaths testingPaths;
 
-    private enum AutoState {
-        TIMER,PEDRO_PATH1, ALIGN, PREPARE, LAUNCH, WAIT_FOR_LAUNCH,
-        PEDRO_PATH2, PEDRO_PATH3, SEARCH_FOR_BALLS, APPROACH_BALL,
-        COLLECT_BALL, CHECK_BALL_COUNT, COMPLETE,PEDRO_PATH4,PEDRO_PATH5,
 
-    }
+    private AutoState autoState = AutoState.PEDRO_PATH1;
+    private LaunchState launchState = LaunchState.IDLE;
+    private Alliance alliance = Alliance.RED;
 
-    private AutoState autoState;
-    private Follower follower;
-
-    private int routineOfShooting = 0;
     private int ballCount = 0;
     private final int TARGET_BALL_COUNT = 3;
     private boolean collectInitialized = false;
-    public int routine = 0;
+    private int routine = 0;
+
+
+
+    private enum AutoState {
+        PEDRO_PATH1,
+        ALIGN,
+        PREPARE,
+        LAUNCH,
+        WAIT_FOR_LAUNCH,
+        PEDRO_PATH2,
+        PEDRO_PATH3,
+        SEARCH_FOR_BALLS,
+        APPROACH_BALL,
+        COLLECT_BALL,
+        CHECK_BALL_COUNT,
+        PEDRO_PATH4,
+        PEDRO_PATH5,
+        COMPLETE
+    }
+
+    private enum Alliance { RED, BLUE }
+
+    private enum LaunchState { IDLE, PREPARE, LAUNCH }
+
+
 
     @Override
     public void init() {
         launcher = hardwareMap.get(DcMotorEx.class, "launcher");
-        FeederOne = hardwareMap.get(CRServo.class, "feederOne");
-        FeederTwo = hardwareMap.get(CRServo.class, "feederTwo");
-        FeederThree= hardwareMap.get(CRServo.class, "feederThree");
-        AngleChanger= hardwareMap.get(Servo.class,"AngleChanger");
         intake = hardwareMap.get(DcMotorEx.class, "intake");
+        leftFeeder = hardwareMap.get(CRServo.class, "left_feeder");
+        rightFeeder = hardwareMap.get(CRServo.class, "right_feeder");
 
         launcher.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
         launcher.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
-        launcher.setPIDFCoefficients(DcMotorEx.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(OpModeConstants.PID_P, OpModeConstants.PID_I, OpModeConstants.PID_D, OpModeConstants.PID_F));
+        launcher.setPIDFCoefficients(
+                DcMotorEx.RunMode.RUN_USING_ENCODER,
+                new PIDFCoefficients(
+                        OpModeConstants.PID_P,
+                        OpModeConstants.PID_I,
+                        OpModeConstants.PID_D,
+                        OpModeConstants.PID_F
+                )
+        );
 
-
-
-
-
-        int[] myPortalsList = VisionPortal.makeMultiPortalView(2, VisionPortal.MultiPortalLayout.HORIZONTAL);
+        leftFeeder.setDirection(DcMotorSimple.Direction.REVERSE);
 
         aprilTagProcessor = AprilTagProcessor.easyCreateWithDefaults();
         frontVisionPortal = new VisionPortal.Builder()
                 .setCamera(hardwareMap.get(WebcamName.class, "Webcam 1"))
                 .addProcessor(aprilTagProcessor)
                 .setCameraResolution(new Size(640, 480))
-                .setLiveViewContainerId(myPortalsList[0])
                 .build();
 
         rearProcessor = new BallProcessor(5.0);
         rearVisionPortal = new VisionPortal.Builder()
                 .setCamera(hardwareMap.get(WebcamName.class, "Webcam 2"))
-                .addProcessor(rearProcessor.getProcessor())
-                .setCameraResolution(new Size(640, 480))
-                .setLiveViewContainerId(myPortalsList[1])
+                .addProcessor(rearProcessor)
+                .setCameraResolution(new Size(320, 240))
                 .build();
 
         follower = Constants.createFollower(hardwareMap);
         distanceAdjust = new DistanceAdjust(follower, gamepad1, aprilTagProcessor);
         centerAprilTag = new CenterAprilTag(follower, aprilTagProcessor);
 
-        autoState = AutoState.PEDRO_PATH1;
-        launchState = LaunchState.IDLE;
         activateFrontCamera();
     }
 
     @Override
     public void init_loop() {
+//        testingPaths = new TestingPaths(follower, 0);
+
         if (gamepad1.b) {
             alliance = Alliance.RED;
-            testingPaths = new TestingPaths(follower,2);
+//            testingPaths = new TestingPaths(follower, 2);
             follower.setStartingPose(START_P1);
         } else if (gamepad1.x) {
             alliance = Alliance.BLUE;
-            testingPaths = new TestingPaths(follower, 1);
+//            testingPaths = new TestingPaths(follower, 1);
             follower.setStartingPose(START_P2);
         }
     }
@@ -131,15 +149,15 @@ public class RobotBAutoTestingVersion extends OpMode {
     @Override
     public void start() {
         autoTimer.reset();
-
     }
+
+
 
     @Override
     public void loop() {
         follower.update();
         double t = autoTimer.seconds();
         switch (autoState) {
-
 
             case PEDRO_PATH1:
                 launcher.setVelocity(LAUNCHER_TARGET_VELOCITY);
@@ -148,43 +166,14 @@ public class RobotBAutoTestingVersion extends OpMode {
                 break;
 
             case ALIGN:
-             {
                 int targetId = (alliance == Alliance.RED) ? 20 : 22;
-
-
-                List<AprilTagDetection> detections = aprilTagProcessor.getDetections();
-
-                boolean tagVisible = false;
-                if (detections != null) {
-                    for (AprilTagDetection d : detections) {
-                        if (d.id == targetId) {
-                            tagVisible = true;
-                            break;
-                        }
-                    }
-                }
-
-
-                if (tagVisible) {
-                    centerAprilTag.start();
-
-                    boolean centered = centerAprilTag.update(targetId, 0.02, 1.5);
-                    boolean distanceOk = autoAlignAlliance(29);
-
-                    if (centered && distanceOk) {
-                        follower.setTeleOpDrive(0, 0, 0, true);
-                        autoState = AutoState.PREPARE;
-                    }
-                }
-
-                else {
-                    follower.setTeleOpDrive(0, 0, 0.5, true);
+                centerAprilTag.start();
+                if (centerAprilTag.update(targetId, 0.02, 1.5) && autoAlignAlliance(29)) {
+                    autoState = AutoState.PREPARE;
                 }
                 break;
-            }
 
             case PREPARE:
-                launcher.setVelocity(LAUNCHER_TARGET_VELOCITY);
                 if (launcher.getVelocity() > OpModeConstants.LAUNCHER_MIN_VELOCITY) {
                     autoState = AutoState.LAUNCH;
                 }
@@ -198,13 +187,8 @@ public class RobotBAutoTestingVersion extends OpMode {
 
             case WAIT_FOR_LAUNCH:
                 if (launch(false)) {
-                    routineOfShooting++;
                     activateRearCamera();
-                    if(t>20){
-                        autoState= AutoState.PEDRO_PATH5;
-                    }else{
-                        autoState = AutoState.PEDRO_PATH2;
-                    }
+                    autoState = AutoState.PEDRO_PATH2;
                 }
                 break;
 
@@ -228,25 +212,19 @@ public class RobotBAutoTestingVersion extends OpMode {
                 break;
 
             case APPROACH_BALL:
-                if (!rearProcessor.isBallFound()) {
-                    autoState = AutoState.SEARCH_FOR_BALLS;
+                double dist = rearProcessor.getDistance();
+                double offset = rearProcessor.getNormalizedOffsetX();
+                if (dist < 7.5) {
+                    follower.setTeleOpDrive(0, 0, 0, true);
+                    autoState = AutoState.COLLECT_BALL;
                 } else {
-                    double dist = rearProcessor.getDistance();
-                    double offset = rearProcessor.getNormalizedOffsetX();
-                    if (dist < 7.5) {
-                        follower.setTeleOpDrive(0, 0, 0, true);
-                        autoState = AutoState.COLLECT_BALL;
-                    } else {
-                        double drive = (dist > 15) ? 0.4 : 0.25;
-                        follower.setTeleOpDrive(drive, 0, offset * 0.35, true);
-                    }
+                    follower.setTeleOpDrive(dist > 15 ? 0.4 : 0.25, 0, offset * 0.35, true);
                 }
                 break;
 
             case COLLECT_BALL:
                 if (!collectInitialized) {
                     collectTimer.reset();
-                    intake.setVelocity(INTAKE_TARGET_VELOCITY);
                     collectInitialized = true;
                 }
                 if (collectTimer.milliseconds() > 1200) {
@@ -258,7 +236,6 @@ public class RobotBAutoTestingVersion extends OpMode {
 
             case CHECK_BALL_COUNT:
                 if (ballCount >= TARGET_BALL_COUNT) {
-                    intake.setVelocity(0);
                     autoState = AutoState.PEDRO_PATH4;
                 } else {
                     autoState = AutoState.SEARCH_FOR_BALLS;
@@ -268,12 +245,12 @@ public class RobotBAutoTestingVersion extends OpMode {
             case PEDRO_PATH4:
                 follower.followPath(testingPaths.Path4);
                 autoState = AutoState.LAUNCH;
-                routine+=1;
+                routine++;
                 break;
 
             case PEDRO_PATH5:
                 follower.followPath(testingPaths.Path5);
-                autoState= AutoState.COMPLETE;
+                autoState = AutoState.COMPLETE;
                 break;
 
             case COMPLETE:
@@ -282,27 +259,34 @@ public class RobotBAutoTestingVersion extends OpMode {
         }
 
         telemetry.addData("State", autoState);
-        telemetry.addData("Ball Found", rearProcessor.isBallFound());
-        telemetry.addData("Ball Dist", rearProcessor.getDistance());
+        telemetry.addData("Ball Count", ballCount);
         telemetry.update();
     }
+
+
 
     private boolean autoAlignAlliance(double targetDist) {
         List<AprilTagDetection> detections = aprilTagProcessor.getDetections();
         if (detections == null || detections.isEmpty()) return false;
+
         AprilTagDetection tag = null;
         for (AprilTagDetection d : detections) {
             if (alliance == Alliance.RED && d.id == 20) tag = d;
             if (alliance == Alliance.BLUE && d.id == 22) tag = d;
         }
         if (tag == null) return false;
+
         double ef = tag.ftcPose.range - targetDist;
         double es = -tag.ftcPose.x;
         double et = -tag.ftcPose.yaw;
-        double pf = Math.max(-0.25, Math.min(0.25, ef * 0.03));
-        double ps = Math.max(-0.25, Math.min(0.25, es * 0.03));
-        double pt = Math.max(-0.20, Math.min(0.20, et * 0.03));
-        follower.setTeleOpDrive(pf, ps, pt, true);
+
+        follower.setTeleOpDrive(
+                Math.max(-0.25, Math.min(0.25, ef * 0.03)),
+                Math.max(-0.25, Math.min(0.25, es * 0.03)),
+                Math.max(-0.20, Math.min(0.20, et * 0.03)),
+                true
+        );
+
         return Math.abs(ef) < 0.8 && Math.abs(es) < 0.8 && Math.abs(et) < 1.5;
     }
 
@@ -314,21 +298,21 @@ public class RobotBAutoTestingVersion extends OpMode {
                     shotTimer.reset();
                 }
                 break;
+
             case PREPARE:
                 launcher.setVelocity(LAUNCHER_TARGET_VELOCITY);
                 if (launcher.getVelocity() > OpModeConstants.LAUNCHER_MIN_VELOCITY) {
                     launchState = LaunchState.LAUNCH;
-                    FeederOne.setPower(1);
-                    FeederTwo.setPower(1);
-                    FeederThree.setPower(1);
+                    leftFeeder.setPower(1);
+                    rightFeeder.setPower(1);
                     feederTimer.reset();
                 }
                 break;
+
             case LAUNCH:
                 if (feederTimer.seconds() > OpModeConstants.FEED_TIME) {
-                    FeederOne.setPower(0);
-                    FeederTwo.setPower(0);
-                    FeederThree.setPower(0);
+                    leftFeeder.setPower(0);
+                    rightFeeder.setPower(0);
                     if (shotTimer.seconds() > OpModeConstants.TIME_BETWEEN_SHOTS) {
                         launchState = LaunchState.IDLE;
                         return true;
@@ -352,24 +336,22 @@ public class RobotBAutoTestingVersion extends OpMode {
     private void stopAllMotors() {
         launcher.setVelocity(0);
         intake.setVelocity(0);
-        FeederOne.setPower(0);
-        FeederTwo.setPower(0);
-        FeederThree.setPower(0);
+        leftFeeder.setPower(0);
+        rightFeeder.setPower(0);
         follower.setTeleOpDrive(0, 0, 0, true);
     }
 
-    class BallProcessor extends org.firstinspires.ftc.teamcodeb.functions.BallDistance {
+
+
+    class BallProcessor extends org.firstinspires.ftc.teamcodeb.functions.BallDistance
+            implements VisionProcessor {
+
         public BallProcessor(double ballDiameter) {
             super(hardwareMap.get(WebcamName.class, "Webcam 2"), ballDiameter);
         }
+
         public double getNormalizedOffsetX() {
             return (getX() - 160) / 160.0;
         }
-        public org.firstinspires.ftc.vision.VisionProcessor getProcessor() {
-            return (org.firstinspires.ftc.vision.VisionProcessor) this;
-        }
     }
-
-    private enum Alliance { RED, BLUE }
-    private enum LaunchState { IDLE, PREPARE, LAUNCH }
 }

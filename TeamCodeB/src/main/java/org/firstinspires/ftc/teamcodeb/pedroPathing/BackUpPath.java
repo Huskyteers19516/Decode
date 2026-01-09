@@ -5,17 +5,16 @@ import com.pedropathing.geometry.BezierCurve;
 import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.PathChain;
-import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
 import org.firstinspires.ftc.teamcodeb.opmode.RobotBAutoTestingVersion;
 
+public class BackUpPath {
 
-
-    public class TestingPaths  {
+    public class TestingPaths extends RobotBAutoTestingVersion {
 
         private final Follower follower;
         private final int routeSerial;
-        public PathChain Path1,Path2,Path3,Path4,Path5;
+        public PathChain Path1, Path2,Path3,Path4,Path5;
         public TestingPaths(Follower follower, int routeSerial) {
             this.follower = follower;
             this.routeSerial = routeSerial;
@@ -24,11 +23,7 @@ import org.firstinspires.ftc.teamcodeb.opmode.RobotBAutoTestingVersion;
 
         private void buildPaths() {
             //for blue
-            System.out.println("Building paths");
-
             if(routeSerial==1){
-                System.out.println("Building paths 1");
-
                 Path1 = follower.pathBuilder()
                         .addPath(new BezierLine(new Pose(follower.getPose().getX(),follower.getPose().getY()), new Pose(36.712, 106.78)))
                         .setConstantHeadingInterpolation(Math.toRadians(135))
@@ -78,7 +73,6 @@ import org.firstinspires.ftc.teamcodeb.opmode.RobotBAutoTestingVersion;
                         .build();
 
             }else if(routeSerial ==2){
-                System.out.println("Building paths 2");
                 //for red
                 Path1 = follower.pathBuilder()
                         .addPath(new BezierLine(new Pose(follower.getPose().getX(),follower.getPose().getY()), new Pose(108.79, 108.62)))
@@ -136,4 +130,4 @@ import org.firstinspires.ftc.teamcodeb.opmode.RobotBAutoTestingVersion;
 
         }
     }
-
+}
