@@ -6,13 +6,10 @@ import static org.firstinspires.ftc.teamcodeb.OpModeConstants.START_P1;
 import static org.firstinspires.ftc.teamcodeb.OpModeConstants.START_P2;
 
 import android.util.Size;
-
 import com.pedropathing.follower.Follower;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
-import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -21,6 +18,7 @@ import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.teamcodeb.OpModeConstants;
 import org.firstinspires.ftc.teamcodeb.functions.CenterAprilTag;
 import org.firstinspires.ftc.teamcodeb.functions.DistanceAdjust;
+import org.firstinspires.ftc.teamcodeb.functions.FeederSequence;
 import org.firstinspires.ftc.teamcodeb.pedroPathing.Constants;
 import org.firstinspires.ftc.teamcodeb.pedroPathing.TestingPaths;
 import org.firstinspires.ftc.vision.VisionPortal;
@@ -32,17 +30,16 @@ import java.util.List;
 @Autonomous(name = "RobotB Auto Testing", group = "Test")
 public class RobotBAutoTestingVersion extends OpMode {
 
-    private ElapsedTime shotTimer = new ElapsedTime();
-    private ElapsedTime feederTimer = new ElapsedTime();
     private ElapsedTime autoTimer = new ElapsedTime();
     private ElapsedTime collectTimer = new ElapsedTime();
 
     private DcMotorEx launcher;
     private DcMotorEx intake;
-    private CRServo FeederOne;
-    private CRServo FeederTwo;
-    private CRServo FeederThree;
+    private Servo FeederA;
+    private Servo FeederB;
+    private Servo FeederC;
     private Servo AngleChanger;
+    private FeederSequence feederSequence;
 
     public DistanceAdjust distanceAdjust;
     public CenterAprilTag centerAprilTag;
@@ -56,37 +53,33 @@ public class RobotBAutoTestingVersion extends OpMode {
     private TestingPaths testingPaths;
 
     private enum AutoState {
-        TIMER,PEDRO_PATH1, ALIGN, PREPARE, LAUNCH, WAIT_FOR_LAUNCH,
+        PEDRO_PATH1, ALIGN, PREPARE, LAUNCH, WAIT_FOR_LAUNCH,
         PEDRO_PATH2, PEDRO_PATH3, SEARCH_FOR_BALLS, APPROACH_BALL,
-        COLLECT_BALL, CHECK_BALL_COUNT, COMPLETE,PEDRO_PATH4,PEDRO_PATH5,
-
+        COLLECT_BALL, CHECK_BALL_COUNT, COMPLETE, PEDRO_PATH4, PEDRO_PATH5,
+        GET_OFF_LINE
     }
 
     private AutoState autoState;
     private Follower follower;
 
-    private int routineOfShooting = 0;
     private int ballCount = 0;
     private final int TARGET_BALL_COUNT = 3;
     private boolean collectInitialized = false;
-    public int routine = 0;
 
     @Override
     public void init() {
         launcher = hardwareMap.get(DcMotorEx.class, "launcher");
-        FeederOne = hardwareMap.get(CRServo.class, "feederOne");
-        FeederTwo = hardwareMap.get(CRServo.class, "feederTwo");
-        FeederThree= hardwareMap.get(CRServo.class, "feederThree");
-        AngleChanger= hardwareMap.get(Servo.class,"AngleChanger");
         intake = hardwareMap.get(DcMotorEx.class, "intake");
+        FeederA = hardwareMap.get(Servo.class, "feederA");
+        FeederB = hardwareMap.get(Servo.class, "feederB");
+        FeederC = hardwareMap.get(Servo.class, "feederC");
+        AngleChanger = hardwareMap.get(Servo.class, "AngleChanger");
+
+        feederSequence = new FeederSequence(FeederA, FeederB, FeederC);
 
         launcher.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
         launcher.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
         launcher.setPIDFCoefficients(DcMotorEx.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(OpModeConstants.PID_P, OpModeConstants.PID_I, OpModeConstants.PID_D, OpModeConstants.PID_F));
-
-
-
-
 
         int[] myPortalsList = VisionPortal.makeMultiPortalView(2, VisionPortal.MultiPortalLayout.HORIZONTAL);
 
@@ -94,7 +87,7 @@ public class RobotBAutoTestingVersion extends OpMode {
         frontVisionPortal = new VisionPortal.Builder()
                 .setCamera(hardwareMap.get(WebcamName.class, "Webcam 1"))
                 .addProcessor(aprilTagProcessor)
-                .setCameraResolution(new Size(640, 480))
+                .setCameraResolution(new Size(1280, 720))
                 .setLiveViewContainerId(myPortalsList[0])
                 .build();
 
@@ -119,7 +112,7 @@ public class RobotBAutoTestingVersion extends OpMode {
     public void init_loop() {
         if (gamepad1.b) {
             alliance = Alliance.RED;
-            testingPaths = new TestingPaths(follower,2);
+            testingPaths = new TestingPaths(follower, 2);
             follower.setStartingPose(START_P1);
         } else if (gamepad1.x) {
             alliance = Alliance.BLUE;
@@ -131,16 +124,21 @@ public class RobotBAutoTestingVersion extends OpMode {
     @Override
     public void start() {
         autoTimer.reset();
-
+        feederSequence.resetSequence();
     }
 
     @Override
     public void loop() {
         follower.update();
+        feederSequence.update();
+
         double t = autoTimer.seconds();
+
+        if (t >= 25.0 && autoState != AutoState.GET_OFF_LINE && autoState != AutoState.COMPLETE) {
+            autoState = AutoState.GET_OFF_LINE;
+        }
+
         switch (autoState) {
-
-
             case PEDRO_PATH1:
                 launcher.setVelocity(LAUNCHER_TARGET_VELOCITY);
                 follower.followPath(testingPaths.Path1);
@@ -148,12 +146,8 @@ public class RobotBAutoTestingVersion extends OpMode {
                 break;
 
             case ALIGN:
-             {
                 int targetId = (alliance == Alliance.RED) ? 20 : 22;
-
-
                 List<AprilTagDetection> detections = aprilTagProcessor.getDetections();
-
                 boolean tagVisible = false;
                 if (detections != null) {
                     for (AprilTagDetection d : detections) {
@@ -164,24 +158,18 @@ public class RobotBAutoTestingVersion extends OpMode {
                     }
                 }
 
-
                 if (tagVisible) {
                     centerAprilTag.start();
-
                     boolean centered = centerAprilTag.update(targetId, 0.02, 1.5);
                     boolean distanceOk = autoAlignAlliance(29);
-
                     if (centered && distanceOk) {
                         follower.setTeleOpDrive(0, 0, 0, true);
                         autoState = AutoState.PREPARE;
                     }
-                }
-
-                else {
+                } else {
                     follower.setTeleOpDrive(0, 0, 0.5, true);
                 }
                 break;
-            }
 
             case PREPARE:
                 launcher.setVelocity(LAUNCHER_TARGET_VELOCITY);
@@ -198,39 +186,31 @@ public class RobotBAutoTestingVersion extends OpMode {
 
             case WAIT_FOR_LAUNCH:
                 if (launch(false)) {
-                    routineOfShooting++;
+                    ballCount = 0;
                     activateRearCamera();
-                    if(t>20){
-                        autoState= AutoState.PEDRO_PATH5;
-                    }else{
-                        autoState = AutoState.PEDRO_PATH2;
-                    }
+                    autoState = (t > 20) ? AutoState.PEDRO_PATH5 : AutoState.PEDRO_PATH2;
                 }
                 break;
 
             case PEDRO_PATH2:
-                follower.followPath(testingPaths.Path2);
+                if (!follower.isBusy()) follower.followPath(testingPaths.Path2);
                 if (!follower.isBusy()) autoState = AutoState.PEDRO_PATH3;
                 break;
 
             case PEDRO_PATH3:
-                follower.followPath(testingPaths.Path3);
+                if (!follower.isBusy()) follower.followPath(testingPaths.Path3);
                 if (!follower.isBusy()) autoState = AutoState.SEARCH_FOR_BALLS;
                 break;
 
             case SEARCH_FOR_BALLS:
                 intake.setVelocity(INTAKE_TARGET_VELOCITY);
-                if (rearProcessor.isBallFound()) {
-                    autoState = AutoState.APPROACH_BALL;
-                } else {
-                    follower.setTeleOpDrive(0, 0, 0.25, true);
-                }
+                if (rearProcessor.isBallFound()) autoState = AutoState.APPROACH_BALL;
+                else follower.setTeleOpDrive(0, 0, 0.25, true);
                 break;
 
             case APPROACH_BALL:
-                if (!rearProcessor.isBallFound()) {
-                    autoState = AutoState.SEARCH_FOR_BALLS;
-                } else {
+                if (!rearProcessor.isBallFound()) autoState = AutoState.SEARCH_FOR_BALLS;
+                else {
                     double dist = rearProcessor.getDistance();
                     double offset = rearProcessor.getNormalizedOffsetX();
                     if (dist < 7.5) {
@@ -254,6 +234,11 @@ public class RobotBAutoTestingVersion extends OpMode {
                     collectInitialized = false;
                     autoState = AutoState.CHECK_BALL_COUNT;
                 }
+                if (collectTimer.seconds() > 10.0 && ballCount > 0) {
+                    collectInitialized = false;
+                    intake.setVelocity(0);
+                    autoState = AutoState.PEDRO_PATH4;
+                }
                 break;
 
             case CHECK_BALL_COUNT:
@@ -267,24 +252,54 @@ public class RobotBAutoTestingVersion extends OpMode {
 
             case PEDRO_PATH4:
                 follower.followPath(testingPaths.Path4);
-                autoState = AutoState.LAUNCH;
-                routine+=1;
+                autoState = AutoState.PEDRO_PATH5;
                 break;
 
             case PEDRO_PATH5:
                 follower.followPath(testingPaths.Path5);
-                autoState= AutoState.COMPLETE;
+                autoState = AutoState.ALIGN;
+                break;
+
+            case GET_OFF_LINE:
+                intake.setVelocity(0);
+                launcher.setVelocity(0);
+                follower.followPath(testingPaths.Path4);
+                autoState = AutoState.COMPLETE;
                 break;
 
             case COMPLETE:
                 stopAllMotors();
+                telemetry.addData("FINAL BALL COUNT", ballCount);
                 break;
         }
 
         telemetry.addData("State", autoState);
-        telemetry.addData("Ball Found", rearProcessor.isBallFound());
-        telemetry.addData("Ball Dist", rearProcessor.getDistance());
+        telemetry.addData("Balls Inside", ballCount);
         telemetry.update();
+    }
+
+    private boolean launch(boolean requested) {
+        switch (launchState) {
+            case IDLE:
+                if (requested) {
+                    launchState = LaunchState.PREPARE;
+                }
+                break;
+            case PREPARE:
+                launcher.setVelocity(LAUNCHER_TARGET_VELOCITY);
+                if (launcher.getVelocity() > OpModeConstants.LAUNCHER_MIN_VELOCITY) {
+                    feederSequence.trigger();
+                    launchState = LaunchState.LAUNCH;
+                }
+                break;
+            case LAUNCH:
+                if (!feederSequence.isBusy()) {
+                    launchState = LaunchState.IDLE;
+                    return true;
+                }
+                break;
+        }
+        return false;
     }
 
     private boolean autoAlignAlliance(double targetDist) {
@@ -306,39 +321,6 @@ public class RobotBAutoTestingVersion extends OpMode {
         return Math.abs(ef) < 0.8 && Math.abs(es) < 0.8 && Math.abs(et) < 1.5;
     }
 
-    private boolean launch(boolean requested) {
-        switch (launchState) {
-            case IDLE:
-                if (requested) {
-                    launchState = LaunchState.PREPARE;
-                    shotTimer.reset();
-                }
-                break;
-            case PREPARE:
-                launcher.setVelocity(LAUNCHER_TARGET_VELOCITY);
-                if (launcher.getVelocity() > OpModeConstants.LAUNCHER_MIN_VELOCITY) {
-                    launchState = LaunchState.LAUNCH;
-                    FeederOne.setPower(1);
-                    FeederTwo.setPower(1);
-                    FeederThree.setPower(1);
-                    feederTimer.reset();
-                }
-                break;
-            case LAUNCH:
-                if (feederTimer.seconds() > OpModeConstants.FEED_TIME) {
-                    FeederOne.setPower(0);
-                    FeederTwo.setPower(0);
-                    FeederThree.setPower(0);
-                    if (shotTimer.seconds() > OpModeConstants.TIME_BETWEEN_SHOTS) {
-                        launchState = LaunchState.IDLE;
-                        return true;
-                    }
-                }
-                break;
-        }
-        return false;
-    }
-
     private void activateRearCamera() {
         rearVisionPortal.resumeStreaming();
         frontVisionPortal.stopStreaming();
@@ -352,9 +334,7 @@ public class RobotBAutoTestingVersion extends OpMode {
     private void stopAllMotors() {
         launcher.setVelocity(0);
         intake.setVelocity(0);
-        FeederOne.setPower(0);
-        FeederTwo.setPower(0);
-        FeederThree.setPower(0);
+        feederSequence.doubleCheckOff();
         follower.setTeleOpDrive(0, 0, 0, true);
     }
 

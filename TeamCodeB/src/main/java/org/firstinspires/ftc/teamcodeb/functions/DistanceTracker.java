@@ -10,8 +10,8 @@ public class DistanceTracker {
         private DcMotorEx launcherMotor;
 
         private static final double[] DIST_POINTS = {29.0, 40.0, 50.0, 60.0};
-        private static final double[] RPM_POINTS = {1200, 1600, 2100, 2500};
-        private static final double[] ANGLE_POINTS = {0.25, 0.50, 0.60, 0.75};
+        private static final double[] RPM_POINTS = {1200, 1200, 1200, 1200};
+        private static final double[] ANGLE_POINTS = {0.0, 0.0, 0.0, 0.0};
 
         public DistanceTracker(Follower follower, AprilTagProcessor processor, AngleChanger angle, DcMotorEx motor) {
             this.follower = follower;

@@ -15,7 +15,7 @@ import org.firstinspires.ftc.teamcodeb.opmode.RobotBAutoTestingVersion;
 
         private final Follower follower;
         private final int routeSerial;
-        public PathChain Path1,Path2,Path3,Path4,Path5;
+        public PathChain Path1,Path2,Path3,Path4,Path5,Path6;
         public TestingPaths(Follower follower, int routeSerial) {
             this.follower = follower;
             this.routeSerial = routeSerial;
@@ -80,56 +80,57 @@ import org.firstinspires.ftc.teamcodeb.opmode.RobotBAutoTestingVersion;
             }else if(routeSerial ==2){
                 System.out.println("Building paths 2");
                 //for red
-                Path1 = follower.pathBuilder()
-                        .addPath(new BezierLine(new Pose(follower.getPose().getX(),follower.getPose().getY()), new Pose(108.79, 108.62)))
-                        .setConstantHeadingInterpolation(Math.toRadians(135))
+                Path1 = follower.pathBuilder().addPath(
+                                new BezierLine(
+                                        new Pose(123.364, 122.394),
+
+                                        new Pose(107.866, 106.927)
+                                )
+                        ).setConstantHeadingInterpolation(Math.toRadians(45))
+
                         .build();
 
-                Path2 = follower
-                        .pathBuilder()
-                        .addPath(
+                Path2 = follower.pathBuilder().addPath(
                                 new BezierCurve(
-                                        new Pose(108.790, 108.620),
-                                        new Pose(43.753, 111.646),
-                                        new Pose(89.853, 71.749),
-                                        new Pose(133.271, 69.737)
+                                        new Pose(107.866, 106.927),
+                                        new Pose(43.067, 69.043),
+                                        new Pose(129.208, 69.958)
                                 )
-                        )
-                        .setConstantHeadingInterpolation(Math.toRadians(90))
-                        .build();
-                Path3 = follower
-                        .pathBuilder()
-                        .addPath(
-                                new BezierCurve(
-                                        new Pose(133.271, 69.737),
-                                        new Pose(43.753, 111.646),
-                                        new Pose(85.830, 4.359),
-                                        new Pose(73.090, 62.864),
-                                        new Pose(126.063, 45.765)
-                                )
-                        )
-                        .setConstantHeadingInterpolation(Math.toRadians(180))
-                        .setReversed()
+                        ).setTangentHeadingInterpolation()
+
                         .build();
 
-                Path4 = follower.pathBuilder()
-                        .addPath(new BezierLine(new Pose(follower.getPose().getX(),follower.getPose().getY()), new Pose(108.79, 108.62)))
-                        .setConstantHeadingInterpolation(Math.toRadians(135))
+                Path3 = follower.pathBuilder().addPath(
+                                new BezierCurve(
+                                        new Pose(129.208, 69.958),
+                                        new Pose(38.487, 44.400),
+                                        new Pose(121.254, 46.952)
+                                )
+                        ).setConstantHeadingInterpolation(Math.toRadians(180))
+
                         .build();
 
-                Path5 = follower
-                        .pathBuilder()
-                        .addPath(
-                                new BezierCurve(
-                                        new Pose(108.790, 108.620),
-                                        new Pose(64.373, 77.951),
-                                        new Pose(110.473, 29.169),
-                                        new Pose(108.964, 6.538)
+                Path4 = follower.pathBuilder().addPath(
+                                new BezierLine(
+                                        new Pose(121.254, 46.952),
+
+                                        new Pose(84.308, 56.858)
                                 )
-                        )
-                        .setConstantHeadingInterpolation(Math.toRadians(180))
-                        .setReversed()
+                        ).setTangentHeadingInterpolation()
+
                         .build();
+
+                Path5 = follower.pathBuilder().addPath(
+                                new BezierLine(
+                                        new Pose(84.308, 56.858),
+
+                                        new Pose(107.651, 106.894)
+                                )
+                        ).setTangentHeadingInterpolation()
+
+                        .build();
+
+
             }
 
 

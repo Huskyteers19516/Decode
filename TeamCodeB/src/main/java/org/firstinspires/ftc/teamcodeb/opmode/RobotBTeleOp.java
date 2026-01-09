@@ -15,27 +15,19 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Position;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 import org.firstinspires.ftc.teamcodeb.OpModeConstants;
-import org.firstinspires.ftc.teamcodeb.functions.AngleChanger;
-import org.firstinspires.ftc.teamcodeb.functions.DistanceTracker;
+import org.firstinspires.ftc.teamcodeb.functions.*;
 import org.firstinspires.ftc.teamcodeb.pedroPathing.Constants;
 import org.firstinspires.ftc.vision.VisionPortal;
-import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
-import org.firstinspires.ftc.teamcodeb.functions.FlyWheelVelocity;
-import org.firstinspires.ftc.teamcodeb.functions.CenterAprilTag;
-import org.firstinspires.ftc.teamcodeb.functions.DistanceAdjust;
-import java.util.List;
-import org.firstinspires.ftc.teamcodeb.functions.LauncherController;
-import org.firstinspires.ftc.teamcodeb.functions.BallTracker;
-import com.qualcomm.robotcore.hardware.Servo;
+
 @Configurable
 @TeleOp
 public class RobotBTeleOp extends OpMode {
-    public static final Pose TARGET_P1 = new Pose(122.238, 121.003, Math.toRadians(45));
-    public static final Pose TARGET_P2 = new Pose(122.238, 121.003, Math.toRadians(45));
     private LauncherController launcherController;
     private DistanceTracker distanceTracker;
-    private AngleChanger angleChanger;
+    private AngleChanger angleChangerWrapper;
+    private FeederSequence feederSequence;
+
     private AprilTagProcessor aprilTagProcessor;
     private VisionPortal visionPortal;
     public Follower follower;
@@ -44,91 +36,52 @@ public class RobotBTeleOp extends OpMode {
 
     public DcMotorEx launcher;
     public DcMotorEx intake;
-    public CRServo FeederOne;
-    public CRServo FeederTwo;
-    public CRServo FeederThree;
-    public Servo AngleChanger;
-    public ElapsedTime feederTimer = new ElapsedTime();
+    public Servo FeederA;
+    public Servo FeederB;
+    public Servo FeederC;
+    public Servo Angle_Changer_Hardware;
+
     private DistanceAdjust distanceAdjust;
     private FlyWheelVelocity flyWheelVelocity;
 
     public enum LaunchState {IDLE, SPIN_UP, LAUNCH, LAUNCHING}
-    public LaunchState launchState;
-
-    public boolean slowMode = false;
-    public final double slowModeMultiplier = 0.5;
+    public LaunchState launchState = LaunchState.IDLE;
+    private Pose holdingPoint;
 
     public enum Alliance {RED, BLUE}
     public Alliance alliance = Alliance.RED;
-
-    public final double kP_AIM = 0.02;
-    public final double MAX_TURN = 0.5;
-    public final double AIM_THRESHOLD = 2;
-
-    private double lastLauncherVelocity = 0;
-    private boolean intakeActive = false;
-
-    public double targetRPM = launcherController.getLastTargetRPM();
-    public double currentRPM = launcher.getVelocity();
-    public double anglePos = angleChanger.getPosition();
-    public boolean readyToShoot = launcherController.isReadyToShoot(50);
+    public boolean slowMode = false;
 
     @Override
     public void init() {
         follower = Constants.createFollower(hardwareMap);
         follower.setStartingPose(startingPose == null ? new Pose() : startingPose);
-        follower.update();
-
         telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
 
         launcher = hardwareMap.get(DcMotorEx.class, "launcher");
-        FeederOne = hardwareMap.get(CRServo.class, "Feeder_One");
-        FeederTwo = hardwareMap.get(CRServo.class, "Feeder_Two");
-        FeederThree = hardwareMap.get(CRServo.class, "Feeder_Three");
-        AngleChanger = hardwareMap.get(Servo.class,"Angle_Changer");
-        intake = hardwareMap.get(DcMotorEx.class,"intake");
+        intake = hardwareMap.get(DcMotorEx.class, "intake");
+        FeederA = hardwareMap.get(Servo.class, "feederA");
+        FeederB = hardwareMap.get(Servo.class, "feederB");
+        FeederC = hardwareMap.get(Servo.class, "feederC");
+        Angle_Changer_Hardware = hardwareMap.get(Servo.class, "hood");
+
+        angleChangerWrapper = new AngleChanger(Angle_Changer_Hardware);
+        feederSequence = new FeederSequence(FeederA, FeederB, FeederC);
 
         WebcamName camera = hardwareMap.get(WebcamName.class, "Webcam 1");
-        Position cameraPosition = new Position(DistanceUnit.INCH, 1.5,9,13,0);
-        YawPitchRollAngles angle = new YawPitchRollAngles(AngleUnit.DEGREES, 0,115,0,0);
+        Position cameraPos = new Position(DistanceUnit.INCH, 1.5, 9, 13, 0);
+        YawPitchRollAngles camAngle = new YawPitchRollAngles(AngleUnit.DEGREES, 0, 115, 0, 0);
 
-        aprilTagProcessor = new AprilTagProcessor.Builder().setCameraPose(cameraPosition, angle).build();
-        visionPortal = new VisionPortal.Builder().setCamera(camera).addProcessor(aprilTagProcessor).setAutoStartStreamOnBuild(true).build();
+        aprilTagProcessor = new AprilTagProcessor.Builder().setCameraPose(cameraPos, camAngle).build();
+        visionPortal = new VisionPortal.Builder().setCamera(camera).addProcessor(aprilTagProcessor).build();
 
+        distanceTracker = new DistanceTracker(follower, aprilTagProcessor, angleChangerWrapper, launcher);
+        launcherController = new LauncherController(distanceTracker, launcher);
         distanceAdjust = new DistanceAdjust(follower, gamepad1, aprilTagProcessor);
         flyWheelVelocity = new FlyWheelVelocity();
         flyWheelVelocity.init(launcher, gamepad1, telemetry);
 
         launcher.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        launcher.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(300, 0, 0, 10));
-
-
-        FeederOne.setPower(OpModeConstants.STOP_SPEED);
-        FeederTwo.setPower(OpModeConstants.STOP_SPEED);
-        FeederThree.setPower(OpModeConstants.STOP_SPEED);
-
-        telemetry.update();
-    }
-
-    private Pose getPoseFromCamera() {
-        aprilTagProcessor.getDetections().forEach(detection -> {
-            detection.robotPose.getPosition();
-        });
-        List<AprilTagDetection> detections = aprilTagProcessor.getDetections();
-        if (detections == null || detections.isEmpty()) return null;
-
-        AprilTagDetection d = detections.get(0);
-        double x = d.robotPose.getPosition().x;
-        double y = d.robotPose.getPosition().y;
-        double heading = d.robotPose.getOrientation().getYaw(AngleUnit.RADIANS);
-
-        return new Pose(x, y, heading);
-    }
-
-    @Override
-    public void start() {
-        follower.startTeleopDrive();
-        launchState = LaunchState.IDLE;
     }
 
     @Override
@@ -138,141 +91,66 @@ public class RobotBTeleOp extends OpMode {
     }
 
     @Override
+    public void start() {
+        follower.startTeleopDrive();
+    }
+
+    @Override
     public void loop() {
         int targetTagId = (alliance == Alliance.RED) ? 20 : 22;
 
         launcherController.updateLauncher(targetTagId);
 
-        boolean ready = launcherController.isReadyToShoot(50);
-        if (gamepad1.xWasPressed()) intake.setVelocity(OpModeConstants.INTAKE_TARGET_VELOCITY);
+        feederSequence.update();
+
+        if (gamepad1.rightBumperWasPressed() || gamepad2.rightBumperWasPressed()) {
+            launch(true);
+        } else {
+            launch(false);
+        }
+
         if (gamepad1.leftBumperWasPressed()) slowMode = !slowMode;
-        if (gamepad1.startWasPressed()) follower.setPose(new Pose());
-
-        if (gamepad2.aWasPressed()) {
-            flyWheelVelocity.setTargetVelocity(OpModeConstants.LAUNCHER_TARGET_VELOCITY);
-        }
-
-        if (gamepad2.bWasPressed()) {
-            flyWheelVelocity.setTargetVelocity(OpModeConstants.LAUNCHER_TARGET_VELOCITY);
-        }
-
-        if (gamepad2.backWasPressed()) {
-            launcher.setVelocity(0);
-            flyWheelVelocity.setTargetVelocity(0);
-        }
-
-        if (gamepad1.aWasPressed()) {
-            distanceAdjust.startAutoDrive29();
-        }
-
-        if (gamepad1.bWasPressed()) {
-            launcher.setVelocity(0);
-            flyWheelVelocity.setTargetVelocity(0);
-        }
-
-        if (gamepad1.yWasPressed()) {
-            flyWheelVelocity.setTargetVelocity(1600);
-        }
 
         distanceAdjust.update();
-        flyWheelVelocity.update();
-
-        double currentTargetVelocity = flyWheelVelocity.getTargetVelocity();
-        boolean isAutoDriveActive = distanceAdjust.isAutoDriveActive();
-
-        if (!isAutoDriveActive) {
-            if (holdingPoint == null){
-                telemetry.addLine("not holding");
-                if (!slowMode) {
-                    follower.setTeleOpDrive(
-                            -gamepad1.left_stick_y,
-                            -gamepad1.left_stick_x,
-                            -gamepad1.right_stick_x,
-                            true
-                    );
-                } else {
-                    follower.setTeleOpDrive(
-                            -gamepad1.left_stick_y * slowModeMultiplier,
-                            -gamepad1.left_stick_x * slowModeMultiplier,
-                            -gamepad1.right_stick_x * slowModeMultiplier,
-                            true
-                    );
-                }
-            } else {
-                telemetry.addLine("Holding");
-                follower.holdPoint(holdingPoint);
-            }
+        if (!distanceAdjust.isAutoDriveActive() && holdingPoint == null) {
+            double mult = slowMode ? 0.5 : 1.0;
+            follower.setTeleOpDrive(-gamepad1.left_stick_y * mult, -gamepad1.left_stick_x * mult, -gamepad1.right_stick_x * mult, true);
+        } else if (holdingPoint != null) {
+            follower.holdPoint(holdingPoint);
         }
 
-        if (gamepad1.squareWasPressed()) {
-            follower.setPose(new Pose());
-        }
-
-        if (gamepad1.left_trigger > 0.1) {
-            intake.setPower(gamepad1.left_trigger);
-            intakeActive = true;
-        }
-
-        if (gamepad2.left_trigger > 0.1) {
-            intake.setVelocity(0);
-            intakeActive = false;
-            if (lastLauncherVelocity > 0) {
-                flyWheelVelocity.setTargetVelocity(lastLauncherVelocity);
-            }
-        }
-
-        if (gamepad2.rightBumperWasPressed() || gamepad1.rightBumperWasPressed()) {
-            launch(true);
-        }
-
-        if (gamepad1.leftBumperWasPressed()) {
-            slowMode = !slowMode;
-        }
+        if (gamepad1.left_trigger > 0.1) intake.setPower(gamepad1.left_trigger);
+        else if (gamepad2.left_trigger > 0.1) intake.setPower(-0.6);
+        else intake.setPower(0);
 
         follower.update();
         telemetryM.update();
 
-        telemetry.addLine("=== Distance Adjust ===");
-        telemetry.addData("Auto Drive Active", isAutoDriveActive ? "YES" : "NO");
-        telemetry.addData("Intake Active", intakeActive ? "YES" : "NO");
-        telemetry.addData("Last Velocity", "%.0f ticks/s", lastLauncherVelocity);
-        telemetry.addData("Trigger Button", "A Button (Gamepad1)");
-
+        telemetry.addData("Ready to Shoot", launcherController.isReadyToShoot(50));
+        telemetry.addData("Auto RPM", launcherController.getLastTargetRPM());
+        telemetry.addData("Auto Angle", angleChangerWrapper.getPosition());
         telemetry.update();
     }
 
-    private Pose holdingPoint;
     void launch(boolean shotRequested) {
         switch (launchState) {
             case IDLE:
-                holdingPoint = follower.getPose();
-                intake.setVelocity(OpModeConstants.INTAKE_TARGET_VELOCITY);
-                intakeActive = true;
-                if (shotRequested) launchState = LaunchState.SPIN_UP;
+                if (shotRequested) {
+                    holdingPoint = follower.getPose();
+                    launchState = LaunchState.SPIN_UP;
+                }
                 break;
             case SPIN_UP:
-                intake.setVelocity(0);
-                intakeActive = false;
-                launcher.setVelocity(flyWheelVelocity.getTargetVelocity());
-                lastLauncherVelocity = flyWheelVelocity.getTargetVelocity();
-                if (launcher.getVelocity() > OpModeConstants.LAUNCHER_MIN_VELOCITY) launchState = LaunchState.LAUNCH;
+                if (launcherController.isReadyToShoot(50)) {
+                    launchState = LaunchState.LAUNCH;
+                }
                 break;
             case LAUNCH:
-                FeederOne.setPower(OpModeConstants.FULL_SPEED);
-                FeederTwo.setPower(OpModeConstants.FULL_SPEED);
-                FeederThree.setPower(OpModeConstants.FULL_SPEED);
-                feederTimer.reset();
+                feederSequence.trigger();
                 launchState = LaunchState.LAUNCHING;
                 break;
             case LAUNCHING:
-                if (feederTimer.seconds() > OpModeConstants.FEED_TIME_SECONDS) {
-                    FeederOne.setPower(OpModeConstants.STOP_SPEED);
-                    FeederTwo.setPower(OpModeConstants.STOP_SPEED);
-                    FeederThree.setPower(OpModeConstants.STOP_SPEED);
-
-                    intake.setVelocity(OpModeConstants.INTAKE_TARGET_VELOCITY);
-                    intakeActive = true;
-
+                if (!feederSequence.isBusy()) {
                     launchState = LaunchState.IDLE;
                     holdingPoint = null;
                 }
