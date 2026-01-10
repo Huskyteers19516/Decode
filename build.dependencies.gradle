@@ -5,6 +5,10 @@ repositories {
     maven {
         url = 'https://maven.brott.dev/'
     }
+    maven {
+        url = "https://repo.dairy.foundation/releases"
+    }
+
 }
 
 dependencies {
@@ -18,10 +22,7 @@ dependencies {
     implementation 'org.firstinspires.ftc:Vision:11.0.0'
     implementation 'androidx.appcompat:appcompat:1.2.0'
 
-    implementation 'com.pedropathing:ftc:2.0.3'
+    implementation 'com.pedropathing:ftc:2.0.5'
     implementation 'com.pedropathing:telemetry:1.0.0'
-    implementation "com.acmerobotics.roadrunner:ftc:0.1.25"
-    implementation "com.acmerobotics.roadrunner:core:1.0.1"
-    implementation "com.acmerobotics.roadrunner:actions:1.0.1"
 }
 
