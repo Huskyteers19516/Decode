@@ -9,13 +9,27 @@ import org.firstinspires.ftc.teamcodec.subsystem.Outtake;
 
 public class Shoot extends SequentialCommandGroup {
     public Shoot(Feeders feeders, Outtake outtake, Feeders.Feeder feeder) {
-        addCommands(
-                new OuttakeSpinUp(outtake),
-                new InstantCommand(() -> feeders.raiseFeeder(feeder)),
-                new WaitCommand(500),
-                new InstantCommand(() -> feeders.lowerFeeder(feeder)),
-                new WaitCommand(500)
-        );
+        if (feeder == Feeders.Feeder.A) {
+            addCommands(
+                    new OuttakeSpinUp(outtake),
+                    new InstantCommand(() -> feeders.raiseFeeder(feeder)),
+                    new WaitCommand(500),
+                    new InstantCommand(() -> feeders.lowerFeeder(feeder)),
+                    new WaitCommand(500)
+            );
+        } else if (feeder == Feeders.Feeder.B) {
+                    addCommands(
+                            new OuttakeSpinUp(outtake),
+                            new InstantCommand(() -> feeders.raiseFeeder(feeder)),
+                            new WaitCommand(500),
+                            new InstantCommand(() -> feeders.lowerFeeder(feeder)),
+                            new InstantCommand(feeders::raiseFeederA),
+                            new WaitCommand(500),
+                            new InstantCommand(feeders::lowerFeederA),
+                            new WaitCommand(500)
+                    );
+        }
+
         addRequirements(outtake, feeders);
     }
 }

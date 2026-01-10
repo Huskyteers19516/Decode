@@ -18,6 +18,8 @@ public class Feeders extends SubsystemBase {
         feederB = hMap.get(Servo.class, "feederB");
         feederC = hMap.get(Servo.class, "feederC");
         lowerFeederA();
+        lowerFeederB();
+        lowerFeederC();
     }
 
     public void raiseFeeder(Feeder feeder) {
@@ -57,15 +59,15 @@ public class Feeders extends SubsystemBase {
     }
 
     public void raiseFeederB() {
-        feederB.setPosition(.79);
+        feederB.setPosition(1.0);
     }
     public void lowerFeederB() {
-        feederB.setPosition(.34);
+        feederB.setPosition(0.35);
     }
     public void raiseFeederC() {
-        feederC.setPosition(.34);
+        feederC.setPosition(0);
     }
     public void lowerFeederC() {
-        feederC.setPosition(.79);
+        feederC.setPosition(.7);
     }
 }

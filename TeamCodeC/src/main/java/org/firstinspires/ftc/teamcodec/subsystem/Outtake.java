@@ -50,7 +50,7 @@ public class Outtake extends SubsystemBase {
         return active;
     }
     public boolean canShoot() {
-        return active && (Math.abs(outtakeMotor.getVelocity() - targetVelocity) < OuttakeConstants.allowance);
+        return active && (Math.abs(outtakeMotor.getVelocity() - getSetPoint()) < OuttakeConstants.allowance);
     }
 
     public double getSetPoint() {
