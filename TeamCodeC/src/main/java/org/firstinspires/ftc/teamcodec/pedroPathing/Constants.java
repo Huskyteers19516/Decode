@@ -17,7 +17,7 @@ public class Constants {
     public static FollowerConstants followerConstants = new FollowerConstants()
             .mass(13.2449)
             .forwardZeroPowerAcceleration(-23.58)
-            .lateralZeroPowerAcceleration(-32.71);
+            .lateralZeroPowerAcceleration(-36.67);
 
     public static PathConstraints pathConstraints = new PathConstraints(0.99, 100, 1, 1);
 
