@@ -78,6 +78,7 @@ public class RobotATeleOp extends OpMode {
 
         launcher.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         launcher.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(300, 0, 0, 10));
+        follower.holdPoint();
 
         leftFeeder.setDirection(DcMotorSimple.Direction.REVERSE);
         leftFeeder.setPower(OpModeConstants.STOP_SPEED);

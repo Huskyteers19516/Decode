@@ -17,6 +17,7 @@ import com.seattlesolvers.solverslib.gamepad.GamepadKeys;
 import com.seattlesolvers.solverslib.util.TelemetryData;
 
 import org.firstinspires.ftc.teamcodec.command.Shoot;
+import org.firstinspires.ftc.teamcodec.config.OuttakeConstants;
 import org.firstinspires.ftc.teamcodec.pedroPathing.Constants;
 import org.firstinspires.ftc.teamcodec.subsystem.Feeders;
 import org.firstinspires.ftc.teamcodec.subsystem.Intake;
@@ -42,7 +43,6 @@ public class HuskyTeleOp extends CommandOpMode {
 
         intake = new Intake(hardwareMap);
         outtake = new Outtake(hardwareMap);
-        outtake.setDefaultCommand(new RunCommand(outtake::start, outtake));
         feeders = new Feeders(hardwareMap);
 
         //#region Buttons
@@ -73,8 +73,19 @@ public class HuskyTeleOp extends CommandOpMode {
         Button shootFeederC = new GamepadButton(driverOp, GamepadKeys.Button.X);
         shootFeederC.whenPressed(new Shoot(feeders, outtake, Feeders.Feeder.C));
 
-        outtake.setDefaultCommand(new RunCommand(outtake::start, outtake));
+        Button toggleShooter = new GamepadButton(shooterOp, GamepadKeys.Button.B);
+        toggleShooter.whenPressed(new InstantCommand(outtake::toggle, outtake));
+        Button increaseSpeed = new GamepadButton(shooterOp, GamepadKeys.Button.DPAD_UP);
+        increaseSpeed.whenPressed(new InstantCommand(() -> outtake.setVelocity(outtake.getTargetVelocity() + 0.1), outtake));
+        Button slightIncreaseSpeed = new GamepadButton(shooterOp, GamepadKeys.Button.DPAD_RIGHT);
+        slightIncreaseSpeed.whenPressed(new InstantCommand(() -> outtake.setVelocity(outtake.getTargetVelocity() + 0.02), outtake));
+        Button decreaseSpeed = new GamepadButton(shooterOp, GamepadKeys.Button.DPAD_DOWN);
+        decreaseSpeed.whenPressed(new InstantCommand(() -> outtake.setVelocity(outtake.getTargetVelocity() - 0.1), outtake));
+        Button slightDecreaseSpeed = new GamepadButton(shooterOp, GamepadKeys.Button.DPAD_LEFT);
+        slightDecreaseSpeed.whenPressed(new InstantCommand(() -> outtake.setVelocity(outtake.getTargetVelocity() - 0.02), outtake));
+
         register(intake, outtake, feeders);
+        schedule(new InstantCommand(() -> {outtake.start();}, outtake));
         //#endregion
     }
 
@@ -96,8 +107,11 @@ public class HuskyTeleOp extends CommandOpMode {
         telemetryM.addData("Intake", intake.active() ? "On" : "Off");
         telemetryM.addData("Outtake", outtake.canShoot() ? "READY" : "NOT READY");
         telemetryM.addData("Outtake velocity", outtake.getVelocity());
+        telemetryM.addData("Outtake target velocity", outtake.getTargetVelocity());
+        telemetryM.addData("Outtake power", outtake.getRawPower());
 
         telemetryM.addData("Drive Mode", isRobotCentric ? "Robot Centric" : "Field Centric");
-        telemetryM.update();
+        telemetryM.addData("Set Point", outtake.getSetPoint());
+        telemetryM.update(telemetry);
     }
 }

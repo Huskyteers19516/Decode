@@ -65,6 +65,7 @@ public class AprilTag {
     }
     public AprilTagDetection getID(int id){
         for(AprilTagDetection detection : detectedTags){
+            detection.ftcPose.bearing
             if(detection.id== id){
                 return detection;
             }
