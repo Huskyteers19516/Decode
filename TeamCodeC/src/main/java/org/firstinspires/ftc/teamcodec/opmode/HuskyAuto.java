@@ -13,6 +13,7 @@ import com.seattlesolvers.solverslib.command.CommandOpMode;
 import com.seattlesolvers.solverslib.command.InstantCommand;
 import com.seattlesolvers.solverslib.command.ParallelDeadlineGroup;
 import com.seattlesolvers.solverslib.command.ParallelRaceGroup;
+import com.seattlesolvers.solverslib.command.RunCommand;
 import com.seattlesolvers.solverslib.command.SequentialCommandGroup;
 import com.seattlesolvers.solverslib.command.StartEndCommand;
 import com.seattlesolvers.solverslib.command.WaitCommand;
@@ -55,7 +56,7 @@ public class HuskyAuto extends CommandOpMode {
         register(intake, outtake, feeders);
         schedule(
                 new SequentialCommandGroup(new ParallelDeadlineGroup(new WaitCommand(25000), new SequentialCommandGroup(
-                        new InstantCommand(outtake::start, outtake),
+                        new RunCommand(outtake::start, outtake),
                         new FollowPathCommand(follower, fromStartToShoot),
                         new Shoot(feeders, outtake, Feeders.Feeder.A),
                         new Shoot(feeders, outtake, Feeders.Feeder.B),
@@ -155,7 +156,6 @@ public class HuskyAuto extends CommandOpMode {
         telemetryM.addData("Outtake target velocity", outtake.getTargetVelocity());
         telemetryM.addData("Outtake power", outtake.getRawPower());
 
-        telemetryM.addData("Set Point", outtake.getSetPoint());
         telemetryM.update(telemetry);
     }
 }

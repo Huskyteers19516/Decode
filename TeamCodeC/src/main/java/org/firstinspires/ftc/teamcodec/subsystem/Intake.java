@@ -18,6 +18,9 @@ public class Intake extends SubsystemBase {
         isRunning = !isRunning;
     }
 
+    public void setPower(double power) {
+        intakeMotor.set(power);
+    }
     public void start() {
         intakeMotor.set(1.0);
     }

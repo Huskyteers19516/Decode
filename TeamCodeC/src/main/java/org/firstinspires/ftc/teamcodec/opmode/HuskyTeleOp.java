@@ -50,15 +50,6 @@ public class HuskyTeleOp extends CommandOpMode {
         GamepadEx shooterOp = new GamepadEx(gamepad2);
 
 
-        Button intakeButton = new GamepadButton(driverOp, GamepadKeys.Button.RIGHT_BUMPER);
-        intakeButton.whenPressed(new ConditionalCommand(
-                new InstantCommand(intake::start, intake),
-                new InstantCommand(intake::stop, intake),
-                () -> {
-                    intake.toggle();
-                    return intake.active();
-                }
-        ));
 
         Button switchDriveMode = new GamepadButton(driverOp, GamepadKeys.Button.A);
         switchDriveMode.whenPressed(() -> {
@@ -76,16 +67,16 @@ public class HuskyTeleOp extends CommandOpMode {
         Button toggleShooter = new GamepadButton(shooterOp, GamepadKeys.Button.B);
         toggleShooter.whenPressed(new InstantCommand(outtake::toggle, outtake));
         Button increaseSpeed = new GamepadButton(shooterOp, GamepadKeys.Button.DPAD_UP);
-        increaseSpeed.whenPressed(new InstantCommand(() -> outtake.setVelocity(outtake.getTargetVelocity() + 0.1), outtake));
+        increaseSpeed.whenPressed(new InstantCommand(() -> outtake.setVelocity(outtake.getTargetVelocity() + 100), outtake));
         Button slightIncreaseSpeed = new GamepadButton(shooterOp, GamepadKeys.Button.DPAD_RIGHT);
-        slightIncreaseSpeed.whenPressed(new InstantCommand(() -> outtake.setVelocity(outtake.getTargetVelocity() + 0.02), outtake));
+        slightIncreaseSpeed.whenPressed(new InstantCommand(() -> outtake.setVelocity(outtake.getTargetVelocity() + 20), outtake));
         Button decreaseSpeed = new GamepadButton(shooterOp, GamepadKeys.Button.DPAD_DOWN);
-        decreaseSpeed.whenPressed(new InstantCommand(() -> outtake.setVelocity(outtake.getTargetVelocity() - 0.1), outtake));
+        decreaseSpeed.whenPressed(new InstantCommand(() -> outtake.setVelocity(outtake.getTargetVelocity() - 100), outtake));
         Button slightDecreaseSpeed = new GamepadButton(shooterOp, GamepadKeys.Button.DPAD_LEFT);
-        slightDecreaseSpeed.whenPressed(new InstantCommand(() -> outtake.setVelocity(outtake.getTargetVelocity() - 0.02), outtake));
+        slightDecreaseSpeed.whenPressed(new InstantCommand(() -> outtake.setVelocity(outtake.getTargetVelocity() - 20), outtake));
 
         register(intake, outtake, feeders);
-        schedule(new InstantCommand(() -> {outtake.start();}, outtake));
+        schedule(new RunCommand(() -> outtake.start(), outtake));
         //#endregion
     }
 
@@ -104,6 +95,8 @@ public class HuskyTeleOp extends CommandOpMode {
         } else {
             telemetryM.addData("Pose", "null");
         }
+
+        intake.setPower(gamepad2.right_trigger);
         telemetryM.addData("Intake", intake.active() ? "On" : "Off");
         telemetryM.addData("Outtake", outtake.canShoot() ? "READY" : "NOT READY");
         telemetryM.addData("Outtake velocity", outtake.getVelocity());
@@ -111,7 +104,6 @@ public class HuskyTeleOp extends CommandOpMode {
         telemetryM.addData("Outtake power", outtake.getRawPower());
 
         telemetryM.addData("Drive Mode", isRobotCentric ? "Robot Centric" : "Field Centric");
-        telemetryM.addData("Set Point", outtake.getSetPoint());
         telemetryM.update(telemetry);
     }
 }
