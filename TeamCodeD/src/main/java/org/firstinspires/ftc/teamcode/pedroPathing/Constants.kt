@@ -13,14 +13,14 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
 
 
 object Constants {
-    var followerConstants: FollowerConstants? = FollowerConstants()
+    var followerConstants: FollowerConstants = FollowerConstants()
         .mass(13.2449)
         .forwardZeroPowerAcceleration(-23.58)
         .lateralZeroPowerAcceleration(-36.67)
 
     var pathConstraints: PathConstraints = PathConstraints(0.99, 100.0, 1.0, 1.0)
 
-    var driveConstants: MecanumConstants? = MecanumConstants()
+    var driveConstants: MecanumConstants = MecanumConstants()
         .maxPower(1.0)
         .xVelocity(56.9)
         .yVelocity(48.94)
@@ -33,7 +33,7 @@ object Constants {
         .rightFrontMotorDirection(DcMotorSimple.Direction.FORWARD)
         .rightRearMotorDirection(DcMotorSimple.Direction.FORWARD)
 
-    var localizerConstants: PinpointConstants? = PinpointConstants()
+    var localizerConstants: PinpointConstants = PinpointConstants()
         .forwardPodY(6.7905)
         .strafePodX(-2.928)
         .distanceUnit(DistanceUnit.INCH)
@@ -43,7 +43,7 @@ object Constants {
         .strafeEncoderDirection(GoBildaPinpointDriver.EncoderDirection.FORWARD)
 
     @JvmStatic
-    fun createFollower(hardwareMap: HardwareMap?): Follower? {
+    fun createFollower(hardwareMap: HardwareMap?): Follower {
         return FollowerBuilder(followerConstants, hardwareMap)
             .pinpointLocalizer(localizerConstants)
             .pathConstraints(pathConstraints)
