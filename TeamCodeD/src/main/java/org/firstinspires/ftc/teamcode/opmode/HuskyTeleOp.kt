@@ -1,6 +1,7 @@
-package org.firstinspires.ftc.teamcode
+package org.firstinspires.ftc.teamcode.opmode
 
 import android.util.Log
+import com.pedropathing.geometry.Pose
 import dev.frozenmilk.dairy.mercurial.continuations.Continuations.deadline
 import dev.frozenmilk.dairy.mercurial.continuations.Continuations.exec
 import dev.frozenmilk.dairy.mercurial.continuations.Continuations.loop
@@ -8,16 +9,18 @@ import dev.frozenmilk.dairy.mercurial.continuations.Continuations.sequence
 import dev.frozenmilk.dairy.mercurial.continuations.Continuations.wait
 import dev.frozenmilk.dairy.mercurial.ftc.Mercurial
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants
+import org.firstinspires.ftc.teamcode.pedroPathing.Drawing
 import org.firstinspires.ftc.teamcode.utils.Alliance
 
 const val TAG = "HuskyTeleOp"
 
 @Suppress("UNUSED")
-val huskyTeleOp = Mercurial.teleop("Husky TeleOp", "Huskyteers") {
+val huskyTeleOp = Mercurial.teleop("HuskyTeleOp", "Huskyteers") {
+    //#region Pre-Init
+
     val follower = Constants.createFollower(hardwareMap)
 
     var alliance = Alliance.RED
-
     schedule(
         deadline(
             wait {
@@ -32,24 +35,24 @@ val huskyTeleOp = Mercurial.teleop("Husky TeleOp", "Huskyteers") {
                 } else if (gamepad1.x) {
                     alliance = Alliance.BLUE
                 }
-                telemetry.addAction {
-                    println("Curiosity")
-                }
                 telemetry.update()
             })
         )
     )
 
+    //#endregion
+
+    waitForStart()
+
+    //#region Drive
+
     var throttle = 1.0
     var isRobotCentric = false
 
-    // Drive loop
     schedule(
         sequence(
             wait { inLoop },
-            exec {
-                follower.startTeleOpDrive()
-            },
+
             loop(exec {
                 Log.d(TAG, "Drive loop")
                 follower.update()
@@ -59,19 +62,21 @@ val huskyTeleOp = Mercurial.teleop("Husky TeleOp", "Huskyteers") {
                     -gamepad1.right_stick_x.toDouble() * throttle,
                     isRobotCentric
                 )
-                telemetry.addData("X", follower.pose.x)
-                telemetry.addData("Y", follower.pose.y)
-                telemetry.addData("Heading", follower.pose.heading)
+                telemetry.addData("X (in)", follower.pose.x)
+                telemetry.addData("Y (in)", follower.pose.y)
+                telemetry.addData("Heading (deg)", Math.toDegrees(follower.pose.heading))
+                telemetry.addData("Throttle", throttle)
                 telemetry.addData(
                     "Drive mode",
                     if (isRobotCentric) "Robot centric" else "Field centric"
                 )
+                Drawing.drawDebug(follower)
                 telemetry.update()
             })
         )
     )
-
-
+    //#endregion
+    follower.startTeleOpDrive()
 
     bindSpawn(
         risingEdge { gamepad1.right_bumper },
@@ -88,7 +93,10 @@ val huskyTeleOp = Mercurial.teleop("Husky TeleOp", "Huskyteers") {
         exec { isRobotCentric = !isRobotCentric }
     )
 
-    waitForStart()
+    bindSpawn(
+        risingEdge { gamepad1.start },
+        exec { follower.pose = Pose() }
+    )
     Log.d(TAG, "HuskyTeleOp started")
     dropToScheduler()
 }

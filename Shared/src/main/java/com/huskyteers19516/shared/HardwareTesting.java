@@ -15,12 +15,14 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-@TeleOp
+@TeleOp(name = "Hardware Testing", group = "Testing")
 public class HardwareTesting extends OpMode {
     List<CRServo> crServos;
     List<Servo> servos;
     List<DcMotorEx> motors;
     int currentHardwareIndex = 0;
+    ArrayList<ControlMode> controlModes = new ArrayList<>(Arrays.asList(ControlMode.values()));
+    int controlModeIndex = 0;
 
     @Override
     public void init() {
@@ -32,20 +34,6 @@ public class HardwareTesting extends OpMode {
         telemetry.addData("Found ", servos.size() + " Servos.");
         telemetry.addData("Found ", motors.size() + " DC Motors.");
     }
-
-    private enum ControlMode {
-        CR_SERVO("Continuous Rotation Servo"),
-        SERVO("Standard Servo"),
-        MOTOR("DC Motor");
-         ControlMode(final String modeName) {
-            this.modeName = modeName;
-        }
-        private final String modeName;
-    }
-
-    ArrayList<ControlMode> controlModes = new ArrayList<>(Arrays.asList(ControlMode.values()));
-
-    int controlModeIndex = 0;
 
     @Override
     public void loop() {
@@ -83,7 +71,7 @@ public class HardwareTesting extends OpMode {
 
 
         // Hardware device selection
-        telemetry.addData( controlMode.modeName + " Count", hardwareList.size());
+        telemetry.addData(controlMode.modeName + " Count", hardwareList.size());
         for (HardwareDevice device : hardwareList) {
             telemetry.addData(hardwareMap.getNamesOf(device).toString(), device.getConnectionInfo());
         }
@@ -115,5 +103,17 @@ public class HardwareTesting extends OpMode {
             }
         }
         telemetry.update();
+    }
+
+    private enum ControlMode {
+        CR_SERVO("Continuous Rotation Servo"),
+        SERVO("Standard Servo"),
+        MOTOR("DC Motor");
+
+        private final String modeName;
+
+        ControlMode(final String modeName) {
+            this.modeName = modeName;
+        }
     }
 }
