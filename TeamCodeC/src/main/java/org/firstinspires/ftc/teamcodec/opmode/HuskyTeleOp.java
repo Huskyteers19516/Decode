@@ -75,8 +75,13 @@ public class HuskyTeleOp extends CommandOpMode {
         Button slightDecreaseSpeed = new GamepadButton(shooterOp, GamepadKeys.Button.DPAD_LEFT);
         slightDecreaseSpeed.whenPressed(new InstantCommand(() -> outtake.setVelocity(outtake.getTargetVelocity() - 20), outtake));
 
+        Button runIntake = new GamepadButton(shooterOp, GamepadKeys.Button.LEFT_BUMPER);
+        runIntake.whileHeld(new InstantCommand(intake::start, intake));
+
+        intake.setDefaultCommand(new RunCommand(intake::stop, intake));
+
         register(intake, outtake, feeders);
-        schedule(new RunCommand(() -> outtake.start(), outtake));
+        schedule(new RunCommand(outtake::start, outtake));
         //#endregion
     }
 
@@ -96,7 +101,6 @@ public class HuskyTeleOp extends CommandOpMode {
             telemetryM.addData("Pose", "null");
         }
 
-        intake.setPower(gamepad2.right_trigger);
         telemetryM.addData("Intake", intake.active() ? "On" : "Off");
         telemetryM.addData("Outtake", outtake.canShoot() ? "READY" : "NOT READY");
         telemetryM.addData("Outtake velocity", outtake.getVelocity());

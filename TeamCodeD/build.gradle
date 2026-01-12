@@ -14,20 +14,36 @@
 // Include common definitions from above.
 apply from: '../build.common.gradle'
 apply from: '../build.dependencies.gradle'
+apply plugin: 'kotlin-android'
 
 android {
-    namespace = 'org.firstinspires.ftc.teamcodec'
+    namespace = 'org.firstinspires.ftc.teamcode'
 
     packagingOptions {
         jniLibs.useLegacyPackaging true
     }
+    kotlin {
+        jvmToolchain(11)
+    }
 }
+
+buildscript {
+    repositories {
+        mavenCentral()
+        maven {
+            url "https://repo.dairy.foundation/releases"
+        }
+    }
+    dependencies {
+        classpath "dev.frozenmilk:Load:0.2.4"
+    }
+}
+apply plugin: 'dev.frozenmilk.sinister.sloth.load'
 
 dependencies {
     implementation project(':FtcRobotController')
     implementation project(':Shared')
 
-    implementation 'com.bylazar:fullpanels:1.0.7'
-    implementation "org.solverslib:core:0.3.3"
-    implementation "org.solverslib:pedroPathing:0.3.3"
+    implementation("com.bylazar.sloth:fullpanels:0.2.4+1.0.12")
+    implementation("dev.frozenmilk.sinister:Sloth:0.2.4")
 }

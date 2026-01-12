@@ -22,6 +22,7 @@ public class Intake extends SubsystemBase {
         intakeMotor.set(power);
     }
     public void start() {
+        System.out.println("Intake started");
         intakeMotor.set(1.0);
     }
 
