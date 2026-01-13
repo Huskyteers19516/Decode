@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.opmode
 
 import android.util.Log
+import com.bylazar.telemetry.PanelsTelemetry
 import com.pedropathing.geometry.Pose
 import dev.frozenmilk.dairy.mercurial.continuations.Continuations.deadline
 import dev.frozenmilk.dairy.mercurial.continuations.Continuations.exec
@@ -22,6 +23,7 @@ const val TAG = "HuskyTeleOp"
 @Suppress("UNUSED")
 val huskyTeleOp = Mercurial.teleop("HuskyTeleOp", "Huskyteers") {
     //#region Pre-Init
+    val telemetryM = PanelsTelemetry.telemetry;
 
     val follower = Constants.createFollower(hardwareMap)
 
@@ -32,15 +34,15 @@ val huskyTeleOp = Mercurial.teleop("HuskyTeleOp", "Huskyteers") {
                 inLoop
             },
             loop(exec {
-                telemetry.addData("Status", "Initialized")
-                telemetry.addLine("Press B for red, press X for blue")
-                telemetry.addData("Current alliance", alliance)
+                telemetryM.addData("Status", "Initialized")
+                telemetryM.addLine("Press B for red, press X for blue")
+                telemetryM.addData("Current alliance", alliance)
                 if (gamepad1.b) {
                     alliance = Alliance.RED
                 } else if (gamepad1.x) {
                     alliance = Alliance.BLUE
                 }
-                telemetry.update()
+                telemetryM.update()
             })
         )
     )
@@ -82,9 +84,9 @@ val huskyTeleOp = Mercurial.teleop("HuskyTeleOp", "Huskyteers") {
     // Main loop
     schedule(
         loop(exec {
-            intake.periodic()
-            outtake.periodic()
-            flippers.periodic()
+            intake.periodic(telemetryM)
+            outtake.periodic(telemetryM)
+            flippers.periodic(telemetryM)
 
 
             follower.update()
@@ -94,16 +96,16 @@ val huskyTeleOp = Mercurial.teleop("HuskyTeleOp", "Huskyteers") {
                 -gamepad1.right_stick_x.toDouble() * throttle,
                 isRobotCentric
             )
-            telemetry.addData("X (in)", follower.pose.x)
-            telemetry.addData("Y (in)", follower.pose.y)
-            telemetry.addData("Heading (deg)", Math.toDegrees(follower.pose.heading))
-            telemetry.addData("Throttle", throttle)
-            telemetry.addData(
+            telemetryM.addData("X (in)", follower.pose.x)
+            telemetryM.addData("Y (in)", follower.pose.y)
+            telemetryM.addData("Heading (deg)", Math.toDegrees(follower.pose.heading))
+            telemetryM.addData("Throttle", throttle)
+            telemetryM.addData(
                 "Drive mode",
                 if (isRobotCentric) "Robot centric" else "Field centric"
             )
             Drawing.drawDebug(follower)
-            telemetry.update()
+            telemetryM.update(telemetry)
         })
     )
 
@@ -154,20 +156,36 @@ val huskyTeleOp = Mercurial.teleop("HuskyTeleOp", "Huskyteers") {
 
     bindSpawn(
         risingEdge {
-            gamepad1.left_bumper
-        },
-        exec {
-            intake.start()
+            gamepad2.dpad_up
+        }, exec {
+            outtake.setTargetVelocity(outtake.getTargetVelocity() + 100)
         }
     )
+
     bindSpawn(
         risingEdge {
-            !gamepad1.left_bumper
-        },
-        exec {
-            intake.stop()
+            gamepad2.dpad_down
+        }, exec {
+            outtake.setTargetVelocity(outtake.getTargetVelocity() - 100)
         }
     )
+
+    bindSpawn(
+        risingEdge {
+            gamepad2.dpad_left
+        }, exec {
+            outtake.setTargetVelocity(outtake.getTargetVelocity() - 20)
+        }
+    )
+
+    bindSpawn(
+        risingEdge {
+            gamepad2.dpad_right
+        }, exec {
+            outtake.setTargetVelocity(outtake.getTargetVelocity() + 20)
+        }
+    )
+
 
     follower.startTeleOpDrive()
 

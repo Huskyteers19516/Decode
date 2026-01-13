@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.hardware
 
+import com.bylazar.telemetry.TelemetryManager
 import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.hardware.DcMotorEx
 import com.qualcomm.robotcore.hardware.HardwareMap
@@ -25,7 +26,7 @@ class Outtake(hardwareMap: HardwareMap) {
     private var active = false
 
 
-    fun periodic() {
+    fun periodic(telemetry: TelemetryManager) {
         outtakeMotor.setVelocityPIDFCoefficients(
             OuttakeConstants.KP,
             OuttakeConstants.KI,
@@ -37,6 +38,10 @@ class Outtake(hardwareMap: HardwareMap) {
         } else {
             outtakeMotor.power = 0.0
         }
+        telemetry.addData("Outtake active", active)
+        telemetry.addData("Outtake power", outtakeMotor.power)
+        telemetry.addData("Outtake velocity", outtakeMotor.velocity)
+        telemetry.addData("Outtake status", if (canShoot()) "CAN SHOOT" else "NOT READY")
     }
 
     fun canShoot(): Boolean {
@@ -49,10 +54,6 @@ class Outtake(hardwareMap: HardwareMap) {
 
     fun setTargetVelocity(velocity: Double) {
         targetVelocity = velocity
-    }
-
-    fun getVelocity(): Double {
-        return outtakeMotor.velocity
     }
 
 

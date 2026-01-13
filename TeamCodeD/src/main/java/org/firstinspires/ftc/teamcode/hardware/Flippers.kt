@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.hardware
 
+import com.bylazar.telemetry.TelemetryManager
 import com.qualcomm.robotcore.hardware.HardwareMap
 import com.qualcomm.robotcore.hardware.Servo
 import org.firstinspires.ftc.teamcode.constants.FlippersConstants
@@ -47,12 +48,19 @@ class Flippers(hardwareMap: HardwareMap) {
         }
     }
 
-    fun periodic() {
+    fun periodic(telemetry: TelemetryManager) {
         flipperA.position =
             if (flipperAPosition == Position.UP) FlippersConstants.FLIPPER_A_UP_POSITION else FlippersConstants.FLIPPER_A_DOWN_POSITION
         flipperB.position =
             if (flipperBPosition == Position.UP) FlippersConstants.FLIPPER_B_UP_POSITION else FlippersConstants.FLIPPER_B_DOWN_POSITION
         flipperC.position =
             if (flipperCPosition == Position.UP) FlippersConstants.FLIPPER_C_UP_POSITION else FlippersConstants.FLIPPER_C_DOWN_POSITION
+
+        telemetry.addData("Flipper A state", flipperAPosition)
+        telemetry.addData("Flipper A position", flipperA.position)
+        telemetry.addData("Flipper B state", flipperBPosition)
+        telemetry.addData("Flipper B position", flipperB.position)
+        telemetry.addData("Flipper C state", flipperCPosition)
+        telemetry.addData("Flipper C position", flipperC.position)
     }
 }
