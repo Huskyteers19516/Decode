@@ -1,6 +1,5 @@
 package org.firstinspires.ftc.teamcodea.opmode;
 
-import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.bylazar.configurables.annotations.Configurable;
 import com.bylazar.telemetry.PanelsTelemetry;
 import com.bylazar.telemetry.TelemetryManager;
@@ -18,7 +17,8 @@ import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 import org.firstinspires.ftc.teamcodea.OpModeConstants;
 import org.firstinspires.ftc.teamcodea.pedroPathing.Constants;
 import org.firstinspires.ftc.vision.VisionPortal;
-import org.firstinspires.ftc.vision.apriltag.*;
+import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
+import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 
 import java.util.List;
 
@@ -28,26 +28,19 @@ public class RobotATeleOp extends OpMode {
 
     public static final Pose TARGET_P1 = new Pose(122.238, 121.003, Math.toRadians(45));
     public static final Pose TARGET_P2 = new Pose(122.238, 121.003, Math.toRadians(45));
-
+    public static Pose startingPose;
+    private final double slowModeMultiplier = 0.5;
     private AprilTagProcessor aprilTagProcessor;
     private VisionPortal visionPortal;
     private Follower follower;
-    public static Pose startingPose;
     private TelemetryManager telemetryM;
-
     private DcMotorEx launcher;
     private CRServo leftFeeder, rightFeeder;
     private ElapsedTime feederTimer = new ElapsedTime();
-
-    private enum LaunchState {IDLE, SPIN_UP, LAUNCH, LAUNCHING}
     private LaunchState launchState;
 
     private boolean slowMode = false;
-    private final double slowModeMultiplier = 0.5;
-
-    private enum Alliance {RED, BLUE}
     private Alliance alliance = Alliance.RED;
-
     private boolean autoDrive29 = false;
 
     @Override
@@ -78,7 +71,6 @@ public class RobotATeleOp extends OpMode {
 
         launcher.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         launcher.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(300, 0, 0, 10));
-        follower.holdPoint();
 
         leftFeeder.setDirection(DcMotorSimple.Direction.REVERSE);
         leftFeeder.setPower(OpModeConstants.STOP_SPEED);
@@ -193,4 +185,8 @@ public class RobotATeleOp extends OpMode {
                 break;
         }
     }
+
+    private enum LaunchState {IDLE, SPIN_UP, LAUNCH, LAUNCHING}
+
+    private enum Alliance {RED, BLUE}
 }
