@@ -1,0 +1,30 @@
+version: 2
+updates:
+  - package-ecosystem: "gradle"
+    directory: "/"
+    schedule:
+      interval: "daily"
+  - package-ecosystem: "gradle"
+    directory: "/TeamCodeA"
+    schedule:
+      interval: "daily"
+  - package-ecosystem: "gradle"
+    directory: "/TeamCodeB"
+    schedule:
+      interval: "daily"
+  - package-ecosystem: "gradle"
+    directory: "/TeamCodeC"
+    schedule:
+      interval: "daily"
+  - package-ecosystem: "gradle"
+    directory: "/TeamCodeD"
+    schedule:
+      interval: "daily"
+  - package-ecosystem: "gradle"
+    directory: "/Shared"
+    schedule:
+      interval: "daily"
+  - package-ecosystem: "gradle"
+    directory: "/FtcRobotController"
+    schedule:
+      interval: "daily"
