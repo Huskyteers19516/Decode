@@ -84,7 +84,7 @@ val huskyTeleOp = Mercurial.teleop("HuskyTeleOp", "Huskyteers") {
     // Main loop
     schedule(
         loop(exec {
-            intake.periodic(telemetryM)
+            intake.teleOpPeriodic(gamepad1.right_trigger.toDouble(), telemetryM)
             outtake.periodic(telemetryM)
             flippers.periodic(telemetryM)
 

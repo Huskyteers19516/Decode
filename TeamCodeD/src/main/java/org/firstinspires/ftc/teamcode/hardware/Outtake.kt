@@ -41,6 +41,7 @@ class Outtake(hardwareMap: HardwareMap) {
         telemetry.addData("Outtake active", active)
         telemetry.addData("Outtake power", outtakeMotor.power)
         telemetry.addData("Outtake velocity", outtakeMotor.velocity)
+        telemetry.addData("Outtake target velocity", targetVelocity)
         telemetry.addData("Outtake status", if (canShoot()) "CAN SHOOT" else "NOT READY")
     }
 
