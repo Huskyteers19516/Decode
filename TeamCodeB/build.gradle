@@ -16,7 +16,7 @@ apply from: '../build.common.gradle'
 apply from: '../build.dependencies.gradle'
 
 android {
-    namespace = 'org.firstinspires.ftc.robotcodeb'
+    namespace = 'org.firstinspires.ftc.teamcodeb'
 
     packagingOptions {
         jniLibs.useLegacyPackaging true
@@ -26,4 +26,6 @@ android {
 dependencies {
     implementation project(':FtcRobotController')
     implementation project(':Shared')
+
+    implementation 'com.bylazar:fullpanels:1.0.7'
 }
