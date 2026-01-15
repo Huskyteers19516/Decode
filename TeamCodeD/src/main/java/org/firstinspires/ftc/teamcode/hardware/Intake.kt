@@ -25,14 +25,14 @@ class Intake(hardwareMap: HardwareMap) {
         active = false
     }
 
-    fun teleOpPeriodic(driverStrength: Double, telemetry: TelemetryManager) {
+    fun manualPeriodic(driverStrength: Double, telemetry: TelemetryManager) {
         intakeMotor.power = if (active) IntakeConstants.ON_POWER else driverStrength
 
         telemetry.addData("Intake active", active)
         telemetry.addData("Intake power", intakeMotor.power)
     }
 
-    fun periodic( telemetry: TelemetryManager) {
+    fun periodic(telemetry: TelemetryManager) {
         intakeMotor.power = if (active) IntakeConstants.ON_POWER else IntakeConstants.OFF_POWER
         telemetry.addData("Intake active", active)
         telemetry.addData("Intake power", intakeMotor.power)

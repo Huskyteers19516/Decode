@@ -25,6 +25,12 @@ class Outtake(hardwareMap: HardwareMap) {
     private var targetVelocity = OuttakeConstants.DEFAULT_TARGET_VELOCITY;
     private var active = false
 
+    fun manualPeriodic(manualPower: Double, telemetry: TelemetryManager) {
+        outtakeMotor.power = manualPower
+        telemetry.addData("Outtake active", active)
+        telemetry.addData("Outtake power", outtakeMotor.power)
+        telemetry.addData("Outtake velocity", outtakeMotor.velocity)
+    }
 
     fun periodic(telemetry: TelemetryManager) {
         outtakeMotor.setVelocityPIDFCoefficients(
