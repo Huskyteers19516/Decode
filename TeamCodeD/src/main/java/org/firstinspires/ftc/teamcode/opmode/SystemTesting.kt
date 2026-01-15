@@ -34,7 +34,7 @@ class SystemTesting : OpMode() {
         if (gamepad1.a) flippers.raiseFlipper(Flippers.Flipper.A) else flippers.lowerFlipper(Flippers.Flipper.A)
         if (gamepad1.b) flippers.raiseFlipper(Flippers.Flipper.B) else flippers.lowerFlipper(Flippers.Flipper.B)
         if (gamepad1.x) flippers.raiseFlipper(Flippers.Flipper.C) else flippers.lowerFlipper(Flippers.Flipper.C)
-        telemetryM.update()
+        telemetryM.update(telemetry)
     }
 
 }
