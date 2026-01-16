@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.opmode
 
+import com.bylazar.telemetry.PanelsTelemetry
 import com.pedropathing.paths.PathChain
 import dev.frozenmilk.dairy.mercurial.continuations.Closure
 import dev.frozenmilk.dairy.mercurial.continuations.Continuations.deadline
@@ -15,11 +16,13 @@ import org.firstinspires.ftc.teamcode.hardware.Flippers.Flipper
 import org.firstinspires.ftc.teamcode.hardware.Intake
 import org.firstinspires.ftc.teamcode.hardware.Outtake
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants
+import org.firstinspires.ftc.teamcode.pedroPathing.Drawing
 import org.firstinspires.ftc.teamcode.utils.Alliance
 
 @Suppress("UNUSED")
 val HuskyAuto = Mercurial.autonomous {
     //#region Pre-Init
+    val telemetryM = PanelsTelemetry.telemetry;
 
     val follower = Constants.createFollower(hardwareMap)
 
@@ -55,7 +58,7 @@ val HuskyAuto = Mercurial.autonomous {
 
     fun followPath(path: PathChain) = sequence(exec {
         follower.followPath(path)
-    }, wait { follower.isBusy })
+    }, wait { !follower.isBusy })
 
     fun shoot(flipper: Flipper) = sequence(
         wait(outtake::canShoot),
@@ -105,4 +108,22 @@ val HuskyAuto = Mercurial.autonomous {
             }
         )
     )
+
+    schedule(
+        loop(exec {
+            intake.periodic(telemetryM)
+            outtake.periodic(telemetryM)
+            flippers.periodic(telemetryM)
+
+
+            follower.update()
+            telemetryM.addData("X (in)", follower.pose.x)
+            telemetryM.addData("Y (in)", follower.pose.y)
+            telemetryM.addData("Heading (deg)", Math.toDegrees(follower.pose.heading))
+            telemetryM.addData("Is busy", follower.isBusy)
+            Drawing.drawDebug(follower)
+            telemetryM.update(telemetry)
+        })
+    )
+    dropToScheduler()
 }

@@ -8,19 +8,19 @@ object FlippersConstants {
     var FLIPPER_A_DOWN_POSITION: Double = .17
 
     @JvmField
-    var FLIPPER_A_UP_POSITION: Double = .55
+    var FLIPPER_A_UP_POSITION: Double = .57
 
     @JvmField
     var FLIPPER_B_DOWN_POSITION: Double = .3
 
     @JvmField
-    var FLIPPER_B_UP_POSITION: Double = .7
+    var FLIPPER_B_UP_POSITION: Double = .76
 
     @JvmField
     var FLIPPER_C_DOWN_POSITION: Double = .32
 
     @JvmField
-    var FLIPPER_C_UP_POSITION: Double = .7
+    var FLIPPER_C_UP_POSITION: Double = .82
 
     @JvmField
     var FLIPPER_WAIT_TIME = 0.7

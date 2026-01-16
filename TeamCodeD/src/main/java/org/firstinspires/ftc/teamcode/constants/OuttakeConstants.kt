@@ -14,7 +14,7 @@ object OuttakeConstants {
     var KD: Double = 0.0
 
     @JvmField
-    var KS: Double = 0.0
+    var KS: Double = 10.0
 
     @JvmField
     var DEFAULT_TARGET_VELOCITY: Double = 1500.0

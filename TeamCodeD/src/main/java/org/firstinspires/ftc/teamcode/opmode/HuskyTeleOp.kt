@@ -8,6 +8,7 @@ import dev.frozenmilk.dairy.mercurial.continuations.Continuations.exec
 import dev.frozenmilk.dairy.mercurial.continuations.Continuations.loop
 import dev.frozenmilk.dairy.mercurial.continuations.Continuations.sequence
 import dev.frozenmilk.dairy.mercurial.continuations.Continuations.wait
+import dev.frozenmilk.dairy.mercurial.continuations.Fiber
 import dev.frozenmilk.dairy.mercurial.ftc.Mercurial
 import org.firstinspires.ftc.teamcode.constants.FlippersConstants
 import org.firstinspires.ftc.teamcode.hardware.Flippers
@@ -81,43 +82,54 @@ val huskyTeleOp = Mercurial.teleop("HuskyTeleOp", "Huskyteers") {
     )
 
 
-    // Main loop
-    schedule(
-        loop(exec {
-            intake.manualPeriodic(gamepad1.right_trigger.toDouble(), telemetryM)
-            outtake.periodic(telemetryM)
-            flippers.periodic(telemetryM)
-
-
-            follower.update()
-            follower.setTeleOpDrive(
-                -gamepad1.left_stick_y.toDouble() * throttle,
-                -gamepad1.left_stick_x.toDouble() * throttle,
-                -gamepad1.right_stick_x.toDouble() * throttle,
-                isRobotCentric
-            )
-            telemetryM.addData("X (in)", follower.pose.x)
-            telemetryM.addData("Y (in)", follower.pose.y)
-            telemetryM.addData("Heading (deg)", Math.toDegrees(follower.pose.heading))
-            telemetryM.addData("Throttle", throttle)
-            telemetryM.addData(
-                "Drive mode",
-                if (isRobotCentric) "Robot centric" else "Field centric"
-            )
-            Drawing.drawDebug(follower)
-            telemetryM.update(telemetry)
-        })
-    )
-
     var isLaunching = false
+
+
+    var flipperAFiber: Fiber? = null
+    var flipperBFiber: Fiber? = null
+    var flipperCFiber: Fiber? = null
 
     fun generateFlipperSequence(flipper: Flipper) = sequence(
         exec {
-            isLaunching = true
+            when (flipper) {
+                Flipper.A -> {
+                    flipperBFiber?.let {
+                        if (it.state == Fiber.State.ACTIVE)
+                            Fiber.UNRAVEL(it)
+                    }
+                    flipperCFiber?.let {
+                        if (it.state == Fiber.State.ACTIVE)
+                            Fiber.UNRAVEL(it)
+                    }
+                }
+
+                Flipper.B -> {
+                    flipperAFiber?.let {
+                        if (it.state == Fiber.State.ACTIVE)
+                            Fiber.UNRAVEL(it)
+                    }
+                    flipperCFiber?.let {
+                        if (it.state == Fiber.State.ACTIVE)
+                            Fiber.UNRAVEL(it)
+                    }
+                }
+
+                Flipper.C -> {
+                    flipperAFiber?.let {
+                        if (it.state == Fiber.State.ACTIVE)
+                            Fiber.UNRAVEL(it)
+                    }
+                    flipperBFiber?.let {
+                        if (it.state == Fiber.State.ACTIVE)
+                            Fiber.UNRAVEL(it)
+                    }
+                }
+            }
             outtake.start()
         },
         wait { outtake.canShoot() },
         exec {
+            isLaunching = true
             flippers.raiseFlipper(flipper)
         },
         wait(FlippersConstants.FLIPPER_WAIT_TIME),
@@ -130,19 +142,27 @@ val huskyTeleOp = Mercurial.teleop("HuskyTeleOp", "Huskyteers") {
         }
     )
 
-    bindSpawn(
-        risingEdge {
-            gamepad1.a && !isLaunching
+    flipperAFiber = bindSpawn(
+        {
+            val a = gamepad1.aWasPressed()
+            if (a) println("A$isLaunching")
+            a && !isLaunching
         }, generateFlipperSequence(Flipper.A)
     )
-    bindSpawn(
-        risingEdge {
-            gamepad1.b && !isLaunching
+
+    flipperBFiber = bindSpawn(
+        {
+            val b = gamepad1.bWasPressed()
+            if (b) println("B$isLaunching")
+            b && !isLaunching
         }, generateFlipperSequence(Flipper.B)
     )
-    bindSpawn(
-        risingEdge {
-            gamepad1.x && !isLaunching
+
+    flipperCFiber = bindSpawn(
+        {
+            val c = gamepad1.xWasPressed()
+            if (c) println("C$isLaunching")
+            c && !isLaunching
         }, generateFlipperSequence(Flipper.C)
     )
 
@@ -184,6 +204,35 @@ val huskyTeleOp = Mercurial.teleop("HuskyTeleOp", "Huskyteers") {
         }, exec {
             outtake.setTargetVelocity(outtake.getTargetVelocity() + 20)
         }
+    )
+
+    // Main loop
+    schedule(
+        loop(exec {
+            intake.manualPeriodic(gamepad1.right_trigger.toDouble(), telemetryM)
+            outtake.periodic(telemetryM)
+            flippers.periodic(telemetryM)
+
+
+            follower.update()
+            follower.setTeleOpDrive(
+                -gamepad1.left_stick_y.toDouble() * throttle,
+                -gamepad1.left_stick_x.toDouble() * throttle,
+                -gamepad1.right_stick_x.toDouble() * throttle,
+                isRobotCentric
+            )
+            telemetryM.addData("X (in)", follower.pose.x)
+            telemetryM.addData("Y (in)", follower.pose.y)
+            telemetryM.addData("Heading (deg)", Math.toDegrees(follower.pose.heading))
+            telemetryM.addData("Throttle", throttle)
+            telemetryM.addData("Is Launching", isLaunching)
+            telemetryM.addData(
+                "Drive mode",
+                if (isRobotCentric) "Robot centric" else "Field centric"
+            )
+            Drawing.drawDebug(follower)
+            telemetryM.update(telemetry)
+        })
     )
 
 
