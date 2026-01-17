@@ -62,7 +62,6 @@ val HuskyAuto = Mercurial.autonomous {
 
     fun shoot(flipper: Flipper) = sequence(
         wait(outtake::canShoot),
-        wait { outtake.canShoot() },
         exec {
             flippers.raiseFlipper(flipper)
         },

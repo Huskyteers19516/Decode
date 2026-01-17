@@ -3,12 +3,15 @@ package org.firstinspires.ftc.teamcode.opmode
 import android.util.Log
 import com.bylazar.telemetry.PanelsTelemetry
 import com.pedropathing.geometry.Pose
+import dev.frozenmilk.dairy.mercurial.continuations.Closure
 import dev.frozenmilk.dairy.mercurial.continuations.Continuations.deadline
 import dev.frozenmilk.dairy.mercurial.continuations.Continuations.exec
 import dev.frozenmilk.dairy.mercurial.continuations.Continuations.loop
 import dev.frozenmilk.dairy.mercurial.continuations.Continuations.sequence
 import dev.frozenmilk.dairy.mercurial.continuations.Continuations.wait
 import dev.frozenmilk.dairy.mercurial.continuations.Fiber
+import dev.frozenmilk.dairy.mercurial.continuations.mutexes.Mutex
+import dev.frozenmilk.dairy.mercurial.continuations.mutexes.Mutexes
 import dev.frozenmilk.dairy.mercurial.ftc.Mercurial
 import org.firstinspires.ftc.teamcode.constants.FlippersConstants
 import org.firstinspires.ftc.teamcode.hardware.Flippers
@@ -81,89 +84,57 @@ val huskyTeleOp = Mercurial.teleop("HuskyTeleOp", "Huskyteers") {
         exec { follower.pose = Pose() }
     )
 
+    var isLaunching = false;
 
-    var isLaunching = false
+    val prioritiser = Mutexes.Prioritiser<Int> { new, old -> new >= old }
 
+    val flipperMutex = Mutex(prioritiser, Unit)
 
-    var flipperAFiber: Fiber? = null
-    var flipperBFiber: Fiber? = null
-    var flipperCFiber: Fiber? = null
+    fun generateFlipperSequence(flipper: Flipper) = Mutexes.guard(
+        flipperMutex,
+        { 0 },
+        { _ ->
+            sequence(
+                exec { outtake.start() },
+                wait { outtake.canShoot() },
+                Mutexes.guard(
+                    flipperMutex,
+                    { 1 },
+                    { _ ->
+                        sequence(
+                            exec {
+                                isLaunching = true
+                                flippers.raiseFlipper(flipper)
+                            },
+                            wait(FlippersConstants.FLIPPER_WAIT_TIME),
+                            exec { flippers.lowerFlipper(flipper) },
 
-    fun generateFlipperSequence(flipper: Flipper) = sequence(
-        exec {
-            when (flipper) {
-                Flipper.A -> {
-                    flipperBFiber?.let {
-                        if (it.state == Fiber.State.ACTIVE)
-                            Fiber.UNRAVEL(it)
-                    }
-                    flipperCFiber?.let {
-                        if (it.state == Fiber.State.ACTIVE)
-                            Fiber.UNRAVEL(it)
-                    }
-                }
-
-                Flipper.B -> {
-                    flipperAFiber?.let {
-                        if (it.state == Fiber.State.ACTIVE)
-                            Fiber.UNRAVEL(it)
-                    }
-                    flipperCFiber?.let {
-                        if (it.state == Fiber.State.ACTIVE)
-                            Fiber.UNRAVEL(it)
-                    }
-                }
-
-                Flipper.C -> {
-                    flipperAFiber?.let {
-                        if (it.state == Fiber.State.ACTIVE)
-                            Fiber.UNRAVEL(it)
-                    }
-                    flipperBFiber?.let {
-                        if (it.state == Fiber.State.ACTIVE)
-                            Fiber.UNRAVEL(it)
-                    }
-                }
-            }
-            outtake.start()
+                            wait(FlippersConstants.FLIPPER_WAIT_TIME),
+                            exec { isLaunching = false }
+                        )
+                    },
+                    // should be impossible
+                    { _, k -> k }
+                )
+            )
         },
-        wait { outtake.canShoot() },
-        exec {
-            isLaunching = true
-            flippers.raiseFlipper(flipper)
-        },
-        wait(FlippersConstants.FLIPPER_WAIT_TIME),
-        exec {
-            flippers.lowerFlipper(flipper)
-        },
-        wait(FlippersConstants.FLIPPER_WAIT_TIME),
-        exec {
-            isLaunching = false
-        }
+         { _, k -> k }
     )
 
-    flipperAFiber = bindSpawn(
-        {
-            val a = gamepad1.aWasPressed()
-            if (a) println("A$isLaunching")
-            a && !isLaunching
-        }, generateFlipperSequence(Flipper.A)
+
+    bindSpawn(
+        risingEdge { gamepad1.a },
+        generateFlipperSequence(Flipper.A)
     )
 
-    flipperBFiber = bindSpawn(
-        {
-            val b = gamepad1.bWasPressed()
-            if (b) println("B$isLaunching")
-            b && !isLaunching
-        }, generateFlipperSequence(Flipper.B)
+    bindSpawn(
+        risingEdge { gamepad1.b },
+        generateFlipperSequence(Flipper.B)
     )
 
-    flipperCFiber = bindSpawn(
-        {
-            val c = gamepad1.xWasPressed()
-            if (c) println("C$isLaunching")
-            c && !isLaunching
-        }, generateFlipperSequence(Flipper.C)
+    bindSpawn(
+        risingEdge { gamepad1.x },
+        generateFlipperSequence(Flipper.C)
     )
 
     bindSpawn(
