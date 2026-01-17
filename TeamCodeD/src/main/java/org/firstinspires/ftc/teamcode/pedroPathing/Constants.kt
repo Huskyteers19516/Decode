@@ -15,15 +15,15 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
 object Constants {
     var followerConstants: FollowerConstants = FollowerConstants()
         .mass(13.2449)
-        .forwardZeroPowerAcceleration(-23.58)
-        .lateralZeroPowerAcceleration(-36.67)
+        .forwardZeroPowerAcceleration(-35.4)
+        .lateralZeroPowerAcceleration(-71.4)
 
     var pathConstraints: PathConstraints = PathConstraints(0.99, 100.0, 1.0, 1.0)
 
     var driveConstants: MecanumConstants = MecanumConstants()
         .maxPower(1.0)
-        .xVelocity(56.9)
-        .yVelocity(48.94)
+        .xVelocity(58.5)
+        .yVelocity(44.3)
         .rightFrontMotorName("front_right")
         .rightRearMotorName("back_right")
         .leftRearMotorName("back_left")
@@ -34,13 +34,13 @@ object Constants {
         .rightRearMotorDirection(DcMotorSimple.Direction.FORWARD)
 
     var localizerConstants: PinpointConstants = PinpointConstants()
-        .forwardPodY(6.7905)
-        .strafePodX(-2.928)
+        .forwardPodY(-6.7905)
+        .strafePodX(2.928)
         .distanceUnit(DistanceUnit.INCH)
         .hardwareMapName("pinpoint")
         .encoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD)
-        .forwardEncoderDirection(GoBildaPinpointDriver.EncoderDirection.FORWARD)
-        .strafeEncoderDirection(GoBildaPinpointDriver.EncoderDirection.FORWARD)
+        .forwardEncoderDirection(GoBildaPinpointDriver.EncoderDirection.REVERSED)
+        .strafeEncoderDirection(GoBildaPinpointDriver.EncoderDirection.REVERSED)
 
     @JvmStatic
     fun createFollower(hardwareMap: HardwareMap?): Follower {

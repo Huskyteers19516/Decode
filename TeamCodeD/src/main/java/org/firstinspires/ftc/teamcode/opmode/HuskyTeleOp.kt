@@ -89,14 +89,14 @@ val huskyTeleOp = Mercurial.teleop("HuskyTeleOp", "Huskyteers") {
 
     val flipperMutex = Mutex(prioritiser, Unit)
 
-    fun generateFlipperSequence(flipper: Flipper) = Mutexes.guard(
+    fun generateFlipperSequence(flipper: Flipper) = Mutexes.guardPoll(
         flipperMutex,
         { 0 },
         { _ ->
             sequence(
                 exec { outtake.active = true },
                 wait { outtake.canShoot() },
-                Mutexes.guard(
+                Mutexes.guardPoll(
                     flipperMutex,
                     { 1 },
                     { _ ->
@@ -113,12 +113,15 @@ val huskyTeleOp = Mercurial.teleop("HuskyTeleOp", "Huskyteers") {
                         )
                     },
                     // should be impossible
+                    { _, k -> k },
                     { _, k -> k }
                 )
             )
         },
+        { _, k -> k },
         { _, k -> k }
     )
+
 
 
     bindSpawn(
@@ -182,7 +185,7 @@ val huskyTeleOp = Mercurial.teleop("HuskyTeleOp", "Huskyteers") {
         }
     )
 
-    drive.follower.startTeleopDrive()
+    drive.follower.startTeleopDrive(true)
 
 
     // Main loop

@@ -25,11 +25,10 @@ val HuskyAuto = Mercurial.autonomous {
     //#region Pre-Init
     val telemetryM = PanelsTelemetry.telemetry;
 
-    val follower = Constants.createFollower(hardwareMap)
-
     var alliance = Alliance.RED
     val paths = Paths()
-    paths.buildPaths(follower, alliance)
+    val drive = Drive(hardwareMap)
+    paths.buildPaths(drive.follower, alliance)
 
     schedule(
         deadline(
@@ -41,10 +40,10 @@ val HuskyAuto = Mercurial.autonomous {
                 telemetry.addData("Current alliance", alliance)
                 if (gamepad1.bWasPressed()) {
                     alliance = Alliance.RED
-                    paths.buildPaths(follower, alliance)
+                    paths.buildPaths(drive.follower, alliance)
                 } else if (gamepad1.xWasPressed()) {
                     alliance = Alliance.BLUE
-                    paths.buildPaths(follower, alliance)
+                    paths.buildPaths(drive.follower, alliance)
                 }
                 telemetry.update()
             })
@@ -54,13 +53,12 @@ val HuskyAuto = Mercurial.autonomous {
     val outtake = Outtake(hardwareMap)
     val intake = Intake(hardwareMap)
     val flippers = Flippers(hardwareMap)
-    val drive = Drive(hardwareMap)
 
     //#endregion
 
     fun followPath(path: PathChain) = sequence(exec {
-        follower.followPath(path)
-    }, wait { !follower.isBusy })
+        drive.follower.followPath(path, true)
+    }, wait { !drive.follower.isBusy })
 
     fun shoot(flipper: Flipper) = sequence(
         wait(outtake::canShoot),
@@ -94,19 +92,21 @@ val HuskyAuto = Mercurial.autonomous {
                 sequence(
                     exec { outtake.active = true },
                     followPath(paths.fromStartToShoot),
-                    shootAllThree(),
-                    doWithIntake(followPath(paths.pickUpFirstRow)),
-                    followPath(paths.firstRowToShoot),
-                    shootAllThree(),
-                    doWithIntake(followPath(paths.pickUpSecondRow)),
-                    followPath(paths.secondRowToShoot),
-                    shootAllThree(),
-                    doWithIntake(followPath(paths.pickUpThirdRow))
+//                    shootAllThree(),
+//                    doWithIntake(
+                        followPath(paths.pickUpFirstRow)
+//                    ),
+//                    followPath(paths.firstRowToShoot),
+//                    shootAllThree(),
+//                    doWithIntake(followPath(paths.pickUpSecondRow)),
+//                    followPath(paths.secondRowToShoot),
+//                    shootAllThree(),
+//                    doWithIntake(followPath(paths.pickUpThirdRow))
                 ),
             ),
-            exec {
-                follower.holdPoint(paths.endLocation.withHeading(follower.heading))
-            }
+//            exec {
+//                drive.follower.holdPoint(paths.endLocation.withHeading(drive.follower.heading))
+//            }
         )
     )
 
@@ -115,9 +115,8 @@ val HuskyAuto = Mercurial.autonomous {
             intake.periodic(telemetryM)
             outtake.periodic(telemetryM)
             flippers.periodic(telemetryM)
-
-
             drive.periodic(telemetryM)
+
             telemetryM.update(telemetry)
         })
     )
