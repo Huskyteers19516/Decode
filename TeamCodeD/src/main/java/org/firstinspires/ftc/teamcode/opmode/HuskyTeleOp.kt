@@ -7,6 +7,7 @@ import dev.frozenmilk.dairy.mercurial.continuations.Closure
 import dev.frozenmilk.dairy.mercurial.continuations.Continuations.deadline
 import dev.frozenmilk.dairy.mercurial.continuations.Continuations.exec
 import dev.frozenmilk.dairy.mercurial.continuations.Continuations.loop
+import dev.frozenmilk.dairy.mercurial.continuations.Continuations.noop
 import dev.frozenmilk.dairy.mercurial.continuations.Continuations.sequence
 import dev.frozenmilk.dairy.mercurial.continuations.Continuations.wait
 import dev.frozenmilk.dairy.mercurial.continuations.Fiber
@@ -14,6 +15,7 @@ import dev.frozenmilk.dairy.mercurial.continuations.mutexes.Mutex
 import dev.frozenmilk.dairy.mercurial.continuations.mutexes.Mutexes
 import dev.frozenmilk.dairy.mercurial.ftc.Mercurial
 import org.firstinspires.ftc.teamcode.constants.FlippersConstants
+import org.firstinspires.ftc.teamcode.hardware.Drive
 import org.firstinspires.ftc.teamcode.hardware.Flippers
 import org.firstinspires.ftc.teamcode.hardware.Flippers.Flipper
 import org.firstinspires.ftc.teamcode.hardware.Intake
@@ -29,7 +31,6 @@ val huskyTeleOp = Mercurial.teleop("HuskyTeleOp", "Huskyteers") {
     //#region Pre-Init
     val telemetryM = PanelsTelemetry.telemetry;
 
-    val follower = Constants.createFollower(hardwareMap)
 
     var alliance = Alliance.RED
     schedule(
@@ -54,6 +55,7 @@ val huskyTeleOp = Mercurial.teleop("HuskyTeleOp", "Huskyteers") {
     val outtake = Outtake(hardwareMap)
     val intake = Intake(hardwareMap)
     val flippers = Flippers(hardwareMap)
+    val drive = Drive(hardwareMap)
 
     //#endregion
 
@@ -61,27 +63,24 @@ val huskyTeleOp = Mercurial.teleop("HuskyTeleOp", "Huskyteers") {
 
     // Drive controls
 
-    var throttle = 1.0
-    var isRobotCentric = false
-
     bindSpawn(
         risingEdge { gamepad1.left_bumper },
-        exec { throttle = 0.5 }
+        exec { drive.throttle = 0.5 }
     )
 
     bindSpawn(
         risingEdge { !gamepad1.left_bumper },
-        exec { throttle = 1.0 }
+        exec { drive.throttle = 1.0 }
     )
 
     bindSpawn(
         risingEdge { gamepad1.a },
-        exec { isRobotCentric = !isRobotCentric }
+        exec { drive.isRobotCentric = !drive.isRobotCentric }
     )
 
     bindSpawn(
         risingEdge { gamepad1.start },
-        exec { follower.pose = Pose() }
+        exec { drive.resetOrientation() }
     )
 
     var isLaunching = false;
@@ -95,7 +94,7 @@ val huskyTeleOp = Mercurial.teleop("HuskyTeleOp", "Huskyteers") {
         { 0 },
         { _ ->
             sequence(
-                exec { outtake.start() },
+                exec { outtake.active = true },
                 wait { outtake.canShoot() },
                 Mutexes.guard(
                     flipperMutex,
@@ -118,7 +117,7 @@ val huskyTeleOp = Mercurial.teleop("HuskyTeleOp", "Huskyteers") {
                 )
             )
         },
-         { _, k -> k }
+        { _, k -> k }
     )
 
 
@@ -139,17 +138,23 @@ val huskyTeleOp = Mercurial.teleop("HuskyTeleOp", "Huskyteers") {
 
     bindSpawn(
         risingEdge {
-            gamepad2.a && !isLaunching
-        }, exec {
-            outtake.toggle()
-        }
+            gamepad2.a
+        }, Mutexes.guardPoll(
+            flipperMutex,
+            { -1 },
+            { _ ->
+                exec { outtake.toggle() }
+            },
+            noop(),
+            noop()
+        )
     )
 
     bindSpawn(
         risingEdge {
             gamepad2.dpad_up
         }, exec {
-            outtake.setTargetVelocity(outtake.getTargetVelocity() + 100)
+            outtake.targetVelocity += 100
         }
     )
 
@@ -157,15 +162,7 @@ val huskyTeleOp = Mercurial.teleop("HuskyTeleOp", "Huskyteers") {
         risingEdge {
             gamepad2.dpad_down
         }, exec {
-            outtake.setTargetVelocity(outtake.getTargetVelocity() - 100)
-        }
-    )
-
-    bindSpawn(
-        risingEdge {
-            gamepad2.dpad_left
-        }, exec {
-            outtake.setTargetVelocity(outtake.getTargetVelocity() - 20)
+            outtake.targetVelocity -= 100
         }
     )
 
@@ -173,9 +170,20 @@ val huskyTeleOp = Mercurial.teleop("HuskyTeleOp", "Huskyteers") {
         risingEdge {
             gamepad2.dpad_right
         }, exec {
-            outtake.setTargetVelocity(outtake.getTargetVelocity() + 20)
+            outtake.targetVelocity += 20
         }
     )
+
+    bindSpawn(
+        risingEdge {
+            gamepad2.dpad_left
+        }, exec {
+            outtake.targetVelocity -= 20
+        }
+    )
+
+    drive.follower.startTeleopDrive()
+
 
     // Main loop
     schedule(
@@ -183,32 +191,17 @@ val huskyTeleOp = Mercurial.teleop("HuskyTeleOp", "Huskyteers") {
             intake.manualPeriodic(gamepad1.right_trigger.toDouble(), telemetryM)
             outtake.periodic(telemetryM)
             flippers.periodic(telemetryM)
-
-
-            follower.update()
-            follower.setTeleOpDrive(
-                -gamepad1.left_stick_y.toDouble() * throttle,
-                -gamepad1.left_stick_x.toDouble() * throttle,
-                -gamepad1.right_stick_x.toDouble() * throttle,
-                isRobotCentric
+            drive.manualPeriodic(
+                -gamepad1.left_stick_y.toDouble(),
+                -gamepad1.left_stick_x.toDouble(),
+                -gamepad1.right_stick_x.toDouble(),
+                telemetryM
             )
-            telemetryM.addData("X (in)", follower.pose.x)
-            telemetryM.addData("Y (in)", follower.pose.y)
-            telemetryM.addData("Heading (deg)", Math.toDegrees(follower.pose.heading))
-            telemetryM.addData("Throttle", throttle)
-            telemetryM.addData("Is Launching", isLaunching)
-            telemetryM.addData(
-                "Drive mode",
-                if (isRobotCentric) "Robot centric" else "Field centric"
-            )
-            Drawing.drawDebug(follower)
+
+            telemetry.addData("Is Launching", isLaunching)
             telemetryM.update(telemetry)
         })
     )
-
-
-    follower.startTeleOpDrive()
-
 
     Log.d(TAG, "HuskyTeleOp started")
     dropToScheduler()

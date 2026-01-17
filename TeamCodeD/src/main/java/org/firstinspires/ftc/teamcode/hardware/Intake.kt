@@ -27,13 +27,15 @@ class Intake(hardwareMap: HardwareMap) {
 
     fun manualPeriodic(driverStrength: Double, telemetry: TelemetryManager) {
         intakeMotor.power = if (active) IntakeConstants.ON_POWER else driverStrength
-
-        telemetry.addData("Intake active", active)
-        telemetry.addData("Intake power", intakeMotor.power)
+        writeTelemetry(telemetry)
     }
 
     fun periodic(telemetry: TelemetryManager) {
         intakeMotor.power = if (active) IntakeConstants.ON_POWER else IntakeConstants.OFF_POWER
+        writeTelemetry(telemetry)
+    }
+
+    fun writeTelemetry(telemetry: TelemetryManager) {
         telemetry.addData("Intake active", active)
         telemetry.addData("Intake power", intakeMotor.power)
     }

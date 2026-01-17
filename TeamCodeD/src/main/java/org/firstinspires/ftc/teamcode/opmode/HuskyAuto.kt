@@ -11,6 +11,7 @@ import dev.frozenmilk.dairy.mercurial.continuations.Continuations.wait
 import dev.frozenmilk.dairy.mercurial.ftc.Mercurial
 import org.firstinspires.ftc.teamcode.constants.AutoConstants
 import org.firstinspires.ftc.teamcode.constants.FlippersConstants
+import org.firstinspires.ftc.teamcode.hardware.Drive
 import org.firstinspires.ftc.teamcode.hardware.Flippers
 import org.firstinspires.ftc.teamcode.hardware.Flippers.Flipper
 import org.firstinspires.ftc.teamcode.hardware.Intake
@@ -53,6 +54,7 @@ val HuskyAuto = Mercurial.autonomous {
     val outtake = Outtake(hardwareMap)
     val intake = Intake(hardwareMap)
     val flippers = Flippers(hardwareMap)
+    val drive = Drive(hardwareMap)
 
     //#endregion
 
@@ -90,7 +92,7 @@ val HuskyAuto = Mercurial.autonomous {
             deadline(
                 wait(AutoConstants.CUTOFF_SECONDS),
                 sequence(
-                    exec(outtake::start),
+                    exec { outtake.active = true },
                     followPath(paths.fromStartToShoot),
                     shootAllThree(),
                     doWithIntake(followPath(paths.pickUpFirstRow)),
@@ -115,12 +117,7 @@ val HuskyAuto = Mercurial.autonomous {
             flippers.periodic(telemetryM)
 
 
-            follower.update()
-            telemetryM.addData("X (in)", follower.pose.x)
-            telemetryM.addData("Y (in)", follower.pose.y)
-            telemetryM.addData("Heading (deg)", Math.toDegrees(follower.pose.heading))
-            telemetryM.addData("Is busy", follower.isBusy)
-            Drawing.drawDebug(follower)
+            drive.periodic(telemetryM)
             telemetryM.update(telemetry)
         })
     )

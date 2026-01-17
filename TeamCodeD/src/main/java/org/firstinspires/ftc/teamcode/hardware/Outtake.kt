@@ -22,8 +22,8 @@ class Outtake(hardwareMap: HardwareMap) {
         outtakeMotor.power = 0.0
     }
 
-    private var targetVelocity = OuttakeConstants.DEFAULT_TARGET_VELOCITY;
-    private var active = false
+    var targetVelocity = OuttakeConstants.DEFAULT_TARGET_VELOCITY;
+    var active = false
 
     fun manualPeriodic(manualPower: Double, telemetry: TelemetryManager) {
         outtakeMotor.power = manualPower
@@ -53,23 +53,6 @@ class Outtake(hardwareMap: HardwareMap) {
 
     fun canShoot(): Boolean {
         return abs(targetVelocity - outtakeMotor.velocity) < OuttakeConstants.ALLOWANCE
-    }
-
-    fun getTargetVelocity(): Double {
-        return targetVelocity
-    }
-
-    fun setTargetVelocity(velocity: Double) {
-        targetVelocity = velocity
-    }
-
-
-    fun start() {
-        active = true
-    }
-
-    fun stop() {
-        active = false
     }
 
     fun toggle() {
