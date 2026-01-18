@@ -6,6 +6,7 @@ import com.pedropathing.geometry.Pose
 import dev.frozenmilk.dairy.mercurial.continuations.Closure
 import dev.frozenmilk.dairy.mercurial.continuations.Continuations.deadline
 import dev.frozenmilk.dairy.mercurial.continuations.Continuations.exec
+import dev.frozenmilk.dairy.mercurial.continuations.Continuations.ifHuh
 import dev.frozenmilk.dairy.mercurial.continuations.Continuations.loop
 import dev.frozenmilk.dairy.mercurial.continuations.Continuations.noop
 import dev.frozenmilk.dairy.mercurial.continuations.Continuations.sequence
@@ -113,14 +114,16 @@ val huskyTeleOp = Mercurial.teleop("HuskyTeleOp", "Huskyteers") {
                         )
                     },
                     // should be impossible
-                    { _, k -> k },
-                    { _, k -> k }
+                    noop(),
+                    noop()
                 )
             )
         },
-        { _, k -> k },
-        { _, k -> k }
+        noop(),
+        noop()
     )
+
+
 
 
 
