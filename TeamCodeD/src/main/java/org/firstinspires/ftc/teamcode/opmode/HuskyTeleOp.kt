@@ -73,10 +73,10 @@ val huskyTeleOp = Mercurial.teleop("HuskyTeleOp", "Huskyteers") {
         exec { drive.throttle = 1.0 }
     )
 
-    bindSpawn(
-        risingEdge { gamepad1.a },
-        exec { drive.isRobotCentric = !drive.isRobotCentric }
-    )
+//    bindSpawn(
+//        risingEdge { gamepad1.a },
+//        exec { drive.isRobotCentric = !drive.isRobotCentric }
+//    )
 
     bindSpawn(
         risingEdge { gamepad1.start },
