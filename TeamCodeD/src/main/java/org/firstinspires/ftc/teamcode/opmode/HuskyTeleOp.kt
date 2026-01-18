@@ -2,28 +2,22 @@ package org.firstinspires.ftc.teamcode.opmode
 
 import android.util.Log
 import com.bylazar.telemetry.PanelsTelemetry
-import com.pedropathing.geometry.Pose
-import dev.frozenmilk.dairy.mercurial.continuations.Closure
 import dev.frozenmilk.dairy.mercurial.continuations.Continuations.deadline
 import dev.frozenmilk.dairy.mercurial.continuations.Continuations.exec
-import dev.frozenmilk.dairy.mercurial.continuations.Continuations.ifHuh
 import dev.frozenmilk.dairy.mercurial.continuations.Continuations.loop
 import dev.frozenmilk.dairy.mercurial.continuations.Continuations.noop
 import dev.frozenmilk.dairy.mercurial.continuations.Continuations.sequence
 import dev.frozenmilk.dairy.mercurial.continuations.Continuations.wait
-import dev.frozenmilk.dairy.mercurial.continuations.Fiber
 import dev.frozenmilk.dairy.mercurial.continuations.mutexes.Mutex
 import dev.frozenmilk.dairy.mercurial.continuations.mutexes.Mutexes
 import dev.frozenmilk.dairy.mercurial.ftc.Mercurial
 import org.firstinspires.ftc.teamcode.constants.FlippersConstants
 import org.firstinspires.ftc.teamcode.hardware.Drive
 import org.firstinspires.ftc.teamcode.hardware.Flippers
-import org.firstinspires.ftc.teamcode.hardware.Flippers.Flipper
 import org.firstinspires.ftc.teamcode.hardware.Intake
 import org.firstinspires.ftc.teamcode.hardware.Outtake
-import org.firstinspires.ftc.teamcode.pedroPathing.Constants
-import org.firstinspires.ftc.teamcode.pedroPathing.Drawing
 import org.firstinspires.ftc.teamcode.utils.Alliance
+import org.firstinspires.ftc.teamcode.utils.Slot
 
 const val TAG = "HuskyTeleOp"
 
@@ -90,7 +84,7 @@ val huskyTeleOp = Mercurial.teleop("HuskyTeleOp", "Huskyteers") {
 
     val flipperMutex = Mutex(prioritiser, Unit)
 
-    fun generateFlipperSequence(flipper: Flipper) = Mutexes.guardPoll(
+    fun generateFlipperSequence(flipper: Slot) = Mutexes.guardPoll(
         flipperMutex,
         { 0 },
         { _ ->
@@ -129,17 +123,17 @@ val huskyTeleOp = Mercurial.teleop("HuskyTeleOp", "Huskyteers") {
 
     bindSpawn(
         risingEdge { gamepad1.a },
-        generateFlipperSequence(Flipper.A)
+        generateFlipperSequence(Slot.A)
     )
 
     bindSpawn(
         risingEdge { gamepad1.b },
-        generateFlipperSequence(Flipper.B)
+        generateFlipperSequence(Slot.B)
     )
 
     bindSpawn(
         risingEdge { gamepad1.x },
-        generateFlipperSequence(Flipper.C)
+        generateFlipperSequence(Slot.C)
     )
 
     bindSpawn(

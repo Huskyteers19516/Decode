@@ -26,6 +26,7 @@ class Outtake(hardwareMap: HardwareMap) {
     var active = false
 
     fun manualPeriodic(manualPower: Double, telemetry: TelemetryManager) {
+        outtakeMotor.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
         outtakeMotor.power = manualPower
         telemetry.addData("Outtake active", active)
         telemetry.addData("Outtake power", outtakeMotor.power)
@@ -33,6 +34,7 @@ class Outtake(hardwareMap: HardwareMap) {
     }
 
     fun periodic(telemetry: TelemetryManager) {
+        outtakeMotor.mode = DcMotor.RunMode.RUN_USING_ENCODER
         outtakeMotor.setVelocityPIDFCoefficients(
             OuttakeConstants.KP,
             OuttakeConstants.KI,

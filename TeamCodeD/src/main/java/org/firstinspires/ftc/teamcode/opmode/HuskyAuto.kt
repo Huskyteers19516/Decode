@@ -13,12 +13,10 @@ import org.firstinspires.ftc.teamcode.constants.AutoConstants
 import org.firstinspires.ftc.teamcode.constants.FlippersConstants
 import org.firstinspires.ftc.teamcode.hardware.Drive
 import org.firstinspires.ftc.teamcode.hardware.Flippers
-import org.firstinspires.ftc.teamcode.hardware.Flippers.Flipper
 import org.firstinspires.ftc.teamcode.hardware.Intake
 import org.firstinspires.ftc.teamcode.hardware.Outtake
-import org.firstinspires.ftc.teamcode.pedroPathing.Constants
-import org.firstinspires.ftc.teamcode.pedroPathing.Drawing
 import org.firstinspires.ftc.teamcode.utils.Alliance
+import org.firstinspires.ftc.teamcode.utils.Slot
 
 @Suppress("UNUSED")
 val HuskyAuto = Mercurial.autonomous {
@@ -60,7 +58,7 @@ val HuskyAuto = Mercurial.autonomous {
         drive.follower.followPath(path, true)
     }, wait { !drive.follower.isBusy })
 
-    fun shoot(flipper: Flipper) = sequence(
+    fun shoot(flipper: Slot) = sequence(
         wait(outtake::canShoot),
         exec {
             flippers.raiseFlipper(flipper)
@@ -73,9 +71,9 @@ val HuskyAuto = Mercurial.autonomous {
     )
 
     fun shootAllThree() = sequence(
-        shoot(Flipper.A),
-        shoot(Flipper.B),
-        shoot(Flipper.C)
+        shoot(Slot.A),
+        shoot(Slot.B),
+        shoot(Slot.C)
     )
 
     fun doWithIntake(closure: Closure) = sequence(
@@ -94,7 +92,7 @@ val HuskyAuto = Mercurial.autonomous {
                     followPath(paths.fromStartToShoot),
 //                    shootAllThree(),
 //                    doWithIntake(
-                        followPath(paths.pickUpFirstRow)
+                    followPath(paths.pickUpFirstRow)
 //                    ),
 //                    followPath(paths.firstRowToShoot),
 //                    shootAllThree(),

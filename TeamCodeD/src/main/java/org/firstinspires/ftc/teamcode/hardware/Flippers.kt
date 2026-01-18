@@ -4,15 +4,12 @@ import com.bylazar.telemetry.TelemetryManager
 import com.qualcomm.robotcore.hardware.HardwareMap
 import com.qualcomm.robotcore.hardware.Servo
 import org.firstinspires.ftc.teamcode.constants.FlippersConstants
+import org.firstinspires.ftc.teamcode.utils.Slot
 
 class Flippers(hardwareMap: HardwareMap) {
     private val flipperA: Servo = hardwareMap.get<Servo>(Servo::class.java, "feederA")
     private val flipperB: Servo = hardwareMap.get<Servo>(Servo::class.java, "feederB")
     private val flipperC: Servo = hardwareMap.get<Servo>(Servo::class.java, "feederC")
-
-    enum class Flipper {
-        A, B, C
-    }
 
     enum class Position {
         UP, DOWN
@@ -27,11 +24,11 @@ class Flippers(hardwareMap: HardwareMap) {
         flipperC.direction = Servo.Direction.REVERSE
     }
 
-    fun raiseFlipper(flipper: Flipper) {
-        when (flipper) {
-            Flipper.A -> flipperAPosition = Position.UP
-            Flipper.B -> flipperBPosition = Position.UP
-            Flipper.C -> flipperCPosition = Position.UP
+    fun raiseFlipper(slot: Slot) {
+        when (slot) {
+            Slot.A -> flipperAPosition = Position.UP
+            Slot.B -> flipperBPosition = Position.UP
+            Slot.C -> flipperCPosition = Position.UP
         }
         if (listOf(flipperAPosition, flipperBPosition, flipperCPosition).count {
                 it == Position.UP
@@ -40,11 +37,11 @@ class Flippers(hardwareMap: HardwareMap) {
         }
     }
 
-    fun lowerFlipper(flipper: Flipper) {
-        when (flipper) {
-            Flipper.A -> flipperAPosition = Position.DOWN
-            Flipper.B -> flipperBPosition = Position.DOWN
-            Flipper.C -> flipperCPosition = Position.DOWN
+    fun lowerFlipper(slot: Slot) {
+        when (slot) {
+            Slot.A -> flipperAPosition = Position.DOWN
+            Slot.B -> flipperBPosition = Position.DOWN
+            Slot.C -> flipperCPosition = Position.DOWN
         }
     }
 
