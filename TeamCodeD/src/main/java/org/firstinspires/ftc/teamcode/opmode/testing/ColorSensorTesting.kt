@@ -6,7 +6,7 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
 import org.firstinspires.ftc.teamcode.hardware.ColorSensors
 
-@TeleOp(name = "System Testing", group = "Testing")
+@TeleOp(name = "Color Sensor Testing", group = "Testing")
 class ColorSensorTesting : OpMode() {
     lateinit var telemetryM: TelemetryManager
     lateinit var colorSensors: ColorSensors

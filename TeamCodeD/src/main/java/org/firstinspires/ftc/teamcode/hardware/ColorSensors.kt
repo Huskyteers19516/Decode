@@ -62,7 +62,7 @@ class ColorSensors(private val hardwareMap: HardwareMap) {
 
     companion object {
         enum class Artifact {
-            GREEN, PURPLE, NONE
+            GREEN, PURPLE, UNKNOWN, NONE
         }
 
         fun identifyArtifact(colorSensor1: ColorRangeSensor, colorSensor2: ColorRangeSensor): Artifact {
@@ -74,7 +74,7 @@ class ColorSensors(private val hardwareMap: HardwareMap) {
             } else if (listOf(artifact1, artifact2).count { it != Artifact.NONE } == 1) {
                 if (artifact1 != Artifact.NONE) artifact1 else artifact2
             } else {
-                Artifact.NONE
+                Artifact.UNKNOWN
             }
         }
 
