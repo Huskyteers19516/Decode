@@ -45,7 +45,7 @@ class Flippers(hardwareMap: HardwareMap) {
         }
     }
 
-    fun periodic(telemetry: TelemetryManager) {
+    fun periodic(telemetry: TelemetryManager, debugging: Boolean = false) {
         flipperA.position =
             if (flipperAPosition == Position.UP) FlippersConstants.FLIPPER_A_UP_POSITION else FlippersConstants.FLIPPER_A_DOWN_POSITION
         flipperB.position =
@@ -54,10 +54,11 @@ class Flippers(hardwareMap: HardwareMap) {
             if (flipperCPosition == Position.UP) FlippersConstants.FLIPPER_C_UP_POSITION else FlippersConstants.FLIPPER_C_DOWN_POSITION
 
         telemetry.addData("Flipper A state", flipperAPosition)
-        telemetry.addData("Flipper A position", flipperA.position)
         telemetry.addData("Flipper B state", flipperBPosition)
-        telemetry.addData("Flipper B position", flipperB.position)
         telemetry.addData("Flipper C state", flipperCPosition)
+        if (!debugging) return
+        telemetry.addData("Flipper A position", flipperA.position)
+        telemetry.addData("Flipper B position", flipperB.position)
         telemetry.addData("Flipper C position", flipperC.position)
     }
 }

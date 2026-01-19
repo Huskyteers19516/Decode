@@ -49,6 +49,7 @@ val cameraTesting = Mercurial.teleop("Camera Testing", "Testing") {
                 try {
                     camera.debugTelemetry(telemetryM)
                 } catch (e: Exception) {
+                    telemetryM.addLine("Camera error!!")
                     e.printStackTrace()
                 }
                 telemetryM.update(telemetry)

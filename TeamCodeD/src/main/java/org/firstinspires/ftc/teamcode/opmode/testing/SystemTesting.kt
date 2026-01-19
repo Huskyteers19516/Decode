@@ -1,64 +1,105 @@
 package org.firstinspires.ftc.teamcode.opmode.testing
 
 import com.bylazar.telemetry.PanelsTelemetry
-import com.bylazar.telemetry.TelemetryManager
-import com.qualcomm.robotcore.eventloop.opmode.OpMode
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp
+import dev.frozenmilk.dairy.mercurial.continuations.Continuations.exec
+import dev.frozenmilk.dairy.mercurial.continuations.Continuations.loop
+import dev.frozenmilk.dairy.mercurial.ftc.Mercurial
+import org.firstinspires.ftc.teamcode.constants.TeleOpConstants
 import org.firstinspires.ftc.teamcode.hardware.Flippers
 import org.firstinspires.ftc.teamcode.hardware.Intake
 import org.firstinspires.ftc.teamcode.hardware.Outtake
-import org.firstinspires.ftc.teamcode.utils.Slot
+import org.firstinspires.ftc.teamcode.utils.hl
 
-@TeleOp(name = "System Testing", group = "Testing")
-class SystemTesting : OpMode() {
-    lateinit var telemetryM: TelemetryManager
-    lateinit var intake: Intake
-    lateinit var flippers: Flippers
-    lateinit var outtake: Outtake
-    override fun init() {
-        telemetryM = PanelsTelemetry.telemetry
-        intake = Intake(hardwareMap)
-        flippers = Flippers(hardwareMap)
-        outtake = Outtake(hardwareMap)
-    }
+@Suppress("unused")
+val systemTesting = Mercurial.teleop("System Testing", "Testing") {
+    val telemetryM = PanelsTelemetry.telemetry;
 
-    val velocityMode = true
+    val intake = Intake(hardwareMap)
+    val outtake = Outtake(hardwareMap)
+    val flippers = Flippers(hardwareMap)
 
-    override fun loop() {
-        telemetryM.addLine("System Testing")
-        telemetryM.addLine("Use the left stick to control the intake")
-        telemetryM.addLine("A for flipper A, B for flipper B, X for flipper C")
+    waitForStart()
 
-        telemetryM.addData(
-            "Outtake mode",
-            if (velocityMode) "Constant velocity mode" else "Manual power mode. Use right stick to control the outtake"
-        )
+    var velocityMode = true
 
-        intake.manualPeriodic(-gamepad1.left_stick_y.toDouble(), telemetryM)
-        if (velocityMode) {
-            telemetryM.addLine("Use dpad to control the outtake velocity, Y to toggle")
-            outtake.periodic(telemetryM)
-            if (gamepad1.dpadUpWasPressed()) {
-                outtake.targetVelocity += 100
-            } else if (gamepad1.dpadDownWasPressed()) {
-                outtake.targetVelocity -= 100
-            } else if (gamepad1.dpadLeftWasPressed()) {
-                outtake.targetVelocity -= 20
-            } else if (gamepad1.dpadRightWasPressed()) {
-                outtake.targetVelocity += 20
-            }
-            if (gamepad1.yWasPressed()) outtake.toggle()
-        } else {
-            telemetryM.addLine("Use the right stick to control the outtake")
-            outtake.manualPeriodic(-gamepad1.right_stick_y.toDouble(), telemetryM)
+    bindSpawn(
+        risingEdge { gamepad1.start }, exec { velocityMode = !velocityMode }
+    )
+
+    bindSpawn(
+        risingEdge {
+            gamepad1.dpad_up
+        },
+        exec {
+            outtake.targetVelocity += TeleOpConstants.OUTTAKE_TARGET_VELOCITY_BIG_ADJUSTMENT_FACTOR
         }
-        flippers.periodic(telemetryM)
+    )
 
+    bindSpawn(
+        risingEdge {
+            gamepad1.dpad_down
+        },
+        exec {
+            outtake.targetVelocity -= TeleOpConstants.OUTTAKE_TARGET_VELOCITY_BIG_ADJUSTMENT_FACTOR
+        }
+    )
 
-        if (gamepad1.a) flippers.raiseFlipper(Slot.A) else flippers.lowerFlipper(Slot.A)
-        if (gamepad1.b) flippers.raiseFlipper(Slot.B) else flippers.lowerFlipper(Slot.B)
-        if (gamepad1.x) flippers.raiseFlipper(Slot.C) else flippers.lowerFlipper(Slot.C)
-        telemetryM.update(telemetry)
-    }
+    bindSpawn(
+        risingEdge {
+            gamepad1.dpad_left
+        },
+        exec {
+            outtake.targetVelocity -= TeleOpConstants.OUTTAKE_TARGET_VELOCITY_SMALL_ADJUSTMENT_FACTOR
+        }
+    )
 
+    bindSpawn(
+        risingEdge {
+            gamepad1.dpad_right
+        },
+        exec {
+            outtake.targetVelocity += TeleOpConstants.OUTTAKE_TARGET_VELOCITY_SMALL_ADJUSTMENT_FACTOR
+        }
+    )
+
+    bindSpawn(
+        risingEdge {
+            gamepad1.y
+        },
+        exec {
+            outtake.toggle()
+        }
+    )
+
+    schedule(
+        loop(
+            exec {
+                telemetryM.addLine("System Testing")
+                telemetryM.addLine("Use the left stick to control the intake")
+                telemetryM.addLine("A for flipper A, B for flipper B, X for flipper C")
+                telemetryM.addLine("Press start to toggle between velocity and manual power modes")
+                if (velocityMode) {
+                    telemetryM.addData(
+                        "Outtake mode",
+                        "Constant velocity mode. Use dpad to control the outtake velocity, Y to toggle"
+                    )
+                    telemetryM.hl()
+                    outtake.periodic(telemetryM, true)
+                } else {
+                    telemetryM.addData("Outtake mode", "Manual power mode. Use the right stick to control the outtake")
+                    telemetryM.hl()
+                    outtake.manualPeriodic(-gamepad1.right_stick_y.toDouble(), telemetryM)
+                }
+                telemetryM.hl()
+                intake.manualPeriodic(-gamepad2.left_stick_y.toDouble(), telemetryM)
+
+                telemetryM.hl()
+                flippers.periodic(telemetryM, true)
+
+                telemetryM.update(telemetry)
+            }
+        )
+    )
+
+    dropToScheduler()
 }

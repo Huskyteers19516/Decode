@@ -13,12 +13,10 @@ import dev.frozenmilk.dairy.mercurial.continuations.mutexes.Mutexes
 import dev.frozenmilk.dairy.mercurial.ftc.Mercurial
 import org.firstinspires.ftc.teamcode.constants.FlippersConstants
 import org.firstinspires.ftc.teamcode.constants.TeleOpConstants
-import org.firstinspires.ftc.teamcode.hardware.Drive
-import org.firstinspires.ftc.teamcode.hardware.Flippers
-import org.firstinspires.ftc.teamcode.hardware.Intake
-import org.firstinspires.ftc.teamcode.hardware.Outtake
+import org.firstinspires.ftc.teamcode.hardware.*
 import org.firstinspires.ftc.teamcode.utils.Alliance
 import org.firstinspires.ftc.teamcode.utils.Slot
+import org.firstinspires.ftc.teamcode.utils.hl
 
 const val TAG = "HuskyTeleOp"
 
@@ -52,6 +50,7 @@ val huskyTeleOp = Mercurial.teleop("HuskyTeleOp", "Huskyteers") {
     val intake = Intake(hardwareMap)
     val flippers = Flippers(hardwareMap)
     val drive = Drive(hardwareMap)
+    val colorSensors = ColorSensors(hardwareMap)
 
     //#endregion
 
@@ -186,17 +185,23 @@ val huskyTeleOp = Mercurial.teleop("HuskyTeleOp", "Huskyteers") {
     // Main loop
     schedule(
         loop(exec {
-            intake.manualPeriodic(gamepad1.right_trigger.toDouble() - gamepad1.left_trigger.toDouble(), telemetryM)
-            outtake.periodic(telemetryM)
-            flippers.periodic(telemetryM)
             drive.manualPeriodic(
                 -gamepad1.left_stick_y.toDouble(),
                 -gamepad1.left_stick_x.toDouble(),
                 -gamepad1.right_stick_x.toDouble(),
                 telemetryM
             )
-
+            telemetryM.hl()
             telemetryM.addData("Is Launching", isLaunching)
+            outtake.periodic(telemetryM)
+            telemetryM.hl()
+            flippers.periodic(telemetryM)
+            telemetryM.hl()
+            intake.manualPeriodic(gamepad1.right_trigger.toDouble() - gamepad1.left_trigger.toDouble(), telemetryM)
+
+            colorSensors.debugTelemetry(telemetryM)
+
+
             telemetryM.update(telemetry)
         })
     )

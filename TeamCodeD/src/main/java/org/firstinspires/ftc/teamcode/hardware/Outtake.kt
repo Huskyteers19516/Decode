@@ -33,7 +33,7 @@ class Outtake(hardwareMap: HardwareMap) {
         telemetry.addData("Outtake velocity", outtakeMotor.velocity)
     }
 
-    fun periodic(telemetry: TelemetryManager) {
+    fun periodic(telemetry: TelemetryManager, debugging: Boolean = false) {
         outtakeMotor.mode = DcMotor.RunMode.RUN_USING_ENCODER
         outtakeMotor.setVelocityPIDFCoefficients(
             OuttakeConstants.KP,
@@ -47,10 +47,11 @@ class Outtake(hardwareMap: HardwareMap) {
             outtakeMotor.power = 0.0
         }
         telemetry.addData("Outtake active", active)
-        telemetry.addData("Outtake power", outtakeMotor.power)
         telemetry.addData("Outtake velocity", outtakeMotor.velocity)
         telemetry.addData("Outtake target velocity", targetVelocity)
         telemetry.addData("Outtake status", if (canShoot()) "CAN SHOOT" else "NOT READY")
+        if (!debugging) return
+        telemetry.addData("Outtake power", outtakeMotor.power)
     }
 
     fun canShoot(): Boolean {

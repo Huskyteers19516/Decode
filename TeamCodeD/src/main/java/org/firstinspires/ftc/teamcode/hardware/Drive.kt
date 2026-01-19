@@ -92,9 +92,6 @@ class Drive(private val hardwareMap: HardwareMap) {
     }
 
     fun writeTelemetry(telemetry: TelemetryManager, manual: Boolean) {
-        telemetry.addData("X (in)", follower.pose.x)
-        telemetry.addData("Y (in)", follower.pose.y)
-        telemetry.addData("Heading (deg)", Math.toDegrees(follower.pose.heading))
         if (manual) {
             telemetry.addData("Throttle", throttle)
             telemetry.addData(
@@ -103,7 +100,10 @@ class Drive(private val hardwareMap: HardwareMap) {
         } else {
             telemetry.addData("Is Busy", follower.isBusy)
         }
-
+        telemetry.addData("X (in)", follower.pose.x)
+        telemetry.addData("Y (in)", follower.pose.y)
+        telemetry.addData("Heading (deg)", Math.toDegrees(follower.pose.heading))
+        
         Drawing.drawDebug(follower)
     }
 }

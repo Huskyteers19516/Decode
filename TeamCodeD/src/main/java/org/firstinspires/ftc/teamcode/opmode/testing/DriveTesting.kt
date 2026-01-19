@@ -57,6 +57,7 @@ val driveTesting = Mercurial.teleop("Drive Testing", "Testing") {
         loop(
             exec {
                 telemetryM.addLine("Press start to toggle between drive and individual mode")
+                telemetryM.hl()
                 if (individualMode) {
                     telemetryM.addLine("Individual mode")
                     telemetryM.addLine("X = front left, Y = front right, B = rear right, A = rear left")
@@ -81,6 +82,7 @@ val driveTesting = Mercurial.teleop("Drive Testing", "Testing") {
                     )
 
                 }
+                telemetryM.hl()
 
                 drive.debugTelemetry(telemetryM)
                 telemetryM.update(telemetry)
