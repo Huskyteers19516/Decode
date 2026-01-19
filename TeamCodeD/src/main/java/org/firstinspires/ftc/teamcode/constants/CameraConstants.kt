@@ -8,5 +8,5 @@ object CameraConstants {
     var GAIN = 255
 
     @JvmField
-    var EXPOSURE_MS: Long = 1
+    var EXPOSURE_MS: Long = 3
 }
