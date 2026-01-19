@@ -118,20 +118,17 @@ val huskyTeleOp = Mercurial.teleop("HuskyTeleOp", "Huskyteers") {
     )
 
 
-
-
-
-    bindSpawn(
+    val fiberA = bindSpawn(
         risingEdge { gamepad1.a },
         generateFlipperSequence(Slot.A)
     )
 
-    bindSpawn(
+    val fiberB = bindSpawn(
         risingEdge { gamepad1.b },
         generateFlipperSequence(Slot.B)
     )
 
-    bindSpawn(
+    val fiberC = bindSpawn(
         risingEdge { gamepad1.x },
         generateFlipperSequence(Slot.C)
     )
@@ -199,6 +196,9 @@ val huskyTeleOp = Mercurial.teleop("HuskyTeleOp", "Huskyteers") {
             )
 
             telemetry.addData("Is Launching", isLaunching)
+            telemetry.addData("Fiber A", fiberA.state)
+            telemetry.addData("Fiber B", fiberB.state)
+            telemetry.addData("Fiber C", fiberC.state)
             telemetryM.update(telemetry)
         })
     )

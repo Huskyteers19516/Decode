@@ -7,7 +7,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap
 import org.firstinspires.ftc.teamcode.constants.ColorSensorConstants
 import org.firstinspires.ftc.teamcode.utils.Slot
 
-class ColorSensors(private val hardwareMap: HardwareMap) {
+class ColorSensors(hardwareMap: HardwareMap) {
     val colorSensorA1: LynxI2cColorRangeSensor = hardwareMap.get(LynxI2cColorRangeSensor::class.java, "colorSensorA1")
     val colorSensorA2: LynxI2cColorRangeSensor = hardwareMap.get(LynxI2cColorRangeSensor::class.java, "colorSensorA2")
     val colorSensorB1: LynxI2cColorRangeSensor = hardwareMap.get(LynxI2cColorRangeSensor::class.java, "colorSensorB1")
@@ -15,7 +15,7 @@ class ColorSensors(private val hardwareMap: HardwareMap) {
     val colorSensorC1: LynxI2cColorRangeSensor = hardwareMap.get(LynxI2cColorRangeSensor::class.java, "colorSensorC1")
     val colorSensorC2: LynxI2cColorRangeSensor = hardwareMap.get(LynxI2cColorRangeSensor::class.java, "colorSensorC2")
 
-    fun telemetry(telemetry: TelemetryManager) {
+    fun debugTelemetry(telemetry: TelemetryManager) {
         telemetry.addData("Model", colorSensorA1.deviceName)
         telemetry.addData("Class", colorSensorA1.javaClass.simpleName)
         val nameMap = mapOf(
