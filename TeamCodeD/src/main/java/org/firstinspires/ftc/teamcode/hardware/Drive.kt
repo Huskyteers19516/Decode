@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.hardware
 import com.bylazar.telemetry.TelemetryManager
 import com.pedropathing.geometry.Pose
 import com.qualcomm.robotcore.hardware.HardwareMap
+import org.firstinspires.ftc.teamcode.constants.DriveConstants
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants
 import org.firstinspires.ftc.teamcode.pedroPathing.Drawing
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection
@@ -17,7 +18,7 @@ class Drive(hardwareMap: HardwareMap) {
     fun orientTowardsAprilTag(aprilTag: AprilTagDetection): State {
 
         val headingError = aprilTag.ftcPose.bearing
-        follower.setTeleOpDrive(0.0, 0.0, headingError)
+        follower.setTeleOpDrive(0.0, 0.0, headingError * DriveConstants.TURN_COEFFICIENT)
         return if (headingError < 5) {
             State.DONE
         } else {

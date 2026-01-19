@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.hardware
 
+import android.util.Log
 import android.util.Size
 import com.bylazar.telemetry.TelemetryManager
 import com.qualcomm.robotcore.hardware.HardwareMap
@@ -11,8 +12,11 @@ import org.firstinspires.ftc.robotcore.external.hardware.camera.controls.Exposur
 import org.firstinspires.ftc.robotcore.external.hardware.camera.controls.GainControl
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
+import org.firstinspires.ftc.teamcode.constants.CameraConstants
+import org.firstinspires.ftc.teamcode.utils.Alliance
 import org.firstinspires.ftc.teamcode.utils.hl
 import org.firstinspires.ftc.vision.VisionPortal
+import org.firstinspires.ftc.vision.apriltag.AprilTagDetection
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor
 import java.util.concurrent.TimeUnit
 
@@ -40,9 +44,9 @@ class Camera(hardwareMap: HardwareMap) {
     fun setControls() {
         val exposure = visionPortal.getCameraControl(ExposureControl::class.java)
         exposure.mode = ExposureControl.Mode.Manual
-        exposure.setExposure(1.toLong(), TimeUnit.MILLISECONDS)
+        exposure.setExposure(CameraConstants.EXPOSURE_MS, TimeUnit.MILLISECONDS)
         val gain = visionPortal.getCameraControl(GainControl::class.java)
-        gain.gain = 255
+        Log.d(TAG, "Setting gain worked: ${gain.setGain(CameraConstants.GAIN)}")
     }
 
     fun debugTelemetry(telemetry: TelemetryManager) {
@@ -54,5 +58,15 @@ class Camera(hardwareMap: HardwareMap) {
             )
             telemetry.hl()
         }
+    }
+
+    fun getTargetTag(alliance: Alliance): AprilTagDetection? {
+        return aprilTagProcessor.detections?.firstOrNull {
+            it.metadata.name == (if (alliance == Alliance.RED) "RedTarget" else "BlueTarget")
+        }
+    }
+
+    companion object {
+        const val TAG = "Camera"
     }
 }
