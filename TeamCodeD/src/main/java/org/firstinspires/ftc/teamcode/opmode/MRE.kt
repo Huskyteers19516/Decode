@@ -2,7 +2,6 @@ package org.firstinspires.ftc.teamcode.opmode
 
 import android.util.Log
 import com.bylazar.telemetry.PanelsTelemetry
-import dev.frozenmilk.dairy.mercurial.continuations.Continuations.deadline
 import dev.frozenmilk.dairy.mercurial.continuations.Continuations.exec
 import dev.frozenmilk.dairy.mercurial.continuations.Continuations.loop
 import dev.frozenmilk.dairy.mercurial.continuations.Continuations.noop
@@ -12,45 +11,18 @@ import dev.frozenmilk.dairy.mercurial.continuations.mutexes.Mutex
 import dev.frozenmilk.dairy.mercurial.continuations.mutexes.Mutexes
 import dev.frozenmilk.dairy.mercurial.ftc.Mercurial
 import org.firstinspires.ftc.teamcode.constants.FlippersConstants
-import org.firstinspires.ftc.teamcode.hardware.Drive
 import org.firstinspires.ftc.teamcode.hardware.Flippers
-import org.firstinspires.ftc.teamcode.hardware.Intake
 import org.firstinspires.ftc.teamcode.hardware.Outtake
-import org.firstinspires.ftc.teamcode.utils.Alliance
 import org.firstinspires.ftc.teamcode.utils.Slot
 
-const val TAG = "HuskyTeleOp"
 
 @Suppress("UNUSED")
-val huskyTeleOp = Mercurial.teleop("HuskyTeleOp", "Huskyteers") {
+val mre = Mercurial.teleop("MRE", "Huskyteers") {
     //#region Pre-Init
     val telemetryM = PanelsTelemetry.telemetry;
 
-
-    var alliance = Alliance.RED
-    schedule(
-        deadline(
-            wait {
-                inLoop
-            },
-            loop(exec {
-                telemetryM.addData("Status", "Initialized")
-                telemetryM.addLine("Press B for red, press X for blue")
-                telemetryM.addData("Current alliance", alliance)
-                if (gamepad1.b) {
-                    alliance = Alliance.RED
-                } else if (gamepad1.x) {
-                    alliance = Alliance.BLUE
-                }
-                telemetryM.update()
-            })
-        )
-    )
-
     val outtake = Outtake(hardwareMap)
-    val intake = Intake(hardwareMap)
     val flippers = Flippers(hardwareMap)
-    val drive = Drive(hardwareMap)
 
     //#endregion
 
@@ -58,36 +30,20 @@ val huskyTeleOp = Mercurial.teleop("HuskyTeleOp", "Huskyteers") {
 
     // Drive controls
 
-    bindSpawn(
-        risingEdge { gamepad1.left_bumper },
-        exec { drive.throttle = 0.5 }
-    )
-
-    bindSpawn(
-        risingEdge { !gamepad1.left_bumper },
-        exec { drive.throttle = 1.0 }
-    )
-
-//    bindSpawn(
-//        risingEdge { gamepad1.a },
-//        exec { drive.isRobotCentric = !drive.isRobotCentric }
-//    )
-
-    bindSpawn(
-        risingEdge { gamepad1.start },
-        exec { drive.resetOrientation() }
-    )
-
-    var isLaunching = false
+    // Variable solely for telemetry
+    var isLaunching = false;
 
     val prioritiser = Mutexes.Prioritiser<Int> { new, old -> new >= old }
 
     val flipperMutex = Mutex(prioritiser, Unit)
 
-    fun generateFlipperSequence(flipper: Slot) = sequence(
-        exec {
-            Log.d(TAG, "Pressed $flipper")
-        },
+    // Our robot has 3 independent flippers, the concept can be seen here: https://youtu.be/eq2MiUJNWEM?t=8
+    // When the button that corresponds to a flipper is pressed, the outtake starts to spin up (priority 0 mutex acquisition)
+    // If another button is pressed during this spin up time, it replaces the other fiber (since the prioritizer is >=)
+    // Once it gets up to speed, it acquires the mutex with priority 1, which cannot be interrupted by any other flipper launch
+    // This way, none of the flippers collide
+
+    fun generateFlipperSequence(flipper: Slot) =
         Mutexes.guardPoll(
             flipperMutex,
             { 0 },
@@ -95,9 +51,6 @@ val huskyTeleOp = Mercurial.teleop("HuskyTeleOp", "Huskyteers") {
                 sequence(
                     exec { outtake.active = true },
                     wait { outtake.canShoot() },
-                    exec {
-                        Log.d(TAG, "Inner about to start")
-                    },
                     Mutexes.guardPoll(
                         flipperMutex,
                         { 1 },
@@ -115,33 +68,21 @@ val huskyTeleOp = Mercurial.teleop("HuskyTeleOp", "Huskyteers") {
                             )
                         },
                         // should be impossible
-                        exec { Log.d(TAG, "Inner rejected") },
-                        exec {
-                            Log.d(TAG, "Inner canceled")
-                        }
+                        noop(),
+                        noop()
                     ),
-                    exec {
-                        Log.d(TAG, "Inner finished")
-                    }
                 )
             },
-            exec {
-                flipperMutex
-                Log.d(TAG, "Outer rejected")
-            },
-            exec {
-                Log.d(TAG, "Outer canceled")
-            }
-        ), exec {
-            Log.d(TAG, "Outer finished")
-        })
+            noop(),
+            noop()
+        )
 
     bindSpawn(
         risingEdge {
             gamepad1.back
         },
         exec {
-            flipperMutex // put breakpoint here to capture flipperMutex
+            flipperMutex // put breakpoint here to capture
         }
     )
 
@@ -175,53 +116,12 @@ val huskyTeleOp = Mercurial.teleop("HuskyTeleOp", "Huskyteers") {
         )
     )
 
-    bindSpawn(
-        risingEdge {
-            gamepad2.dpad_up
-        }, exec {
-            outtake.targetVelocity += 100
-        }
-    )
-
-    bindSpawn(
-        risingEdge {
-            gamepad2.dpad_down
-        }, exec {
-            outtake.targetVelocity -= 100
-        }
-    )
-
-    bindSpawn(
-        risingEdge {
-            gamepad2.dpad_right
-        }, exec {
-            outtake.targetVelocity += 20
-        }
-    )
-
-    bindSpawn(
-        risingEdge {
-            gamepad2.dpad_left
-        }, exec {
-            outtake.targetVelocity -= 20
-        }
-    )
-
-    drive.follower.startTeleopDrive(true)
-
 
     // Main loop
     schedule(
         loop(exec {
-            intake.manualPeriodic(gamepad1.right_trigger.toDouble(), telemetryM)
             outtake.periodic(telemetryM)
             flippers.periodic(telemetryM)
-            drive.manualPeriodic(
-                -gamepad1.left_stick_y.toDouble(),
-                -gamepad1.left_stick_x.toDouble(),
-                -gamepad1.right_stick_x.toDouble(),
-                telemetryM
-            )
 
             telemetry.addData("Is Launching", isLaunching)
             telemetry.addData("Fiber A", fiberA.state)
