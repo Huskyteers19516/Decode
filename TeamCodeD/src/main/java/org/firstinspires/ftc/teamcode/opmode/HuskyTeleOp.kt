@@ -12,6 +12,7 @@ import dev.frozenmilk.dairy.mercurial.continuations.mutexes.Mutex
 import dev.frozenmilk.dairy.mercurial.continuations.mutexes.Mutexes
 import dev.frozenmilk.dairy.mercurial.ftc.Mercurial
 import org.firstinspires.ftc.teamcode.constants.FlippersConstants
+import org.firstinspires.ftc.teamcode.constants.TeleOpConstants
 import org.firstinspires.ftc.teamcode.hardware.Drive
 import org.firstinspires.ftc.teamcode.hardware.Flippers
 import org.firstinspires.ftc.teamcode.hardware.Intake
@@ -42,7 +43,7 @@ val huskyTeleOp = Mercurial.teleop("HuskyTeleOp", "Huskyteers") {
                 } else if (gamepad1.x) {
                     alliance = Alliance.BLUE
                 }
-                telemetryM.update()
+                telemetryM.update(telemetry)
             })
         )
     )
@@ -68,10 +69,10 @@ val huskyTeleOp = Mercurial.teleop("HuskyTeleOp", "Huskyteers") {
         exec { drive.throttle = 1.0 }
     )
 
-//    bindSpawn(
-//        risingEdge { gamepad1.a },
-//        exec { drive.isRobotCentric = !drive.isRobotCentric }
-//    )
+    bindSpawn(
+        risingEdge { gamepad2.y },
+        exec { drive.isRobotCentric = !drive.isRobotCentric }
+    )
 
     bindSpawn(
         risingEdge { gamepad1.start },
@@ -84,10 +85,7 @@ val huskyTeleOp = Mercurial.teleop("HuskyTeleOp", "Huskyteers") {
 
     val flipperMutex = Mutex(prioritiser, Unit)
 
-    fun generateFlipperSequence(flipper: Slot) = sequence(
-        exec {
-            Log.d(TAG, "Pressed $flipper")
-        },
+    fun generateFlipperSequence(flipper: Slot) =
         Mutexes.guardPoll(
             flipperMutex,
             { 0 },
@@ -95,9 +93,6 @@ val huskyTeleOp = Mercurial.teleop("HuskyTeleOp", "Huskyteers") {
                 sequence(
                     exec { outtake.active = true },
                     wait { outtake.canShoot() },
-                    exec {
-                        Log.d(TAG, "Inner about to start")
-                    },
                     Mutexes.guardPoll(
                         flipperMutex,
                         { 1 },
@@ -115,36 +110,14 @@ val huskyTeleOp = Mercurial.teleop("HuskyTeleOp", "Huskyteers") {
                             )
                         },
                         // should be impossible
-                        exec { Log.d(TAG, "Inner rejected") },
-                        exec {
-                            Log.d(TAG, "Inner canceled")
-                        }
-                    ),
-                    exec {
-                        Log.d(TAG, "Inner finished")
-                    }
+                        noop(),
+                        noop()
+                    )
                 )
             },
-            exec {
-                flipperMutex
-                Log.d(TAG, "Outer rejected")
-            },
-            exec {
-                Log.d(TAG, "Outer canceled")
-            }
-        ), exec {
-            Log.d(TAG, "Outer finished")
-        })
-
-    bindSpawn(
-        risingEdge {
-            gamepad1.back
-        },
-        exec {
-            flipperMutex // put breakpoint here to capture flipperMutex
-        }
-    )
-
+            noop(),
+            noop()
+        )
 
     val fiberA = bindSpawn(
         risingEdge { gamepad1.a },
@@ -179,7 +152,7 @@ val huskyTeleOp = Mercurial.teleop("HuskyTeleOp", "Huskyteers") {
         risingEdge {
             gamepad2.dpad_up
         }, exec {
-            outtake.targetVelocity += 100
+            outtake.targetVelocity += TeleOpConstants.OUTTAKE_TARGET_VELOCITY_BIG_ADJUSTMENT_FACTOR
         }
     )
 
@@ -187,7 +160,7 @@ val huskyTeleOp = Mercurial.teleop("HuskyTeleOp", "Huskyteers") {
         risingEdge {
             gamepad2.dpad_down
         }, exec {
-            outtake.targetVelocity -= 100
+            outtake.targetVelocity -= TeleOpConstants.OUTTAKE_TARGET_VELOCITY_BIG_ADJUSTMENT_FACTOR
         }
     )
 
@@ -195,7 +168,7 @@ val huskyTeleOp = Mercurial.teleop("HuskyTeleOp", "Huskyteers") {
         risingEdge {
             gamepad2.dpad_right
         }, exec {
-            outtake.targetVelocity += 20
+            outtake.targetVelocity += TeleOpConstants.OUTTAKE_TARGET_VELOCITY_SMALL_ADJUSTMENT_FACTOR
         }
     )
 
@@ -203,17 +176,17 @@ val huskyTeleOp = Mercurial.teleop("HuskyTeleOp", "Huskyteers") {
         risingEdge {
             gamepad2.dpad_left
         }, exec {
-            outtake.targetVelocity -= 20
+            outtake.targetVelocity -= TeleOpConstants.OUTTAKE_TARGET_VELOCITY_SMALL_ADJUSTMENT_FACTOR
         }
     )
 
-    drive.follower.startTeleopDrive(true)
+    drive.follower.startTeleopDrive(TeleOpConstants.TELEOP_BRAKE_MODE)
 
 
     // Main loop
     schedule(
         loop(exec {
-            intake.manualPeriodic(gamepad1.right_trigger.toDouble(), telemetryM)
+            intake.manualPeriodic(gamepad1.right_trigger.toDouble() - gamepad1.left_trigger.toDouble(), telemetryM)
             outtake.periodic(telemetryM)
             flippers.periodic(telemetryM)
             drive.manualPeriodic(
@@ -223,10 +196,7 @@ val huskyTeleOp = Mercurial.teleop("HuskyTeleOp", "Huskyteers") {
                 telemetryM
             )
 
-            telemetry.addData("Is Launching", isLaunching)
-            telemetry.addData("Fiber A", fiberA.state)
-            telemetry.addData("Fiber B", fiberB.state)
-            telemetry.addData("Fiber C", fiberC.state)
+            telemetryM.addData("Is Launching", isLaunching)
             telemetryM.update(telemetry)
         })
     )
