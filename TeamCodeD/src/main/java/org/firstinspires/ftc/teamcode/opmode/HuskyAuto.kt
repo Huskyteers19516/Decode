@@ -83,6 +83,7 @@ val HuskyAuto = Mercurial.autonomous {
     )
 
     waitForStart()
+    drive.follower.setStartingPose(paths.startPosition)
     schedule(
         sequence(
             deadline(
