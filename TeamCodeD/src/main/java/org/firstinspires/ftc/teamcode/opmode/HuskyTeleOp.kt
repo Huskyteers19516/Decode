@@ -18,6 +18,7 @@ import org.firstinspires.ftc.teamcode.hardware.*
 import org.firstinspires.ftc.teamcode.utils.Alliance
 import org.firstinspires.ftc.teamcode.utils.Slot
 import org.firstinspires.ftc.teamcode.utils.hl
+import kotlin.time.Duration
 import kotlin.time.measureTime
 
 const val TAG = "HuskyTeleOp"
@@ -186,11 +187,11 @@ val huskyTeleOp = Mercurial.teleop("HuskyTeleOp", "Huskyteers") {
 
     // Main loop
     var loops = 0
-    var totalDriveLoopTime = kotlin.time.Duration.ZERO
-    var totalSensorLoopTime = kotlin.time.Duration.ZERO
-    var totalOuttakeLoopTime = kotlin.time.Duration.ZERO
-    var totalFlippersLoopTime = kotlin.time.Duration.ZERO
-    var totalIntakeLoopTime = kotlin.time.Duration.ZERO
+    var totalDriveLoopTime = Duration.ZERO
+    var totalSensorLoopTime = Duration.ZERO
+    var totalOuttakeLoopTime = Duration.ZERO
+    var totalFlippersLoopTime = Duration.ZERO
+    var totalIntakeLoopTime = Duration.ZERO
 
 
     schedule(
@@ -240,6 +241,8 @@ val huskyTeleOp = Mercurial.teleop("HuskyTeleOp", "Huskyteers") {
 
             loops++
 
+            var maxLoopTime = Duration.ZERO
+
             telemetryM.addData("Average drive loop time", totalDriveLoopTime / loops)
             telemetryM.addData("Average outtake loop time", totalOuttakeLoopTime / loops)
             telemetryM.addData("Average flippers loop time", totalFlippersLoopTime / loops)
@@ -249,6 +252,8 @@ val huskyTeleOp = Mercurial.teleop("HuskyTeleOp", "Huskyteers") {
                 "Average total loop time",
                 (totalDriveLoopTime + totalOuttakeLoopTime + totalFlippersLoopTime + totalIntakeLoopTime + totalSensorLoopTime) / loops
             )
+            maxLoopTime = maxLoopTime.coerceAtLeast(totalDriveLoopTime)
+            telemetryM.addData("Max total loop time", maxLoopTime)
 
             telemetryM.update(telemetry)
         })
