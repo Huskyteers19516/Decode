@@ -25,6 +25,11 @@ android {
     kotlin {
         jvmToolchain(17)
     }
+    buildTypes {
+        debug {
+            apply plugin: 'dev.frozenmilk.sinister.sloth.load'
+        }
+    }
 }
 
 buildscript {
@@ -38,14 +43,14 @@ buildscript {
         classpath "dev.frozenmilk:Load:0.2.4"
     }
 }
-apply plugin: 'dev.frozenmilk.sinister.sloth.load'
+
 
 dependencies {
     implementation project(':FtcRobotController')
     implementation project(':Shared')
-
+    
     implementation("com.bylazar.sloth:fullpanels:0.2.4+1.0.12")
-    implementation("dev.frozenmilk.sinister:Sloth:0.2.4")
+    debugImplementation("dev.frozenmilk.sinister:Sloth:0.2.4")
 
     implementation project(":MercurialFTC")
 }
