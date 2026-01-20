@@ -12,4 +12,11 @@ object TeleOpConstants {
 
     @JvmField
     var TELEOP_BRAKE_MODE = true
+
+    @JvmField
+    var DEBUG_MODE = false
+
+    @JvmField
+    var COLOR_SENSOR_INTERVAL = 3
+
 }

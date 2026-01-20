@@ -33,8 +33,8 @@ class Drive(private val hardwareMap: HardwareMap) {
 
     val follower = Constants.createFollower(hardwareMap)
 
-    var throttle = 1.0
-    var isRobotCentric = false
+    var throttle = DriveConstants.NORMAL_MODE_SPEED
+    var isRobotCentric = DriveConstants.DEFAULT_DRIVE_MODE_IS_ROBOT_CENTRIC
 
     fun resetOrientation() {
         follower.pose = Pose()
@@ -45,12 +45,18 @@ class Drive(private val hardwareMap: HardwareMap) {
         writeTelemetry(telemetry, false)
     }
 
-    fun manualPeriodic(forward: Double, strafe: Double, turn: Double, telemetry: TelemetryManager) {
+    fun manualPeriodic(
+        forward: Double,
+        strafe: Double,
+        turn: Double,
+        telemetry: TelemetryManager,
+        debugging: Boolean = false
+    ) {
         follower.update()
         follower.setTeleOpDrive(
             forward * throttle, strafe * throttle, turn * throttle, isRobotCentric
         )
-        writeTelemetry(telemetry, true)
+        writeTelemetry(telemetry, true, debugging)
     }
 
     val leftFront: DcMotor by lazy {
@@ -91,7 +97,7 @@ class Drive(private val hardwareMap: HardwareMap) {
         }
     }
 
-    fun writeTelemetry(telemetry: TelemetryManager, manual: Boolean) {
+    fun writeTelemetry(telemetry: TelemetryManager, manual: Boolean, debugging: Boolean = false) {
         if (manual) {
             telemetry.addData("Throttle", throttle)
             telemetry.addData(
@@ -103,7 +109,11 @@ class Drive(private val hardwareMap: HardwareMap) {
         telemetry.addData("X (in)", follower.pose.x)
         telemetry.addData("Y (in)", follower.pose.y)
         telemetry.addData("Heading (deg)", Math.toDegrees(follower.pose.heading))
-        
-        Drawing.drawDebug(follower)
+
+        if (debugging) {
+            Drawing.drawDebug(follower)
+            debugTelemetry(telemetry)
+        }
+
     }
 }

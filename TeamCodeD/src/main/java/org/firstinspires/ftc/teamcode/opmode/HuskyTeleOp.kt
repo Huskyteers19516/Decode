@@ -11,12 +11,14 @@ import dev.frozenmilk.dairy.mercurial.continuations.Continuations.wait
 import dev.frozenmilk.dairy.mercurial.continuations.mutexes.Mutex
 import dev.frozenmilk.dairy.mercurial.continuations.mutexes.Mutexes
 import dev.frozenmilk.dairy.mercurial.ftc.Mercurial
+import org.firstinspires.ftc.teamcode.constants.DriveConstants
 import org.firstinspires.ftc.teamcode.constants.FlippersConstants
 import org.firstinspires.ftc.teamcode.constants.TeleOpConstants
 import org.firstinspires.ftc.teamcode.hardware.*
 import org.firstinspires.ftc.teamcode.utils.Alliance
 import org.firstinspires.ftc.teamcode.utils.Slot
 import org.firstinspires.ftc.teamcode.utils.hl
+import kotlin.time.measureTime
 
 const val TAG = "HuskyTeleOp"
 
@@ -60,12 +62,12 @@ val huskyTeleOp = Mercurial.teleop("HuskyTeleOp", "Huskyteers") {
 
     bindSpawn(
         risingEdge { gamepad1.left_bumper },
-        exec { drive.throttle = 0.5 }
+        exec { drive.throttle = DriveConstants.SLOW_MODE_SPEED }
     )
 
     bindSpawn(
         risingEdge { !gamepad1.left_bumper },
-        exec { drive.throttle = 1.0 }
+        exec { drive.throttle = DriveConstants.NORMAL_MODE_SPEED }
     )
 
     bindSpawn(
@@ -183,24 +185,70 @@ val huskyTeleOp = Mercurial.teleop("HuskyTeleOp", "Huskyteers") {
 
 
     // Main loop
+    var loops = 0
+    var totalDriveLoopTime = kotlin.time.Duration.ZERO
+    var totalSensorLoopTime = kotlin.time.Duration.ZERO
+    var totalOuttakeLoopTime = kotlin.time.Duration.ZERO
+    var totalFlippersLoopTime = kotlin.time.Duration.ZERO
+    var totalIntakeLoopTime = kotlin.time.Duration.ZERO
+
+
     schedule(
         loop(exec {
-            drive.manualPeriodic(
-                -gamepad1.left_stick_y.toDouble(),
-                -gamepad1.left_stick_x.toDouble(),
-                -gamepad1.right_stick_x.toDouble(),
-                telemetryM
-            )
+            val driveLoopTime =
+                measureTime {
+                    drive.manualPeriodic(
+                        -gamepad1.left_stick_y.toDouble(),
+                        -gamepad1.left_stick_x.toDouble(),
+                        -gamepad1.right_stick_x.toDouble(),
+                        telemetryM
+                    )
+                }
+            totalDriveLoopTime += driveLoopTime
+
             telemetryM.hl()
+
             telemetryM.addData("Is Launching", isLaunching)
-            outtake.periodic(telemetryM)
-            telemetryM.hl()
-            flippers.periodic(telemetryM)
-            telemetryM.hl()
-            intake.manualPeriodic(gamepad1.right_trigger.toDouble() - gamepad1.left_trigger.toDouble(), telemetryM)
+            val sensorLoopTime = measureTime {
+                if (loops % TeleOpConstants.COLOR_SENSOR_INTERVAL == 0) {
+                    colorSensors.update()
+                }
+                colorSensors.telemetry(telemetryM)
+            }
+            totalSensorLoopTime += sensorLoopTime
 
-            colorSensors.debugTelemetry(telemetryM)
+            telemetryM.hl()
 
+            val outtakeLoopTime = measureTime {
+                outtake.periodic(telemetryM, TeleOpConstants.DEBUG_MODE)
+            }
+
+            totalOuttakeLoopTime += outtakeLoopTime
+            telemetryM.hl()
+
+            val flippersLoopTime = measureTime {
+                flippers.periodic(telemetryM, TeleOpConstants.DEBUG_MODE)
+            }
+            totalFlippersLoopTime += flippersLoopTime
+
+            telemetryM.hl()
+
+            val intakeLoopTime = measureTime {
+                intake.manualPeriodic(gamepad1.right_trigger.toDouble() - gamepad1.left_trigger.toDouble(), telemetryM)
+            }
+            totalIntakeLoopTime += intakeLoopTime
+
+            loops++
+
+            telemetryM.addData("Average drive loop time", totalDriveLoopTime / loops)
+            telemetryM.addData("Average outtake loop time", totalOuttakeLoopTime / loops)
+            telemetryM.addData("Average flippers loop time", totalFlippersLoopTime / loops)
+            telemetryM.addData("Average intake loop time", totalIntakeLoopTime / loops)
+            telemetryM.addData("Average sensor loop time", totalSensorLoopTime / loops)
+            telemetryM.addData(
+                "Average total loop time",
+                (totalDriveLoopTime + totalOuttakeLoopTime + totalFlippersLoopTime + totalIntakeLoopTime + totalSensorLoopTime) / loops
+            )
 
             telemetryM.update(telemetry)
         })

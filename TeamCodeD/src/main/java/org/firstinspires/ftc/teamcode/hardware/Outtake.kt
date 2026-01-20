@@ -35,27 +35,32 @@ class Outtake(hardwareMap: HardwareMap) {
 
     fun periodic(telemetry: TelemetryManager, debugging: Boolean = false) {
         outtakeMotor.mode = DcMotor.RunMode.RUN_USING_ENCODER
-        outtakeMotor.setVelocityPIDFCoefficients(
-            OuttakeConstants.KP,
-            OuttakeConstants.KI,
-            OuttakeConstants.KD,
-            OuttakeConstants.KS
-        )
+
+        if (debugging) {
+            // takes 3 ms
+            outtakeMotor.setVelocityPIDFCoefficients(
+                OuttakeConstants.KP,
+                OuttakeConstants.KI,
+                OuttakeConstants.KD,
+                OuttakeConstants.KS
+            )
+        }
         if (active) {
             outtakeMotor.velocity = targetVelocity
         } else {
             outtakeMotor.power = 0.0
         }
         telemetry.addData("Outtake active", active)
-        telemetry.addData("Outtake velocity", outtakeMotor.velocity)
-        telemetry.addData("Outtake target velocity", targetVelocity)
-        telemetry.addData("Outtake status", if (canShoot()) "CAN SHOOT" else "NOT READY")
+        val velocity = outtakeMotor.velocity
+        telemetry.addData("Outtake velocity", velocity)
+        telemetry.addData("Outtake target velocity", velocity)
+        telemetry.addData("Outtake status", if (active && canShoot()) "CAN SHOOT" else "NOT READY")
         if (!debugging) return
         telemetry.addData("Outtake power", outtakeMotor.power)
     }
 
-    fun canShoot(): Boolean {
-        return abs(targetVelocity - outtakeMotor.velocity) < OuttakeConstants.ALLOWANCE
+    fun canShoot(velocity: Double? = null): Boolean {
+        return abs(targetVelocity - (velocity ?: outtakeMotor.velocity)) < OuttakeConstants.ALLOWANCE
     }
 
     fun toggle() {

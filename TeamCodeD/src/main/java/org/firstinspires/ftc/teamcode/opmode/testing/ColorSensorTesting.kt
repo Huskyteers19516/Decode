@@ -16,7 +16,7 @@ val colorSensorTesting = Mercurial.teleop("Color Sensor Testing", "Testing") {
         loop(
             exec {
                 telemetryM.addLine("Color Sensor Testing")
-                colorSensors.debugTelemetry(telemetryM, true)
+                colorSensors.debugTelemetry(telemetryM)
                 telemetryM.update(telemetry)
             }
         )

@@ -15,16 +15,27 @@ class ColorSensors(hardwareMap: HardwareMap) {
     val colorSensorC1: LynxI2cColorRangeSensor = hardwareMap.get(LynxI2cColorRangeSensor::class.java, "colorSensorC1")
     val colorSensorC2: LynxI2cColorRangeSensor = hardwareMap.get(LynxI2cColorRangeSensor::class.java, "colorSensorC2")
 
-    fun debugTelemetry(telemetry: TelemetryManager, debugging: Boolean = false) {
+    var slots = mutableMapOf(
+        Slot.A to Artifact.UNKNOWN,
+        Slot.B to Artifact.UNKNOWN,
+        Slot.C to Artifact.UNKNOWN,
+    )
+
+    fun update() {
+        slots = slots.mapValues { (slot, _) -> getElement(slot) }.toMutableMap()
+    }
+
+    fun telemetry(telemetry: TelemetryManager) {
+        slots.forEach { (slot, color) -> telemetry.addData("$slot slot", color) }
+    }
+
+    fun debugTelemetry(telemetry: TelemetryManager) {
         mapOf(
             "A" to identifyArtifact(colorSensorA1, colorSensorA2),
             "B" to identifyArtifact(colorSensorB1, colorSensorB2),
             "C" to identifyArtifact(colorSensorC1, colorSensorC2)
         ).forEach { (slot, color) -> telemetry.addData("$slot slot", color) }
-        if (!debugging) return
-        
-        telemetry.addData("Model", colorSensorA1.deviceName)
-        telemetry.addData("Class", colorSensorA1.javaClass.simpleName)
+
         val nameMap = mapOf(
             "A1" to colorSensorA1,
             "A2" to colorSensorA2,
