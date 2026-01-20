@@ -83,6 +83,7 @@ val HuskyAuto = Mercurial.autonomous {
     )
 
     waitForStart()
+    println(paths.startPosition)
     drive.follower.setStartingPose(paths.startPosition)
     schedule(
         sequence(
@@ -91,21 +92,21 @@ val HuskyAuto = Mercurial.autonomous {
                 sequence(
                     exec { outtake.active = true },
                     followPath(paths.fromStartToShoot),
-//                    shootAllThree(),
-//                    doWithIntake(
-                    followPath(paths.pickUpFirstRow)
-//                    ),
-//                    followPath(paths.firstRowToShoot),
-//                    shootAllThree(),
-//                    doWithIntake(followPath(paths.pickUpSecondRow)),
-//                    followPath(paths.secondRowToShoot),
-//                    shootAllThree(),
-//                    doWithIntake(followPath(paths.pickUpThirdRow))
+                    shootAllThree(),
+                    doWithIntake(
+                        followPath(paths.pickUpFirstRow)
+                    ),
+                    followPath(paths.firstRowToShoot),
+                    shootAllThree(),
+                    doWithIntake(followPath(paths.pickUpSecondRow)),
+                    followPath(paths.secondRowToShoot),
+                    shootAllThree(),
+                    doWithIntake(followPath(paths.pickUpThirdRow))
                 ),
             ),
-//            exec {
-//                drive.follower.holdPoint(paths.endLocation.withHeading(drive.follower.heading))
-//            }
+            exec {
+                drive.follower.holdPoint(paths.endLocation.withHeading(drive.follower.heading))
+            }
         )
     )
 

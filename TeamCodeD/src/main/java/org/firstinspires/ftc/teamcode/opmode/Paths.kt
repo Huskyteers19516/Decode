@@ -49,7 +49,6 @@ class Paths {
         val goalLocation = mirrorIfBlue(Pose(144.0, 144.0))
         val aimHeading = calculateAimHeading(startPosition, goalLocation)
 
-        follower.setStartingPose(mirrorIfBlue(startPosition))
         fromStartToShoot = follower.pathBuilder().addPath(
             BezierLine(startPosition, shootPosition)
         ).setConstantHeadingInterpolation(aimHeading).build()
