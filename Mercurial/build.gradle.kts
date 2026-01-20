@@ -1,5 +1,9 @@
 plugins {
-    id("dev.frozenmilk.jvm-library") version "10.3.0-0.1.4"
+    id("dev.frozenmilk.jvm-library") version "11.0.0-1.1.0"
+}
+
+ftc {
+    kotlin()
 }
 
 repositories {

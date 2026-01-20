@@ -1,18 +1,16 @@
 plugins {
-    id("dev.frozenmilk.android-library") version "10.3.0-0.1.4"
+    id("dev.frozenmilk.android-library") version "11.0.0-1.1.0"
 }
 
 android.namespace = "dev.frozenmilk.dairy"
 
 // Most FTC libraries will want the following
 ftc {
-    kotlin // if you don't want to use kotlin, remove this
+    kotlin() // if you don't want to use kotlin, remove this
 
     sdk {
-        RobotCore
-        FtcCommon {
-            configurationNames += "testImplementation"
-        }
+        implementation(RobotCore)
+        implementation(FtcCommon)
     }
 }
 
