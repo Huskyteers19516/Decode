@@ -50,13 +50,12 @@ class Drive(private val hardwareMap: HardwareMap) {
         strafe: Double,
         turn: Double,
         telemetry: TelemetryManager,
-        debugging: Boolean = false
     ) {
         follower.update()
         follower.setTeleOpDrive(
             forward * throttle, strafe * throttle, turn * throttle, isRobotCentric
         )
-        writeTelemetry(telemetry, true, debugging)
+        writeTelemetry(telemetry, true)
     }
 
     val leftFront: DcMotor by lazy {
@@ -97,7 +96,7 @@ class Drive(private val hardwareMap: HardwareMap) {
         }
     }
 
-    fun writeTelemetry(telemetry: TelemetryManager, manual: Boolean, debugging: Boolean = false) {
+    fun writeTelemetry(telemetry: TelemetryManager, manual: Boolean) {
         if (manual) {
             telemetry.addData("Throttle", throttle)
             telemetry.addData(
@@ -110,10 +109,7 @@ class Drive(private val hardwareMap: HardwareMap) {
         telemetry.addData("Y (in)", follower.pose.y)
         telemetry.addData("Heading (deg)", Math.toDegrees(follower.pose.heading))
 
-        if (debugging) {
-            Drawing.drawDebug(follower)
-            debugTelemetry(telemetry)
-        }
+        Drawing.drawDebug(follower)
 
     }
 }
