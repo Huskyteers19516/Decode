@@ -32,9 +32,9 @@ val HuskyAuto = Mercurial.autonomous {
             wait {
                 inLoop
             }, loop(exec {
-                telemetry.addData("Status", "Initialized")
-                telemetry.addLine("Press B for red, press X for blue")
-                telemetry.addData("Current alliance", alliance)
+                telemetryM.addData("Status", "Initialized")
+                telemetryM.addLine("Press B for red, press X for blue")
+                telemetryM.addData("Current alliance", alliance)
                 if (gamepad1.bWasPressed()) {
                     alliance = Alliance.RED
                     paths.buildPaths(drive.follower, alliance)
@@ -43,8 +43,9 @@ val HuskyAuto = Mercurial.autonomous {
                     paths.buildPaths(drive.follower, alliance)
                 }
                 telemetryM.hl()
+                colorSensors.update()
                 colorSensors.telemetry(telemetryM)
-                telemetry.update()
+                telemetryM.update(telemetry)
             })
         )
     )
