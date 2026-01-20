@@ -11,12 +11,10 @@ import dev.frozenmilk.dairy.mercurial.continuations.Continuations.wait
 import dev.frozenmilk.dairy.mercurial.ftc.Mercurial
 import org.firstinspires.ftc.teamcode.constants.AutoConstants
 import org.firstinspires.ftc.teamcode.constants.FlippersConstants
-import org.firstinspires.ftc.teamcode.hardware.Drive
-import org.firstinspires.ftc.teamcode.hardware.Flippers
-import org.firstinspires.ftc.teamcode.hardware.Intake
-import org.firstinspires.ftc.teamcode.hardware.Outtake
+import org.firstinspires.ftc.teamcode.hardware.*
 import org.firstinspires.ftc.teamcode.utils.Alliance
 import org.firstinspires.ftc.teamcode.utils.Slot
+import org.firstinspires.ftc.teamcode.utils.hl
 
 @Suppress("UNUSED")
 val HuskyAuto = Mercurial.autonomous {
@@ -26,6 +24,7 @@ val HuskyAuto = Mercurial.autonomous {
     var alliance = Alliance.RED
     val paths = Paths()
     val drive = Drive(hardwareMap)
+    val colorSensors = ColorSensors(hardwareMap)
     paths.buildPaths(drive.follower, alliance)
 
     schedule(
@@ -43,6 +42,8 @@ val HuskyAuto = Mercurial.autonomous {
                     alliance = Alliance.BLUE
                     paths.buildPaths(drive.follower, alliance)
                 }
+                telemetryM.hl()
+                colorSensors.telemetry(telemetryM)
                 telemetry.update()
             })
         )
