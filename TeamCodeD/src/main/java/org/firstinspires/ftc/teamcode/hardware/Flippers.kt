@@ -7,58 +7,75 @@ import org.firstinspires.ftc.teamcode.constants.FlippersConstants
 import org.firstinspires.ftc.teamcode.utils.Slot
 
 class Flippers(hardwareMap: HardwareMap) {
-    private val flipperA: Servo = hardwareMap.get<Servo>(Servo::class.java, "feederA")
-    private val flipperB: Servo = hardwareMap.get<Servo>(Servo::class.java, "feederB")
-    private val flipperC: Servo = hardwareMap.get<Servo>(Servo::class.java, "feederC")
+    private var flippers = mapOf<Slot, Servo>(
+        Slot.A to hardwareMap.get<Servo>(Servo::class.java, "feederA"),
+        Slot.B to hardwareMap.get<Servo>(Servo::class.java, "feederB"),
+        Slot.C to hardwareMap.get<Servo>(Servo::class.java, "feederC"),
+    )
 
     enum class Position {
         UP, DOWN
     }
 
-    var flipperAPosition = Position.DOWN
-    var flipperBPosition = Position.DOWN
-    var flipperCPosition = Position.DOWN
+    var flipperPositions = mutableMapOf(
+        Slot.A to Position.DOWN,
+        Slot.B to Position.DOWN,
+        Slot.C to Position.DOWN,
+    )
 
 
     init {
-        flipperC.direction = Servo.Direction.REVERSE
+        flippers[Slot.C]!!.direction = Servo.Direction.REVERSE
     }
 
     fun raiseFlipper(slot: Slot) {
-        when (slot) {
-            Slot.A -> flipperAPosition = Position.UP
-            Slot.B -> flipperBPosition = Position.UP
-            Slot.C -> flipperCPosition = Position.UP
-        }
-        if (listOf(flipperAPosition, flipperBPosition, flipperCPosition).count {
-                it == Position.UP
-            } > 1) {
+        if (flipperPositions.filter { (flipperSlot, _) ->
+                flipperSlot != slot
+            }.count { (_, position) ->
+                position == Position.UP
+            } > 0) {
             throw RuntimeException("More than one flipper is up")
         }
+        flipperPositions[slot] = Position.UP
     }
 
     fun lowerFlipper(slot: Slot) {
-        when (slot) {
-            Slot.A -> flipperAPosition = Position.DOWN
-            Slot.B -> flipperBPosition = Position.DOWN
-            Slot.C -> flipperCPosition = Position.DOWN
-        }
+        flipperPositions[slot] = Position.DOWN
     }
 
     fun periodic(telemetry: TelemetryManager, debugging: Boolean = false) {
-        flipperA.position =
-            if (flipperAPosition == Position.UP) FlippersConstants.FLIPPER_A_UP_POSITION else FlippersConstants.FLIPPER_A_DOWN_POSITION
-        flipperB.position =
-            if (flipperBPosition == Position.UP) FlippersConstants.FLIPPER_B_UP_POSITION else FlippersConstants.FLIPPER_B_DOWN_POSITION
-        flipperC.position =
-            if (flipperCPosition == Position.UP) FlippersConstants.FLIPPER_C_UP_POSITION else FlippersConstants.FLIPPER_C_DOWN_POSITION
+        for ((slot, position) in flipperPositions) {
+            val servo = flippers[slot] ?: continue
+            when (slot) {
+                Slot.A -> {
+                    servo.position = when (position) {
+                        Position.UP -> FlippersConstants.FLIPPER_A_UP_POSITION
+                        Position.DOWN -> FlippersConstants.FLIPPER_A_DOWN_POSITION
+                    }
+                }
 
-        telemetry.addData("Flipper A state", flipperAPosition)
-        telemetry.addData("Flipper B state", flipperBPosition)
-        telemetry.addData("Flipper C state", flipperCPosition)
+                Slot.B -> {
+                    servo.position = when (position) {
+                        Position.UP -> FlippersConstants.FLIPPER_B_UP_POSITION
+                        Position.DOWN -> FlippersConstants.FLIPPER_B_DOWN_POSITION
+                    }
+                }
+
+                Slot.C -> {
+                    servo.position = when (position) {
+                        Position.UP -> FlippersConstants.FLIPPER_C_UP_POSITION
+                        Position.DOWN -> FlippersConstants.FLIPPER_C_DOWN_POSITION
+                    }
+                }
+            }
+        }
+
+        flipperPositions.forEach { (slot, position) ->
+            telemetry.addData("$slot flipper position", position)
+        }
+
         if (!debugging) return
-        telemetry.addData("Flipper A position", flipperA.position)
-        telemetry.addData("Flipper B position", flipperB.position)
-        telemetry.addData("Flipper C position", flipperC.position)
+
+        flippers.forEach { (slot, servo) -> telemetry.addData("$slot flipper position", servo.position) }
     }
 }

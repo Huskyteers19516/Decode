@@ -22,11 +22,23 @@ class ColorSensors(hardwareMap: HardwareMap) {
     )
 
     fun update() {
-        slots = slots.mapValues { (slot, _) -> getElement(slot) }.toMutableMap()
+        slots = slots.mapValues { (slot, _) -> getSlotArtifact(slot) }.toMutableMap()
     }
 
     fun telemetry(telemetry: TelemetryManager) {
         slots.forEach { (slot, color) -> telemetry.addData("$slot slot", color) }
+    }
+
+    fun getBestSlot(desiredColor: Artifact): Slot? {
+        update()
+        return slots.toList().firstOrNull { (_, color) ->
+            println(color)
+            desiredColor == color
+        }?.first ?: slots.toList().firstOrNull { (_, color) ->
+            ColorSensorConstants.SHOOT_EVEN_IF_NOT_DESIRED_COLOR && color in listOf(Artifact.GREEN, Artifact.PURPLE)
+        }?.first ?: slots.toList().firstOrNull { (_, color) ->
+            ColorSensorConstants.SHOOT_EVEN_IF_UNKNOWN_COLOR && color == Artifact.UNKNOWN
+        }?.first
     }
 
     fun debugTelemetry(telemetry: TelemetryManager) {
@@ -53,7 +65,7 @@ class ColorSensors(hardwareMap: HardwareMap) {
         nameMap.forEach { (name, sensor) -> debugTelemetry(sensor, name, telemetry) }
     }
 
-    fun getElement(slot: Slot): Artifact {
+    fun getSlotArtifact(slot: Slot): Artifact {
         return when (slot) {
             Slot.A -> identifyArtifact(
                 colorSensorA1,

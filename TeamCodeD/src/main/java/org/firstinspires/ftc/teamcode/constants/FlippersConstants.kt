@@ -11,10 +11,10 @@ object FlippersConstants {
     var FLIPPER_A_UP_POSITION: Double = .57
 
     @JvmField
-    var FLIPPER_B_DOWN_POSITION: Double = .3
+    var FLIPPER_B_DOWN_POSITION: Double = .2
 
     @JvmField
-    var FLIPPER_B_UP_POSITION: Double = .76
+    var FLIPPER_B_UP_POSITION: Double = .63
 
     @JvmField
     var FLIPPER_C_DOWN_POSITION: Double = .32
