@@ -20,7 +20,7 @@ import org.firstinspires.ftc.teamcode.utils.hl
 @Suppress("UNUSED")
 val TestingAuto = Mercurial.autonomous {
 
-    /* ================= Pre-Init ================= */
+
     val telemetryM = PanelsTelemetry.telemetry
 
     var alliance = Alliance.RED
