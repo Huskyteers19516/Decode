@@ -10,6 +10,7 @@ import kotlin.math.atan2
 
 class Paths {
 
+
     lateinit var fromStartToShoot: PathChain
     lateinit var pickUpFirstRow: PathChain
     lateinit var firstRowToShoot: PathChain
@@ -20,33 +21,33 @@ class Paths {
     lateinit var shootPosition: Pose
     lateinit var firstRowControlPoint: Pose
     lateinit var firstRow: Pose
-    lateinit var secondRow: Pose
-    lateinit var secondToShootControlPoint: Pose
     lateinit var secondRowControlPoint: Pose
+    lateinit var secondRow: Pose
     lateinit var thirdRow: Pose
     lateinit var thirdRowControlPoint: Pose
+    lateinit var thirdRowEndPoint: Pose
     lateinit var endLocation: Pose
 
 
     fun buildPaths(follower: Follower, alliance: Alliance) {
-        fun mirrorIfBlue(pose: Pose): Pose {
-            return if (alliance == Alliance.BLUE) pose.mirror() else pose
+        fun Pose.mirrorIfBlue(): Pose {
+            return if (alliance == Alliance.BLUE) this.mirror() else this
         }
 
-        startPosition = mirrorIfBlue(Pose(122.364, 122.394, Math.toRadians(36.0)))
-        shootPosition = mirrorIfBlue(Pose(84.8704156479217, 78.42542787286067))
-        firstRowControlPoint = mirrorIfBlue(Pose(64.1, 79.0))
-        firstRow = mirrorIfBlue(Pose(139.34, 82.51))
-        secondRow = mirrorIfBlue(Pose(143.4, 57.0))
-        secondToShootControlPoint = mirrorIfBlue(Pose(79.8, 79.8))
-        secondRowControlPoint = mirrorIfBlue(Pose(59.0, 58.7))
-        thirdRow = mirrorIfBlue(Pose(142.6, 33.95))
-        thirdRowControlPoint = mirrorIfBlue(Pose(59.5, 27.1))
+        startPosition = Pose(122.364, 122.394, Math.toRadians(36.0)).mirrorIfBlue()
+        shootPosition = Pose(84.8704156479217, 78.42542787286067).mirrorIfBlue()
+        firstRowControlPoint = Pose(104.04687882496938, 86.57894736842107).mirrorIfBlue()
+        firstRow = Pose(139.34, 82.51).mirrorIfBlue()
+        secondRowControlPoint = Pose(85.0, 58.7).mirrorIfBlue()
+        secondRow = Pose(143.4, 57.0).mirrorIfBlue()
+        thirdRow = Pose(142.6, 33.95).mirrorIfBlue()
+        thirdRowControlPoint = Pose(59.5, 27.1).mirrorIfBlue()
+        thirdRowEndPoint = Pose(143.22154222766218, 35.121175030599765).mirrorIfBlue()
 
-        endLocation = mirrorIfBlue(Pose(100.0, 53.0))
+        endLocation = Pose(100.0, 53.0).mirrorIfBlue()
 
 
-        val goalLocation = mirrorIfBlue(Pose(144.0, 144.0))
+        val goalLocation = Pose(144.0, 144.0).mirrorIfBlue()
         val aimHeading = calculateAimHeading(startPosition, goalLocation)
 
         fromStartToShoot = follower.pathBuilder().addPath(
@@ -56,6 +57,7 @@ class Paths {
         pickUpFirstRow = follower.pathBuilder()
             .addPath(BezierCurve(shootPosition, firstRowControlPoint, firstRow))
             .setTangentHeadingInterpolation()
+            .setReversed()
             .build()
 
         firstRowToShoot = follower.pathBuilder()
@@ -66,16 +68,21 @@ class Paths {
         pickUpSecondRow = follower.pathBuilder()
             .addPath(BezierCurve(shootPosition, secondRowControlPoint, secondRow))
             .setTangentHeadingInterpolation()
+            .setReversed()
             .build()
 
         secondRowToShoot = follower.pathBuilder()
-            .addPath(BezierCurve(secondRow, secondToShootControlPoint, shootPosition))
+            .addPath(BezierCurve(secondRow, secondRowControlPoint, shootPosition))
             .setConstantHeadingInterpolation(aimHeading)
             .build()
 
         pickUpThirdRow = follower.pathBuilder()
-            .addPath(BezierCurve(shootPosition, thirdRowControlPoint, thirdRow))
-            .setTangentHeadingInterpolation()
+            .addPaths(
+                BezierCurve(shootPosition, thirdRowControlPoint, thirdRow),
+                BezierLine(thirdRow, thirdRowEndPoint)
+            )
+            .setGlobalTangentHeadingInterpolation()
+            .setGlobalReversed()
             .build()
     }
 
@@ -85,5 +92,7 @@ class Paths {
             // alternate implementation
             // goal.minus(robot).asVector.theta
         }
+        val obelisk = Pose(72.0, 144.0)
+
     }
 }

@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.opmode
 
 import com.bylazar.telemetry.PanelsTelemetry
+import com.pedropathing.paths.HeadingInterpolator
 import com.pedropathing.paths.PathChain
 import dev.frozenmilk.dairy.mercurial.continuations.Closure
 import dev.frozenmilk.dairy.mercurial.continuations.Continuations.deadline
@@ -56,8 +57,8 @@ val HuskyAuto = Mercurial.autonomous {
 
     //#endregion
 
-    fun followPath(path: PathChain) = sequence(exec {
-        drive.follower.followPath(path, true)
+    fun followPath(path: PathChain, maxPower: Double = 1.0, holdEnd: Boolean = true) = sequence(exec {
+        drive.follower.followPath(path, maxPower, holdEnd)
     }, wait { !drive.follower.isBusy })
 
     fun shoot(flipper: Slot) = sequence(
@@ -93,7 +94,9 @@ val HuskyAuto = Mercurial.autonomous {
                 wait(AutoConstants.CUTOFF_SECONDS),
                 sequence(
                     exec { outtake.active = true },
-                    followPath(paths.fromStartToShoot),
+                    followPath(paths.fromStartToShoot.apply {
+                        headingInterpolator = HeadingInterpolator.facingPoint(Paths.obelisk)
+                    }),
                     shootAllThree(),
                     doWithIntake(
                         followPath(paths.pickUpFirstRow)
@@ -104,6 +107,7 @@ val HuskyAuto = Mercurial.autonomous {
                     followPath(paths.secondRowToShoot),
                     shootAllThree(),
                     doWithIntake(followPath(paths.pickUpThirdRow))
+
                 ),
             ),
             exec {
