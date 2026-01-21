@@ -29,7 +29,7 @@ const val TAG = "HuskyTeleOp"
 @Suppress("UNUSED")
 val huskyTeleOp = Mercurial.teleop("HuskyTeleOp", "Huskyteers") {
     //#region Pre-Init
-    val telemetryM = PanelsTelemetry.telemetry;
+    val telemetryM = PanelsTelemetry.telemetry
 
 
     var alliance = Alliance.RED
@@ -161,7 +161,7 @@ val huskyTeleOp = Mercurial.teleop("HuskyTeleOp", "Huskyteers") {
         risingEdge { gamepad1.b },
         ifHuh(
             { trustingColorSensors },
-            match { colorSensors.getBestSlot(ColorSensors.Companion.Artifact.GREEN) }
+            match { colorSensors.getBestSlot(ColorSensors.Companion.Artifact.PURPLE) }
                 .branch(
                     Slot.A, generateFlipperSequence(Slot.A)
                 )

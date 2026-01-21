@@ -5,7 +5,7 @@ import com.bylazar.configurables.annotations.Configurable
 @Configurable
 object FlippersConstants {
     @JvmField
-    var FLIPPER_A_DOWN_POSITION: Double = .17
+    var FLIPPER_A_DOWN_POSITION: Double = .14
 
     @JvmField
     var FLIPPER_A_UP_POSITION: Double = .57
