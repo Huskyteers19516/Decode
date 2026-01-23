@@ -58,7 +58,7 @@ val HuskyAuto = Mercurial.autonomous {
                 if (colorSensors.slots.count { it.value in listOf(ColorSensors.Companion.Artifact.GREEN, ColorSensors.Companion.Artifact.PURPLE) } < 3) {
                     telemetryM.addLine("WARNING: Currently detecting less than 3 artifacts")
                 } else if (colorSensors.slots.count { it.value in listOf(ColorSensors.Companion.Artifact.GREEN) } != 1) {
-                    telemetryM.addLine("WARNING: Currently detecting an abnormal number of artifacts")
+                    telemetryM.addLine("WARNING: Detecting something other than 1 green artifact and 2 purple artifacts.")
                 }
 
                 telemetryM.update(telemetry)
@@ -140,6 +140,11 @@ val HuskyAuto = Mercurial.autonomous {
 
     // todo: empty extras function
 
+    fun shootRemaining() = deadline(
+        wait { colorSensors.slots.all { it.value == ColorSensors.Companion.Artifact.NONE } }, loop(
+        shootColor(ColorSensors.Companion.Artifact.GREEN)
+    ))
+
     fun doWithIntake(closure: Closure) = sequence(
         exec(intake::start),
         closure,
@@ -191,6 +196,7 @@ val HuskyAuto = Mercurial.autonomous {
                     shootAllThree(),
                     doWithIntake(followPath(paths.pickUpSecondRow)),
                     followPath(paths.secondRowToShoot),
+                    turnTo(paths.aimHeading),
                     shootAllThree(),
                     doWithIntake(followPath(paths.pickUpThirdRow))
                 ),
