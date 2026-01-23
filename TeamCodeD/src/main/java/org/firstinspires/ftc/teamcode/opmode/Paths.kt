@@ -5,12 +5,16 @@ import com.pedropathing.geometry.BezierCurve
 import com.pedropathing.geometry.BezierLine
 import com.pedropathing.geometry.Pose
 import com.pedropathing.paths.PathChain
+import org.firstinspires.ftc.teamcode.constants.AutoConstants
 import org.firstinspires.ftc.teamcode.utils.Alliance
 import kotlin.math.atan2
+import kotlin.math.sqrt
+import kotlin.properties.Delegates
 
-class Paths {
-
-
+class Paths(private val follower: Follower) {
+    init {
+        buildPaths(Alliance.RED)
+    }
     lateinit var fromStartToShoot: PathChain
     lateinit var pickUpFirstRow: PathChain
     lateinit var firstRowToShoot: PathChain
@@ -27,53 +31,62 @@ class Paths {
     lateinit var thirdRowControlPoint: Pose
     lateinit var thirdRowEndPoint: Pose
     lateinit var endLocation: Pose
+    var aimHeading by Delegates.notNull<Double>()
 
 
-    fun buildPaths(follower: Follower, alliance: Alliance) {
+    fun buildPaths(alliance: Alliance) {
         fun Pose.mirrorIfBlue(): Pose {
             return if (alliance == Alliance.BLUE) this.mirror() else this
         }
 
-        startPosition = Pose(122.364, 122.394, Math.toRadians(36.0)).mirrorIfBlue()
+        // Assume robot starts aligned with goal, facing obelisk wall, with line in the middle of the drive train
+        // https://www.desmos.com/calculator/qgkrj2eng6
+        startPosition = Pose(130.046 - ROBOT_WIDTH / sqrt(2.0) / 2, 130.046 - ROBOT_WIDTH / sqrt(2.0) / 2, Math.toRadians(126.0)).mirrorIfBlue()
         shootPosition = Pose(84.8704156479217, 78.42542787286067).mirrorIfBlue()
-        firstRowControlPoint = Pose(104.04687882496938, 86.57894736842107).mirrorIfBlue()
-        firstRow = Pose(139.34, 82.51).mirrorIfBlue()
-        secondRowControlPoint = Pose(85.0, 58.7).mirrorIfBlue()
-        secondRow = Pose(143.4, 57.0).mirrorIfBlue()
-        thirdRow = Pose(142.6, 33.95).mirrorIfBlue()
-        thirdRowControlPoint = Pose(59.5, 27.1).mirrorIfBlue()
-        thirdRowEndPoint = Pose(143.22154222766218, 35.121175030599765).mirrorIfBlue()
+        firstRowControlPoint = Pose(91.99073396778475, 83.2123552123552).mirrorIfBlue()
+        firstRow = Pose(144 - 6 - ROBOT_LENGTH / 2 - ROBOT_FRONT_PROTRUSION, 83.51).mirrorIfBlue()
+        secondRowControlPoint = Pose(83.14671814671814, 54.622779922779934).mirrorIfBlue()
+        secondRow = Pose(144 - ROBOT_LENGTH / 2 - ROBOT_FRONT_PROTRUSION, 54.7).mirrorIfBlue()
+        thirdRow = Pose(98.30656370656376, 35.80328185328186).mirrorIfBlue()
+        thirdRowControlPoint = Pose(83.03667953667953, 35.43976833976834).mirrorIfBlue()
+        thirdRowEndPoint = Pose(144 - ROBOT_LENGTH / 2 - ROBOT_FRONT_PROTRUSION, 35.43976833976834).mirrorIfBlue()
 
         endLocation = Pose(100.0, 53.0).mirrorIfBlue()
+        val pickupHeading = if (alliance == Alliance.RED) 0.0 else Math.toDegrees(180.0)
 
 
-        val goalLocation = Pose(144.0, 144.0).mirrorIfBlue()
-        val aimHeading = calculateAimHeading(startPosition, goalLocation)
+        val goalLocation = Pose(138.0, 144.0).mirrorIfBlue()
+        aimHeading = calculateAimHeading(shootPosition, goalLocation)
 
         fromStartToShoot = follower.pathBuilder().addPath(
             BezierLine(startPosition, shootPosition)
-        ).setConstantHeadingInterpolation(aimHeading).build()
+        ).build()
 
         pickUpFirstRow = follower.pathBuilder()
             .addPath(BezierCurve(shootPosition, firstRowControlPoint, firstRow))
-            .setTangentHeadingInterpolation()
+            .setConstantHeadingInterpolation(pickupHeading)
             .setReversed()
+            .addPoseCallback(Pose(101.749, 82.334).mirrorIfBlue(), {
+                follower.setMaxPower(AutoConstants.MAX_POWER_WHEN_RUNNING_INTAKE)
+            }, 0.5)
             .build()
 
         firstRowToShoot = follower.pathBuilder()
             .addPath(BezierLine(firstRow, shootPosition))
-            .setConstantHeadingInterpolation(aimHeading)
+            .setLinearHeadingInterpolation(pickupHeading, aimHeading)
             .build()
 
         pickUpSecondRow = follower.pathBuilder()
             .addPath(BezierCurve(shootPosition, secondRowControlPoint, secondRow))
-            .setTangentHeadingInterpolation()
-            .setReversed()
+            .setConstantHeadingInterpolation(pickupHeading)
+            .addPoseCallback(Pose(97.773, 60.0).mirrorIfBlue(), {
+                follower.setMaxPower(AutoConstants.MAX_POWER_WHEN_RUNNING_INTAKE)
+            }, 0.5)
             .build()
 
         secondRowToShoot = follower.pathBuilder()
             .addPath(BezierCurve(secondRow, secondRowControlPoint, shootPosition))
-            .setConstantHeadingInterpolation(aimHeading)
+            .setLinearHeadingInterpolation(pickupHeading, aimHeading)
             .build()
 
         pickUpThirdRow = follower.pathBuilder()
@@ -93,6 +106,9 @@ class Paths {
             // goal.minus(robot).asVector.theta
         }
         val obelisk = Pose(72.0, 144.0)
+        const val ROBOT_LENGTH = 17.055;
+        const val ROBOT_WIDTH = 16.850394;
+        const val ROBOT_FRONT_PROTRUSION = 0.5;
 
     }
 }

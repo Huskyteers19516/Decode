@@ -55,10 +55,6 @@ class TestingPaths {
         val goalLocation = mirrorIfBlue(Pose(144.0, 144.0))
         val aimHeading = calculateAimHeading(startPosition, goalLocation)
 
-        follower.setStartingPose(startPosition)
-
-
-
         fromStartToShoot = follower.pathBuilder()
             .addPath(
                 BezierLine(

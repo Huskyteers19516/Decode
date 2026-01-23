@@ -19,10 +19,14 @@ class Drive(private val hardwareMap: HardwareMap) {
         IN_PROGRESS, DONE
     }
 
-    fun orientTowardsAprilTag(aprilTag: AprilTagDetection): State {
+    fun orientTowardsAprilTag(aprilTag: AprilTagDetection, teleOp: Boolean = true): State {
 
         val headingError = aprilTag.ftcPose.bearing
-        follower.setTeleOpDrive(0.0, 0.0, headingError * DriveConstants.TURN_COEFFICIENT)
+        if (teleOp) {
+            follower.setTeleOpDrive(0.0, 0.0, headingError * DriveConstants.TURN_COEFFICIENT)
+        } else {
+            follower.turn(Math.toRadians(headingError), true)
+        }
         return if (headingError < 5) {
             State.DONE
         } else {
