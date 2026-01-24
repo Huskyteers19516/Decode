@@ -109,7 +109,7 @@ class Paths(private val follower: Follower) {
         val obelisk = Pose(72.0, 144.0)
         const val ROBOT_LENGTH = 17.055;
         const val ROBOT_WIDTH = 16.850394;
-        const val ROBOT_FRONT_PROTRUSION = 3.0;
+        const val ROBOT_FRONT_PROTRUSION = 9.0;
         val RED_GOAL_FRONT = Pose(130.0, 130.0)
         val BLUE_GOAL_FRONT = Pose(14.0, 130.0)
     }
