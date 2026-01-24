@@ -16,7 +16,9 @@ import dev.frozenmilk.dairy.mercurial.continuations.Continuations.noop
 import dev.frozenmilk.dairy.mercurial.continuations.Continuations.scope
 import dev.frozenmilk.dairy.mercurial.continuations.Continuations.sequence
 import dev.frozenmilk.dairy.mercurial.continuations.Continuations.wait
+import dev.frozenmilk.dairy.mercurial.ftc.Context
 import dev.frozenmilk.dairy.mercurial.ftc.Mercurial
+import dev.frozenmilk.dairy.mercurial.ftc.Mercurial.teleop
 import org.firstinspires.ftc.teamcode.constants.AutoConstants
 import org.firstinspires.ftc.teamcode.constants.FlippersConstants
 import org.firstinspires.ftc.teamcode.hardware.*
@@ -26,8 +28,7 @@ import org.firstinspires.ftc.teamcode.utils.Slot
 import org.firstinspires.ftc.teamcode.utils.hl
 import kotlin.math.abs
 
-@Suppress("UNUSED")
-val HuskyAuto = Mercurial.autonomous {
+fun createHuskyAuto(goToTeleOp: Boolean) = Mercurial.PipelineProgram {
     //#region Pre-Init
     val telemetryM = PanelsTelemetry.telemetry;
 
@@ -243,4 +244,15 @@ val HuskyAuto = Mercurial.autonomous {
         })
     )
     dropToScheduler()
+    if (goToTeleOp) {
+        createHuskyTeleOp(drive.follower.pose, alliance)
+    } else {
+        Mercurial.Program {
+            telemetry.addLine("Auto ended")
+            telemetry.update()
+        }
+    }
 }
+
+val HuskyAuto = Mercurial.autonomous("Husky Auto", "Huskyteers", "Husky TeleOp",createHuskyAuto(true))
+val HuskyPipelineAuto = Mercurial.pipelineAutonomous("Husky Auto DIRECTLY INTO TELEOP", "Huskyteers", createHuskyAuto(false))

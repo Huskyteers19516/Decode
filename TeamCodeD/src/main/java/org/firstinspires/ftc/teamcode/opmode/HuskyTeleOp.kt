@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.opmode
 
 import android.util.Log
 import com.bylazar.telemetry.PanelsTelemetry
+import com.pedropathing.geometry.Pose
 import dev.frozenmilk.dairy.mercurial.continuations.Continuations.deadline
 import dev.frozenmilk.dairy.mercurial.continuations.Continuations.exec
 import dev.frozenmilk.dairy.mercurial.continuations.Continuations.ifHuh
@@ -27,12 +28,13 @@ import kotlin.time.measureTime
 const val TAG = "HuskyTeleOp"
 
 @Suppress("UNUSED")
-val huskyTeleOp = Mercurial.teleop("HuskyTeleOp", "Huskyteers") {
+fun createHuskyTeleOp(startPose: Pose, startAlliance: Alliance) = Mercurial.Program {
     //#region Pre-Init
     val telemetryM = PanelsTelemetry.telemetry
 
+    var alliance = startAlliance
 
-    var alliance = Alliance.RED
+
     schedule(
         deadline(
             wait {
@@ -56,6 +58,8 @@ val huskyTeleOp = Mercurial.teleop("HuskyTeleOp", "Huskyteers") {
     val intake = Intake(hardwareMap)
     val flippers = Flippers(hardwareMap)
     val drive = Drive(hardwareMap)
+    val camera = Camera(hardwareMap)
+    drive.follower.setStartingPose(startPose)
     val colorSensors = ColorSensors(hardwareMap)
 
     //#endregion
@@ -103,10 +107,7 @@ val huskyTeleOp = Mercurial.teleop("HuskyTeleOp", "Huskyteers") {
                         { 1 },
                         { _ ->
                             sequence(jumpScope {
-                                sequence(
-                                    exec {
-                                        drive.follower.holdPoint(drive.follower.pose)
-                                    },
+                                deadline(sequence(
                                     exec {
                                         isLaunching = true
                                         try {
@@ -122,7 +123,20 @@ val huskyTeleOp = Mercurial.teleop("HuskyTeleOp", "Huskyteers") {
 
                                     wait(FlippersConstants.FLIPPER_WAIT_TIME),
                                     exec { isLaunching = false }
-                                )
+                                ), jumpScope {
+
+                                    sequence(exec {
+                                        drive.follower.holdPoint(drive.follower.pose)
+                                    },
+                                        loop(
+                                        exec {
+                                            camera.getTargetTag(alliance)?.let {
+                                                drive.orientTowardsAprilTag(it, false)
+                                                jump()
+                                            }
+                                        }
+                                    ))
+                                })
                             }, exec {
                                 drive.follower.startTeleopDrive(TeleOpConstants.TELEOP_BRAKE_MODE)
                             })
@@ -389,3 +403,5 @@ val huskyTeleOp = Mercurial.teleop("HuskyTeleOp", "Huskyteers") {
     Log.d(TAG, "HuskyTeleOp started")
     dropToScheduler()
 }
+
+val HuskyTeleOp = Mercurial.teleop("Husky TeleOp", "Huskyteers", createHuskyTeleOp(Pose(), Alliance.RED))

@@ -188,14 +188,29 @@ object Mercurial {
         .withProgram(liftPipeLine(program))
 
     @JvmStatic
-    fun autonomous(
+    fun pipelineAutonomous(
         name: String,
         group: String,
         program: PipelineProgram,
     ) = buildProgram() //
         .withType(OpModeMeta.Flavor.AUTONOMOUS) //
         .withName(name) //
+        .withGroup(group)
+        .withProgram(liftPipeLine(program))
+
+    @JvmStatic
+    fun autonomous(
+        name: String,
+        group: String,
+        preload: String,
+        program: PipelineProgram,
+    ) = buildProgram() //
+        .withType(OpModeMeta.Flavor.AUTONOMOUS) //
+        .withName(name) //
         .withGroup(group) //
+        .withTransitionTarget {
+            preload
+        }
         .withProgram(liftPipeLine(program))
 
     //
