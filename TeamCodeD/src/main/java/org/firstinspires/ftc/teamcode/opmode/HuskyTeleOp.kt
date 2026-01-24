@@ -92,6 +92,12 @@ fun createHuskyTeleOp(startPose: Pose, startAlliance: Alliance) = Mercurial.Prog
     val prioritiser = Mutexes.Prioritiser<Int> { new, old -> new >= old }
 
     val flipperMutex = Mutex(prioritiser, Unit)
+    var autoChooseRPM = true
+
+    bindSpawn(
+        risingEdge { gamepad2.right_bumper },
+        exec {autoChooseRPM = !autoChooseRPM }
+    )
 
     fun generateFlipperSequence(flipper: Slot) =
         Mutexes.guardPoll(
@@ -100,44 +106,52 @@ fun createHuskyTeleOp(startPose: Pose, startAlliance: Alliance) = Mercurial.Prog
             { _ ->
                 sequence(
                     exec {
-                        outtake.targetVelocity = Outtake.getBestTargetVelocity(camera.getTargetTag(alliance)?.ftcPose?.range ?: drive.follower.pose.distanceFrom(if (alliance == Alliance.RED) Paths.RED_GOAL_FRONT else Paths.BLUE_GOAL_FRONT)) ;outtake.active = true;
-                         },
+                        if (autoChooseRPM) {
+                            outtake.targetVelocity = Outtake.getBestTargetVelocity(
+                                camera.getTargetTag(alliance)?.ftcPose?.range
+                                    ?: drive.follower.pose.distanceFrom(if (alliance == Alliance.RED) Paths.RED_GOAL_FRONT else Paths.BLUE_GOAL_FRONT)
+                            ); outtake.active = true;
+
+                        }
+                    },
                     wait { outtake.canShoot() },
                     Mutexes.guardPoll(
                         flipperMutex,
                         { 1 },
                         { _ ->
                             sequence(jumpScope {
-                                deadline(sequence(
-                                    exec {
-                                        isLaunching = true
-                                        try {
-                                            flippers.raiseFlipper(flipper)
-                                        } catch (e: Exception) {
-                                            isLaunching = false
-                                            Log.e(TAG, "Failed to raise flipper", e)
-                                            jump()
-                                        }
-                                    },
-                                    wait(FlippersConstants.FLIPPER_WAIT_TIME),
-                                    exec { flippers.lowerFlipper(flipper) },
-
-                                    wait(FlippersConstants.FLIPPER_WAIT_TIME),
-                                    exec { isLaunching = false }
-                                ), jumpScope {
-
-                                    sequence(exec {
-                                        drive.follower.holdPoint(drive.follower.pose)
-                                    },
-                                        loop(
+                                deadline(
+                                    sequence(
                                         exec {
-                                            camera.getTargetTag(alliance)?.let {
-                                                drive.orientTowardsAprilTag(it, false)
+                                            isLaunching = true
+                                            try {
+                                                flippers.raiseFlipper(flipper)
+                                            } catch (e: Exception) {
+                                                isLaunching = false
+                                                Log.e(TAG, "Failed to raise flipper", e)
                                                 jump()
                                             }
-                                        }
-                                    ))
-                                })
+                                        },
+                                        wait(FlippersConstants.FLIPPER_WAIT_TIME),
+                                        exec { flippers.lowerFlipper(flipper) },
+
+                                        wait(FlippersConstants.FLIPPER_WAIT_TIME),
+                                        exec { isLaunching = false }
+                                    ), jumpScope {
+
+                                        sequence(
+                                            exec {
+                                            drive.follower.holdPoint(drive.follower.pose)
+                                        },
+                                            loop(
+                                                exec {
+                                                    camera.getTargetTag(alliance)?.let {
+                                                        drive.orientTowardsAprilTag(it, false)
+                                                        jump()
+                                                    }
+                                                }
+                                            ))
+                                    })
                             }, exec {
                                 drive.follower.startTeleopDrive(TeleOpConstants.TELEOP_BRAKE_MODE)
                             })
@@ -329,10 +343,11 @@ fun createHuskyTeleOp(startPose: Pose, startAlliance: Alliance) = Mercurial.Prog
             val driveLoopTime =
                 measureTime {
                     if (!isLaunching) {
+                        telemetryM.addData("is busy", drive.follower.isBusy)
                         drive.manualPeriodic(
                             -gamepad1.left_stick_y.toDouble(),
                             -gamepad1.left_stick_x.toDouble(),
-                            -gamepad1.right_stick_x.toDouble(),
+                            -gamepad1.right_stick_x.toDouble() * 0.7,
                             telemetryM
                         )
                     } else {
@@ -345,6 +360,7 @@ fun createHuskyTeleOp(startPose: Pose, startAlliance: Alliance) = Mercurial.Prog
 
             telemetryM.addData("Is Launching", isLaunching)
             telemetryM.addLine((if (!trustingColorSensors) "NOT " else "") + "Trusting color sensors (Y Gamepad 2)")
+            telemetryM.addLine((if (!autoChooseRPM) "NOT " else "") + "Auto choose RPM (Right bumper Gamepad 2)")
             val sensorLoopTime = measureTime {
                 if (loops % TeleOpConstants.COLOR_SENSOR_INTERVAL == 0) {
                     colorSensors.update()

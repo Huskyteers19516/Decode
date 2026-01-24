@@ -1,11 +1,14 @@
 package org.firstinspires.ftc.teamcode.hardware
 
+import android.util.Log
 import com.bylazar.telemetry.TelemetryManager
 import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.hardware.DcMotorEx
 import com.qualcomm.robotcore.hardware.HardwareMap
 import org.firstinspires.ftc.teamcode.constants.OuttakeConstants
+import java.lang.Math.pow
 import kotlin.math.abs
+import kotlin.math.pow
 
 class Outtake(hardwareMap: HardwareMap) {
     private val outtakeMotor: DcMotorEx = hardwareMap.get(DcMotorEx::class.java, "outtake")
@@ -70,17 +73,26 @@ class Outtake(hardwareMap: HardwareMap) {
     companion object {
         // List of pairs with the first being the distance in inches, the second being the target velocity
         val knownValues = listOf(
-            0.0 to 0.0,
-            10.0 to 1000.0,
-            25.0 to 1500.0,
-            30.0 to 1700.0
+            25.0 to 1100.0,
+            11.0 to 1000.0,
+            28.75 to 1200.0,
+            46.0 to 1300.0,
+            64.0 to 1500.0,
+            78.75 to 1620.0
         )
 
         fun getBestTargetVelocity(range: Double): Double {
+            Log.d("HuskyTeleOp", "using range: $range in")
+
+            return 0.000178272* range.pow(2.0) + 0.0769583 * range + 49.28455
+
             val sorted = knownValues.sortedBy { it.first }
 
             // exact match
-            for ((d, v) in sorted) if (d == range) return v
+            for ((d, v) in sorted) if (d == range) {
+                Log.d("HuskyTeleOp", "Found $v")
+                return v
+            }
 
             // clamp to ends
             if (range <= sorted.first().first) return sorted.first().second
@@ -92,6 +104,8 @@ class Outtake(hardwareMap: HardwareMap) {
                 val (d2, v2) = sorted[i + 1]
                 if (range in d1..d2) {
                     val t = (range - d1) / (d2 - d1)
+                    Log.d("HuskyTeleOp", "${v1 + t * (v2 - v1)}")
+
                     return v1 + t * (v2 - v1)
                 }
             }
