@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.opmode.testing
 
+import android.util.Log
 import com.bylazar.telemetry.PanelsTelemetry
 import dev.frozenmilk.dairy.mercurial.continuations.Continuations.exec
 import dev.frozenmilk.dairy.mercurial.continuations.Continuations.loop
@@ -21,29 +22,23 @@ val cameraTesting = Mercurial.teleop("Camera Testing", "Testing") {
     )
 
     waitForStart()
-    drive.follower.startTeleopDrive()
+//    drive.follower.startTeleopDrive()
+
+    bindSpawn(
+        risingEdge {
+            gamepad1.a
+        },
+        exec {
+            camera.getTargetTag(Alliance.BLUE)?.let { drive.orientTowardsAprilTag(it, false); Log.d("TESTING", "found april tag"); }
+        }
+    )
 
     schedule(
         loop(
             exec {
                 telemetryM.addLine("Camera Testing")
 
-                if (gamepad1.a) {
-                    val targetTag =
-                        camera.getTargetTag(Alliance.BLUE) ?: camera.getTargetTag(Alliance.RED)
-                    if (targetTag == null) {
-                        telemetryM.addData("Orienting status", "Not found")
-                    } else {
-                        telemetryM.addData(
-                            "Orienting status", when (drive.orientTowardsAprilTag(targetTag)) {
-                                Drive.State.IN_PROGRESS -> "In progress"
-                                Drive.State.DONE -> "Done"
-                            }
-                        )
-                    }
-                } else {
-                    drive.follower.setTeleOpDrive(0.0, 0.0, 0.0)
-                }
+
                 drive.periodic(telemetryM)
 
                 try {

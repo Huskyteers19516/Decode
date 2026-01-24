@@ -27,7 +27,7 @@ import org.firstinspires.ftc.teamcode.utils.hl
 import kotlin.math.abs
 
 @Suppress("UNUSED")
-val HuskyAuto = Mercurial.autonomous {
+val TestAuto = Mercurial.autonomous {
     //#region Pre-Init
     val telemetryM = PanelsTelemetry.telemetry;
 
@@ -37,37 +37,6 @@ val HuskyAuto = Mercurial.autonomous {
     val camera = Camera(hardwareMap)
     val colorSensors = ColorSensors(hardwareMap)
 
-    schedule(
-        deadline(
-            wait {
-                inLoop
-            }, loop(exec {
-                telemetryM.addData("Status", "Initialized")
-                telemetryM.addLine("Press B for red, press X for blue")
-                telemetryM.addData("Current alliance", alliance)
-                if (gamepad1.bWasPressed()) {
-                    alliance = Alliance.RED
-                    paths.buildPaths(alliance)
-                } else if (gamepad1.xWasPressed()) {
-                    alliance = Alliance.BLUE
-                    paths.buildPaths(alliance)
-                }
-                telemetryM.hl()
-                colorSensors.update()
-                colorSensors.telemetry(telemetryM)
-                if (colorSensors.slots[Slot.A] == ColorSensors.Companion.Artifact.GREEN) {
-                    telemetryM.addLine("WARNING: Green in slot A (back slot). Recommended to put purple artifact there.")
-                }
-                if (colorSensors.slots.count { it.value in listOf(ColorSensors.Companion.Artifact.GREEN, ColorSensors.Companion.Artifact.PURPLE) } < 3) {
-                    telemetryM.addLine("WARNING: Currently detecting less than 3 artifacts")
-                } else if (colorSensors.slots.count { it.value in listOf(ColorSensors.Companion.Artifact.GREEN) } != 1) {
-                    telemetryM.addLine("WARNING: Detecting something other than 1 green artifact and 2 purple artifacts.")
-                }
-
-                telemetryM.update(telemetry)
-            })
-        )
-    )
 
     val outtake = Outtake(hardwareMap)
     val intake = Intake(hardwareMap)
@@ -84,12 +53,7 @@ val HuskyAuto = Mercurial.autonomous {
     fun turnTo(radians: Double) = sequence(deadline(wait(1.5), sequence(
         exec {
             drive.follower.turnTo(radians)
-        }, wait { abs(drive.follower.pose.heading - radians) < 0.007 }, jumpScope {
-            loop(exec {
-                // once it sees the april tag, stops aligning
-                camera.getTargetTag(alliance)?.let { drive.orientTowardsAprilTag(it, false); Log.d(TAG, "found april tag"); jump() }
-            })
-        },))
+        }, wait { abs(drive.follower.pose.heading - radians) < 0.007 }))
     )
 
     fun shoot(flipper: Slot) = sequence(
@@ -142,7 +106,7 @@ val HuskyAuto = Mercurial.autonomous {
         jumpScope {
             loop(exec {
                 // once it sees the april tag, stops aligning
-                camera.getTargetTag(alliance)?.let { drive.orientTowardsAprilTag(it, false); Log.d(TAG, "found april tag"); jump() }
+                camera.getTargetTag(alliance)?.let { drive.orientTowardsAprilTag(it); Log.d(TAG, "found april tag"); jump() }
             })
         },
 
@@ -171,54 +135,7 @@ val HuskyAuto = Mercurial.autonomous {
     drive.follower.setStartingPose(paths.startPosition)
     Log.d(TAG, paths.aimHeading.toString())
     schedule(
-        sequence(
-            deadline(
-                wait(AutoConstants.CUTOFF_SECONDS),
-                sequence(
-                    exec { outtake.active = true },
-                    followPath(paths.fromStartToShoot.apply {
-                        headingInterpolator = object : HeadingInterpolator {
-                            val faceObelisk = HeadingInterpolator.facingPoint(Paths.obelisk)
-                            val faceGoal = HeadingInterpolator.tangent.reverse()
-                            override fun interpolate(closestPoint: PathPoint?): Double {
-                                return if (motif == null) {
-                                    faceObelisk.interpolate(closestPoint)
-                                } else {
-                                    faceGoal.interpolate(closestPoint)
-                                }
-                            }
-                        }
-                    }),
-                    turnTo(paths.aimHeading),
-                    exec {
-                        if (motif == null) {
-                            motif = Motif.PGP
-                        }
-                        Log.d(TAG, "Got motif")
-                    },
-                    shootAllThree(),
-                    shootRemaining(),
-                    exec {
-                        needColorSensors = true
-                    },
-                    doWithIntake(
-                        sequence(followPath(paths.pickUpFirstRow), followPath(paths.firstRowToShoot),)
-                    ),
-                    turnTo(paths.aimHeading),
-                    shootAllThree(),
-                    shootRemaining(),
-                    doWithIntake(sequence(followPath(paths.pickUpSecondRow), followPath(paths.secondRowToShoot))),
-                    turnTo(paths.aimHeading),
-                    shootAllThree(),
-                    shootRemaining(),
-                    doWithIntake(followPath(paths.pickUpThirdRow))
-                ),
-            ),
-            exec {
-                drive.follower.breakFollowing()
-                drive.follower.holdPoint(paths.endLocation.withHeading(drive.follower.heading))
-            }
-        )
+        turnTo(1.0)
     )
 
     schedule(

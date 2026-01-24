@@ -11,7 +11,7 @@ object TeleOpConstants {
     var OUTTAKE_TARGET_VELOCITY_SMALL_ADJUSTMENT_FACTOR = 20
 
     @JvmField
-    var TELEOP_BRAKE_MODE = true
+    var TELEOP_BRAKE_MODE = false
 
     @JvmField
     var DEBUG_MODE = false

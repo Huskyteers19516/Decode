@@ -5,9 +5,11 @@ import dev.frozenmilk.dairy.mercurial.continuations.Continuations.exec
 import dev.frozenmilk.dairy.mercurial.continuations.Continuations.loop
 import dev.frozenmilk.dairy.mercurial.ftc.Mercurial
 import org.firstinspires.ftc.teamcode.constants.TeleOpConstants
+import org.firstinspires.ftc.teamcode.hardware.Camera
 import org.firstinspires.ftc.teamcode.hardware.Flippers
 import org.firstinspires.ftc.teamcode.hardware.Intake
 import org.firstinspires.ftc.teamcode.hardware.Outtake
+import org.firstinspires.ftc.teamcode.utils.Slot
 import org.firstinspires.ftc.teamcode.utils.hl
 
 @Suppress("unused")
@@ -17,6 +19,7 @@ val systemTesting = Mercurial.teleop("System Testing", "Testing") {
     val intake = Intake(hardwareMap)
     val outtake = Outtake(hardwareMap)
     val flippers = Flippers(hardwareMap)
+    val camera = Camera(hardwareMap)
 
     waitForStart()
 
@@ -25,6 +28,56 @@ val systemTesting = Mercurial.teleop("System Testing", "Testing") {
     bindSpawn(
         risingEdge { gamepad1.start }, exec { velocityMode = !velocityMode }
     )
+
+    bindSpawn(
+        risingEdge {
+            gamepad1.a
+        },
+        exec {
+            flippers.raiseFlipper(Slot.A)
+        }
+    )
+    bindSpawn(
+        risingEdge {
+            !gamepad1.a
+        },
+        exec {
+            flippers.lowerFlipper(Slot.A)
+        }
+    )
+    bindSpawn(
+        risingEdge {
+            gamepad1.b
+        },
+        exec {
+            flippers.raiseFlipper(Slot.B)
+        }
+    )
+    bindSpawn(
+        risingEdge {
+            !gamepad1.b
+        },
+        exec {
+            flippers.lowerFlipper(Slot.B)
+        }
+    )
+    bindSpawn(
+        risingEdge {
+            gamepad1.x
+        },
+        exec {
+            flippers.raiseFlipper(Slot.C)
+        }
+    )
+    bindSpawn(
+        risingEdge {
+            !gamepad1.x
+        },
+        exec {
+            flippers.lowerFlipper(Slot.C)
+        }
+    )
+
 
     bindSpawn(
         risingEdge {
@@ -95,6 +148,8 @@ val systemTesting = Mercurial.teleop("System Testing", "Testing") {
 
                 telemetryM.hl()
                 flippers.periodic(telemetryM, true)
+
+                camera.debugTelemetry(telemetryM)
 
                 telemetryM.update(telemetry)
             }

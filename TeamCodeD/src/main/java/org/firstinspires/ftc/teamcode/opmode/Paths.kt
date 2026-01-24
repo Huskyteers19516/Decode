@@ -31,7 +31,7 @@ class Paths(private val follower: Follower) {
     lateinit var thirdRowControlPoint: Pose
     lateinit var thirdRowEndPoint: Pose
     lateinit var endLocation: Pose
-    var aimHeading by Delegates.notNull<Double>()
+    var aimHeading = 0.0;
 
 
     fun buildPaths(alliance: Alliance) {
@@ -46,13 +46,13 @@ class Paths(private val follower: Follower) {
         firstRowControlPoint = Pose(91.99073396778475, 83.2123552123552).mirrorIfBlue()
         firstRow = Pose(144 - 6 - ROBOT_LENGTH / 2 - ROBOT_FRONT_PROTRUSION, 83.51).mirrorIfBlue()
         secondRowControlPoint = Pose(83.14671814671814, 54.622779922779934).mirrorIfBlue()
-        secondRow = Pose(144 - ROBOT_LENGTH / 2 - ROBOT_FRONT_PROTRUSION, 54.7).mirrorIfBlue()
+        secondRow = Pose(144 - ROBOT_LENGTH / 2 - ROBOT_FRONT_PROTRUSION - 6, 54.7 + 2.0).mirrorIfBlue()
         thirdRow = Pose(98.30656370656376, 35.80328185328186).mirrorIfBlue()
         thirdRowControlPoint = Pose(83.03667953667953, 35.43976833976834).mirrorIfBlue()
-        thirdRowEndPoint = Pose(144 - ROBOT_LENGTH / 2 - ROBOT_FRONT_PROTRUSION, 35.43976833976834).mirrorIfBlue()
+        thirdRowEndPoint = Pose(144 - ROBOT_LENGTH / 2 - ROBOT_FRONT_PROTRUSION - 6, 35.43976833976834).mirrorIfBlue()
 
         endLocation = Pose(100.0, 53.0).mirrorIfBlue()
-        val pickupHeading = if (alliance == Alliance.RED) 0.0 else Math.toDegrees(180.0)
+        val pickupHeading = if (alliance == Alliance.RED) 0.0 else Math.toRadians(180.0)
 
 
         val goalLocation = Pose(138.0, 144.0).mirrorIfBlue()
@@ -79,6 +79,7 @@ class Paths(private val follower: Follower) {
         pickUpSecondRow = follower.pathBuilder()
             .addPath(BezierCurve(shootPosition, secondRowControlPoint, secondRow))
             .setConstantHeadingInterpolation(pickupHeading)
+            .setReversed()
             .addPoseCallback(Pose(97.773, 60.0).mirrorIfBlue(), {
                 follower.setMaxPower(AutoConstants.MAX_POWER_WHEN_RUNNING_INTAKE)
             }, 0.5)
@@ -108,7 +109,7 @@ class Paths(private val follower: Follower) {
         val obelisk = Pose(72.0, 144.0)
         const val ROBOT_LENGTH = 17.055;
         const val ROBOT_WIDTH = 16.850394;
-        const val ROBOT_FRONT_PROTRUSION = 0.5;
+        const val ROBOT_FRONT_PROTRUSION = 3.0;
 
     }
 }

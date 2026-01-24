@@ -54,8 +54,8 @@ class Camera(hardwareMap: HardwareMap) {
     fun debugTelemetry(telemetry: TelemetryManager) {
         aprilTagProcessor.detections.forEach { detection ->
             telemetry.addData(
-                "Tag ID ${detection.id}", "X: %.2f in, Y: %.2f in, Z: %.2f in, Bearing: %.2f deg".format(
-                    detection.ftcPose.x, detection.ftcPose.y, detection.ftcPose.z, detection.ftcPose.bearing
+                "Tag ID ${detection.id}", "X: %.2f in, Y: %.2f in, Z: %.2f in, Bearing: %.2f deg, Range: %.2f in".format(
+                    detection.ftcPose.x, detection.ftcPose.y, detection.ftcPose.z, detection.ftcPose.bearing, detection.ftcPose.range
                 )
             )
             telemetry.hl()
@@ -64,14 +64,16 @@ class Camera(hardwareMap: HardwareMap) {
 
     fun getTargetTag(alliance: Alliance): AprilTagDetection? {
         return aprilTagProcessor.detections?.firstOrNull {
-            it.metadata.name == (if (alliance == Alliance.RED) "RedTarget" else "BlueTarget")
+            it.metadata.id == (if (alliance == Alliance.RED) 24 else 20)
         }
     }
 
     fun getObelisk(): Motif? {
         aprilTagProcessor.detections?.forEach {
             Motif.entries.forEach { motif ->
-                if (motif.name == "Obelisk_${it.metadata.name}") {
+                println(it.metadata.name)
+                println("Obelisk_${it.metadata.name}")
+                if (it.metadata.name == "Obelisk_${motif.name}") {
                     return motif
                 }
             }

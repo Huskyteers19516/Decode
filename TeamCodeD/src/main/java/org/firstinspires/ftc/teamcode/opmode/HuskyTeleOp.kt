@@ -102,8 +102,11 @@ val huskyTeleOp = Mercurial.teleop("HuskyTeleOp", "Huskyteers") {
                         flipperMutex,
                         { 1 },
                         { _ ->
-                            jumpScope {
+                            sequence(jumpScope {
                                 sequence(
+                                    exec {
+                                        drive.follower.holdPoint(drive.follower.pose)
+                                    },
                                     exec {
                                         isLaunching = true
                                         try {
@@ -120,7 +123,9 @@ val huskyTeleOp = Mercurial.teleop("HuskyTeleOp", "Huskyteers") {
                                     wait(FlippersConstants.FLIPPER_WAIT_TIME),
                                     exec { isLaunching = false }
                                 )
-                            }
+                            }, exec {
+                                drive.follower.startTeleopDrive(TeleOpConstants.TELEOP_BRAKE_MODE)
+                            })
                         },
                         // should be impossible
                         noop(),
@@ -302,19 +307,22 @@ val huskyTeleOp = Mercurial.teleop("HuskyTeleOp", "Huskyteers") {
     var totalFlippersLoopTime = Duration.ZERO
     var totalIntakeLoopTime = Duration.ZERO
 
-
     schedule(
         loop(exec {
             telemetryM.addLine("(Gamepad 1) Slow down: left bumper, reset orientation: start")
             telemetryM.addLine("(Gamepad 2) Change drive mode: start")
             val driveLoopTime =
                 measureTime {
-                    drive.manualPeriodic(
-                        -gamepad1.left_stick_y.toDouble(),
-                        -gamepad1.left_stick_x.toDouble(),
-                        -gamepad1.right_stick_x.toDouble(),
-                        telemetryM
-                    )
+                    if (!isLaunching) {
+                        drive.manualPeriodic(
+                            -gamepad1.left_stick_y.toDouble(),
+                            -gamepad1.left_stick_x.toDouble(),
+                            -gamepad1.right_stick_x.toDouble(),
+                            telemetryM
+                        )
+                    } else {
+                        drive.periodic(telemetryM)
+                    }
                 }
             totalDriveLoopTime += driveLoopTime
 

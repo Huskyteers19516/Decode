@@ -108,6 +108,7 @@ class Drive(private val hardwareMap: HardwareMap) {
             )
         } else {
             telemetry.addData("Is Busy", follower.isBusy)
+            telemetry.addData("Is Turning", follower.isTurning)
         }
         telemetry.addData("X (in)", follower.pose.x)
         telemetry.addData("Y (in)", follower.pose.y)

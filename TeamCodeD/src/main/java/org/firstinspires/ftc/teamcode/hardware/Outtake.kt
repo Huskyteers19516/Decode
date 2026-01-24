@@ -53,7 +53,7 @@ class Outtake(hardwareMap: HardwareMap) {
         telemetry.addData("Outtake active", active)
         val velocity = outtakeMotor.velocity
         telemetry.addData("Outtake velocity", velocity)
-        telemetry.addData("Outtake target velocity", velocity)
+        telemetry.addData("Outtake target velocity", targetVelocity)
         telemetry.addData("Outtake status", if (active && canShoot()) "CAN SHOOT" else "NOT READY")
         if (!debugging) return
         telemetry.addData("Outtake power", outtakeMotor.power)
