@@ -34,7 +34,6 @@ fun createHuskyTeleOp(startPose: Pose, startAlliance: Alliance) = Mercurial.Prog
 
     var alliance = startAlliance
 
-
     schedule(
         deadline(
             wait {
@@ -100,7 +99,9 @@ fun createHuskyTeleOp(startPose: Pose, startAlliance: Alliance) = Mercurial.Prog
             { 0 },
             { _ ->
                 sequence(
-                    exec { outtake.active = true },
+                    exec {
+                        outtake.targetVelocity = Outtake.getBestTargetVelocity(camera.getTargetTag(alliance)?.ftcPose?.range ?: drive.follower.pose.distanceFrom(if (alliance == Alliance.RED) Paths.RED_GOAL_FRONT else Paths.BLUE_GOAL_FRONT)) ;outtake.active = true;
+                         },
                     wait { outtake.canShoot() },
                     Mutexes.guardPoll(
                         flipperMutex,

@@ -66,4 +66,39 @@ class Outtake(hardwareMap: HardwareMap) {
     fun toggle() {
         active = !active
     }
+
+    companion object {
+        // List of pairs with the first being the distance in inches, the second being the target velocity
+        val knownValues = listOf(
+            0.0 to 0.0,
+            10.0 to 1000.0,
+            25.0 to 1500.0,
+            30.0 to 1700.0
+        )
+
+        fun getBestTargetVelocity(range: Double): Double {
+            val sorted = knownValues.sortedBy { it.first }
+
+            // exact match
+            for ((d, v) in sorted) if (d == range) return v
+
+            // clamp to ends
+            if (range <= sorted.first().first) return sorted.first().second
+            if (range >= sorted.last().first) return sorted.last().second
+
+            // find interval and linearly interpolate
+            for (i in 0 until sorted.size - 1) {
+                val (d1, v1) = sorted[i]
+                val (d2, v2) = sorted[i + 1]
+                if (range in d1..d2) {
+                    val t = (range - d1) / (d2 - d1)
+                    return v1 + t * (v2 - v1)
+                }
+            }
+
+            // fallback (shouldn't be reached)
+            return sorted.last().second
+        }
+
+    }
 }
