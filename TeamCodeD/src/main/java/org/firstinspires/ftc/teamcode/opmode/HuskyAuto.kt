@@ -254,5 +254,5 @@ fun createHuskyAuto(goToTeleOp: Boolean) = Mercurial.PipelineProgram {
     }
 }
 
-val HuskyAuto = Mercurial.autonomous("Husky Auto", "Huskyteers", "Husky TeleOp",createHuskyAuto(true))
-val HuskyPipelineAuto = Mercurial.pipelineAutonomous("Husky Auto DIRECTLY INTO TELEOP", "Huskyteers", createHuskyAuto(false))
+val HuskyAuto = Mercurial.autonomous("Husky Auto", "Huskyteers", "Husky TeleOp",createHuskyAuto(false))
+val HuskyPipelineAuto = Mercurial.pipelineAutonomous("Husky Auto DIRECTLY INTO TELEOP", "Huskyteers", createHuskyAuto(true))

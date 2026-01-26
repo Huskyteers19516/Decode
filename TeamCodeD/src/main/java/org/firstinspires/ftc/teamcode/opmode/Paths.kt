@@ -17,6 +17,7 @@ class Paths(private val follower: Follower) {
     }
     lateinit var fromStartToShoot: PathChain
     lateinit var pickUpFirstRow: PathChain
+    lateinit var pickUpFirstRowWithGate: PathChain
     lateinit var firstRowToShoot: PathChain
     lateinit var pickUpSecondRow: PathChain
     lateinit var secondRowToShoot: PathChain
@@ -31,6 +32,7 @@ class Paths(private val follower: Follower) {
     lateinit var thirdRowControlPoint: Pose
     lateinit var thirdRowEndPoint: Pose
     lateinit var endLocation: Pose
+    lateinit var innerEndLocation: Pose
     var aimHeading = 0.0;
 
 
@@ -52,6 +54,7 @@ class Paths(private val follower: Follower) {
         thirdRowEndPoint = Pose(144 - ROBOT_LENGTH / 2 - ROBOT_FRONT_PROTRUSION - 6, 35.43976833976834).mirrorIfBlue()
 
         endLocation = Pose(100.0, 53.0).mirrorIfBlue()
+        innerEndLocation = Pose(86.0, 132.0).mirrorIfBlue()
         val pickupHeading = if (alliance == Alliance.RED) 0.0 else Math.toRadians(180.0)
 
 
@@ -67,6 +70,15 @@ class Paths(private val follower: Follower) {
             .setConstantHeadingInterpolation(pickupHeading)
             .setReversed()
             .addPoseCallback(Pose(101.749, 82.334).mirrorIfBlue(), {
+                follower.setMaxPower(AutoConstants.MAX_POWER_WHEN_RUNNING_INTAKE)
+            }, 0.5)
+            .build()
+
+        pickUpFirstRowWithGate = follower.pathBuilder()
+            .addPath(BezierCurve(shootPosition, firstRowControlPoint, firstRow))
+            .setConstantHeadingInterpolation(pickupHeading)
+            .setReversed()
+            .addPoseCallback(Pose(101.749, 82.334 - 12.0).mirrorIfBlue(), {
                 follower.setMaxPower(AutoConstants.MAX_POWER_WHEN_RUNNING_INTAKE)
             }, 0.5)
             .build()

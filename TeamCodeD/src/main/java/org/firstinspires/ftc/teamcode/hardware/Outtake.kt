@@ -84,7 +84,8 @@ class Outtake(hardwareMap: HardwareMap) {
         fun getBestTargetVelocity(range: Double): Double {
             Log.d("HuskyTeleOp", "using range: $range in")
 
-            return 0.000178272* range.pow(2.0) + 0.0769583 * range + 49.28455
+//            return 0.178272 * range.pow(2.0) + 0.0769583 * range + 49.28455
+            return 446.88*range.pow(0.295259)
 
             val sorted = knownValues.sortedBy { it.first }
 
