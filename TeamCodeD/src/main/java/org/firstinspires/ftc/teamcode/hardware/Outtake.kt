@@ -6,30 +6,38 @@ import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.hardware.DcMotorEx
 import com.qualcomm.robotcore.hardware.HardwareMap
 import org.firstinspires.ftc.teamcode.constants.OuttakeConstants
-import java.lang.Math.pow
 import kotlin.math.abs
 import kotlin.math.pow
 
 class Outtake(hardwareMap: HardwareMap) {
     private val outtakeMotor: DcMotorEx = hardwareMap.get(DcMotorEx::class.java, "outtake")
+    private val turretMotor: DcMotorEx = hardwareMap.get(DcMotorEx::class.java, "turret")
 
     init {
         outtakeMotor.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.FLOAT
         outtakeMotor.mode = DcMotor.RunMode.RUN_USING_ENCODER
         outtakeMotor.setVelocityPIDFCoefficients(
-            OuttakeConstants.KP,
-            OuttakeConstants.KI,
-            OuttakeConstants.KD,
-            OuttakeConstants.KS
+            OuttakeConstants.SHOOTER_KP,
+            OuttakeConstants.SHOOTER_KI,
+            OuttakeConstants.SHOOTER_KD,
+            OuttakeConstants.SHOOTER_KS
         )
         outtakeMotor.power = 0.0
+
+        turretMotor.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
+        turretMotor.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
+        turretMotor.setPositionPIDFCoefficients(
+            OuttakeConstants.TURRET_KP,
+        )
     }
 
     var targetVelocity = OuttakeConstants.DEFAULT_TARGET_VELOCITY;
+    var velocityAdjustmentFactor = 0.0
     var active = false
 
     fun manualPeriodic(manualPower: Double, telemetry: TelemetryManager) {
         outtakeMotor.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
+        turretMotor.mode = DcMotor.RunMode.RUN_TO_POSITION
         outtakeMotor.power = manualPower
         telemetry.addData("Outtake active", active)
         telemetry.addData("Outtake power", outtakeMotor.power)
@@ -38,32 +46,36 @@ class Outtake(hardwareMap: HardwareMap) {
 
     fun periodic(telemetry: TelemetryManager, debugging: Boolean = false) {
         outtakeMotor.mode = DcMotor.RunMode.RUN_USING_ENCODER
+        turretMotor.mode = DcMotor.RunMode.RUN_TO_POSITION
 
         if (debugging) {
             // takes 3 ms
             outtakeMotor.setVelocityPIDFCoefficients(
-                OuttakeConstants.KP,
-                OuttakeConstants.KI,
-                OuttakeConstants.KD,
-                OuttakeConstants.KS
+                OuttakeConstants.SHOOTER_KP,
+                OuttakeConstants.SHOOTER_KI,
+                OuttakeConstants.SHOOTER_KD,
+                OuttakeConstants.SHOOTER_KS
             )
         }
         if (active) {
-            outtakeMotor.velocity = targetVelocity
+            outtakeMotor.velocity = targetVelocity + velocityAdjustmentFactor
         } else {
             outtakeMotor.power = 0.0
         }
         telemetry.addData("Outtake active", active)
         val velocity = outtakeMotor.velocity
         telemetry.addData("Outtake velocity", velocity)
-        telemetry.addData("Outtake target velocity", targetVelocity)
+        telemetry.addData("Outtake target velocity", targetVelocity + velocityAdjustmentFactor)
+        telemetry.addData("Outtake velocity adjustment factor", velocityAdjustmentFactor)
         telemetry.addData("Outtake status", if (active && canShoot()) "CAN SHOOT" else "NOT READY")
         if (!debugging) return
         telemetry.addData("Outtake power", outtakeMotor.power)
     }
 
     fun canShoot(velocity: Double? = null): Boolean {
-        return abs(targetVelocity - (velocity ?: outtakeMotor.velocity)) < OuttakeConstants.ALLOWANCE
+        return abs(
+            targetVelocity + velocityAdjustmentFactor - (velocity ?: outtakeMotor.velocity)
+        ) < OuttakeConstants.ALLOWANCE
     }
 
     fun toggle() {
@@ -85,7 +97,7 @@ class Outtake(hardwareMap: HardwareMap) {
             Log.d("HuskyTeleOp", "using range: $range in")
 
 //            return 0.178272 * range.pow(2.0) + 0.0769583 * range + 49.28455
-            return 446.88*range.pow(0.295259)
+            return 446.88 * range.pow(0.295259)
 
             val sorted = knownValues.sortedBy { it.first }
 

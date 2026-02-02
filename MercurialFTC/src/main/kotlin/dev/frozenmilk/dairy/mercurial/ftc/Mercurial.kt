@@ -203,7 +203,7 @@ object Mercurial {
         name: String,
         group: String,
         preload: String,
-        program: PipelineProgram,
+        program: Program,
     ) = buildProgram() //
         .withType(OpModeMeta.Flavor.AUTONOMOUS) //
         .withName(name) //
@@ -211,7 +211,7 @@ object Mercurial {
         .withTransitionTarget {
             preload
         }
-        .withProgram(liftPipeLine(program))
+        .withProgram(program)
 
     //
     // Manual Registration

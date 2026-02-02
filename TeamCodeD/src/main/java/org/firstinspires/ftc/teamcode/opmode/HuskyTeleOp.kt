@@ -5,24 +5,18 @@ import com.bylazar.telemetry.PanelsTelemetry
 import com.pedropathing.geometry.Pose
 import dev.frozenmilk.dairy.mercurial.continuations.Continuations.deadline
 import dev.frozenmilk.dairy.mercurial.continuations.Continuations.exec
-import dev.frozenmilk.dairy.mercurial.continuations.Continuations.ifHuh
-import dev.frozenmilk.dairy.mercurial.continuations.Continuations.jumpScope
 import dev.frozenmilk.dairy.mercurial.continuations.Continuations.loop
-import dev.frozenmilk.dairy.mercurial.continuations.Continuations.match
-import dev.frozenmilk.dairy.mercurial.continuations.Continuations.noop
-import dev.frozenmilk.dairy.mercurial.continuations.Continuations.sequence
 import dev.frozenmilk.dairy.mercurial.continuations.Continuations.wait
-import dev.frozenmilk.dairy.mercurial.continuations.mutexes.Mutex
-import dev.frozenmilk.dairy.mercurial.continuations.mutexes.Mutexes
 import dev.frozenmilk.dairy.mercurial.ftc.Mercurial
 import org.firstinspires.ftc.teamcode.constants.DriveConstants
-import org.firstinspires.ftc.teamcode.constants.FlippersConstants
 import org.firstinspires.ftc.teamcode.constants.TeleOpConstants
-import org.firstinspires.ftc.teamcode.hardware.*
+import org.firstinspires.ftc.teamcode.hardware.Camera
+import org.firstinspires.ftc.teamcode.hardware.Drive
+import org.firstinspires.ftc.teamcode.hardware.Intake
+import org.firstinspires.ftc.teamcode.hardware.Outtake
 import org.firstinspires.ftc.teamcode.utils.Alliance
-import org.firstinspires.ftc.teamcode.utils.Slot
+import org.firstinspires.ftc.teamcode.utils.LoopTimer
 import org.firstinspires.ftc.teamcode.utils.hl
-import kotlin.time.Duration
 import kotlin.time.measureTime
 
 const val TAG = "HuskyTeleOp"
@@ -31,7 +25,6 @@ const val TAG = "HuskyTeleOp"
 fun createHuskyTeleOp(startPose: Pose, startAlliance: Alliance) = Mercurial.Program {
     //#region Pre-Init
     val telemetryM = PanelsTelemetry.telemetry
-
     var alliance = startAlliance
 
     schedule(
@@ -55,15 +48,23 @@ fun createHuskyTeleOp(startPose: Pose, startAlliance: Alliance) = Mercurial.Prog
 
     val outtake = Outtake(hardwareMap)
     val intake = Intake(hardwareMap)
-    val flippers = Flippers(hardwareMap)
     val drive = Drive(hardwareMap)
     val camera = Camera(hardwareMap)
     drive.follower.setStartingPose(startPose)
-    val colorSensors = ColorSensors(hardwareMap)
 
     //#endregion
 
     waitForStart()
+    val loopTimer = LoopTimer()
+    val isLaunching = false
+
+    schedule(
+        loop(
+            exec {
+                loopTimer.start()
+            }
+        )
+    )
 
     // Drive controls
 
@@ -87,149 +88,14 @@ fun createHuskyTeleOp(startPose: Pose, startAlliance: Alliance) = Mercurial.Prog
         exec { drive.resetOrientation() }
     )
 
-    var isLaunching = false
 
-    val prioritiser = Mutexes.Prioritiser<Int> { new, old -> new >= old }
-
-    val flipperMutex = Mutex(prioritiser, Unit)
-    var autoChooseRPM = true
-
-    bindSpawn(
-        risingEdge { gamepad2.right_bumper },
-        exec {autoChooseRPM = !autoChooseRPM }
-    )
-
-    fun generateFlipperSequence(flipper: Slot) =
-        Mutexes.guardPoll(
-            flipperMutex,
-            { 0 },
-            { _ ->
-                sequence(
-                    exec {
-                        if (autoChooseRPM) {
-                            outtake.targetVelocity = Outtake.getBestTargetVelocity(
-                                camera.getTargetTag(alliance)?.ftcPose?.range
-                                    ?: drive.follower.pose.distanceFrom(if (alliance == Alliance.RED) Paths.RED_GOAL_FRONT else Paths.BLUE_GOAL_FRONT)
-                            ); outtake.active = true;
-
-                        }
-                    },
-                    wait { outtake.canShoot() },
-                    Mutexes.guardPoll(
-                        flipperMutex,
-                        { 1 },
-                        { _ ->
-                            sequence(jumpScope {
-                                deadline(
-                                    sequence(
-                                        exec {
-                                            isLaunching = true
-                                            try {
-                                                flippers.raiseFlipper(flipper)
-                                            } catch (e: Exception) {
-                                                isLaunching = false
-                                                Log.e(TAG, "Failed to raise flipper", e)
-                                                jump()
-                                            }
-                                        },
-                                        wait(FlippersConstants.FLIPPER_WAIT_TIME),
-                                        exec { flippers.lowerFlipper(flipper) },
-
-                                        wait(FlippersConstants.FLIPPER_WAIT_TIME),
-                                        exec { isLaunching = false }
-                                    ), jumpScope {
-
-                                        sequence(
-                                            exec {
-                                            drive.follower.holdPoint(drive.follower.pose)
-                                        },
-                                            loop(
-                                                exec {
-                                                    camera.getTargetTag(alliance)?.let {
-                                                        drive.orientTowardsAprilTag(it, false)
-                                                        jump()
-                                                    }
-                                                }
-                                            ))
-                                    })
-                            }, exec {
-                                drive.follower.startTeleopDrive(TeleOpConstants.TELEOP_BRAKE_MODE)
-                            })
-                        },
-                        // should be impossible
-                        noop(),
-                        noop()
-                    )
-                )
-            },
-            noop(),
-            noop()
-        )
-
-    var trustingColorSensors = true
-
-    bindSpawn(
-        risingEdge {
-            gamepad2.y
-        },
-        exec {
-            trustingColorSensors = !trustingColorSensors
-        }
-    )
-
-
-    val fiberA = bindSpawn(
-        risingEdge { gamepad1.a },
-        ifHuh(
-            { trustingColorSensors },
-            match { colorSensors.getBestSlot(ColorSensors.Companion.Artifact.GREEN) }
-                .branch(
-                    Slot.A, generateFlipperSequence(Slot.A)
-                )
-                .branch(Slot.B, generateFlipperSequence(Slot.B))
-                .branch(Slot.C, generateFlipperSequence(Slot.C))
-        ).elseHuh(generateFlipperSequence(Slot.A))
-    )
-
-    val fiberB = bindSpawn(
-        risingEdge { gamepad1.b },
-        ifHuh(
-            { trustingColorSensors },
-            match { colorSensors.getBestSlot(ColorSensors.Companion.Artifact.PURPLE) }
-                .branch(
-                    Slot.A, generateFlipperSequence(Slot.A)
-                )
-                .branch(Slot.B, generateFlipperSequence(Slot.B))
-                .branch(Slot.C, generateFlipperSequence(Slot.C))
-        ).elseHuh(generateFlipperSequence(Slot.B))
-    )
-
-    val fiberC = bindSpawn(
-        risingEdge { gamepad1.x && !trustingColorSensors },
-        generateFlipperSequence(Slot.C)
-    )
-
-    bindSpawn(
-        risingEdge {
-            gamepad2.left_bumper
-        }, Mutexes.guardPoll(
-            flipperMutex,
-            { -1 },
-            { _ ->
-                exec { outtake.toggle() }
-            },
-            noop(),
-            noop()
-        )
-    )
-
-
+    //#region Velocity adjustment factors
 
     bindSpawn(
         risingEdge {
             gamepad2.dpad_up
         }, exec {
-            outtake.targetVelocity += TeleOpConstants.OUTTAKE_TARGET_VELOCITY_BIG_ADJUSTMENT_FACTOR
+            outtake.velocityAdjustmentFactor += TeleOpConstants.OUTTAKE_TARGET_VELOCITY_BIG_ADJUSTMENT_FACTOR
         }
     )
 
@@ -237,7 +103,7 @@ fun createHuskyTeleOp(startPose: Pose, startAlliance: Alliance) = Mercurial.Prog
         risingEdge {
             gamepad2.dpad_down
         }, exec {
-            outtake.targetVelocity -= TeleOpConstants.OUTTAKE_TARGET_VELOCITY_BIG_ADJUSTMENT_FACTOR
+            outtake.velocityAdjustmentFactor -= TeleOpConstants.OUTTAKE_TARGET_VELOCITY_BIG_ADJUSTMENT_FACTOR
         }
     )
 
@@ -245,7 +111,7 @@ fun createHuskyTeleOp(startPose: Pose, startAlliance: Alliance) = Mercurial.Prog
         risingEdge {
             gamepad2.dpad_right
         }, exec {
-            outtake.targetVelocity += TeleOpConstants.OUTTAKE_TARGET_VELOCITY_SMALL_ADJUSTMENT_FACTOR
+            outtake.velocityAdjustmentFactor += TeleOpConstants.OUTTAKE_TARGET_VELOCITY_SMALL_ADJUSTMENT_FACTOR
         }
     )
 
@@ -253,171 +119,56 @@ fun createHuskyTeleOp(startPose: Pose, startAlliance: Alliance) = Mercurial.Prog
         risingEdge {
             gamepad2.dpad_left
         }, exec {
-            outtake.targetVelocity -= TeleOpConstants.OUTTAKE_TARGET_VELOCITY_SMALL_ADJUSTMENT_FACTOR
+            outtake.velocityAdjustmentFactor -= TeleOpConstants.OUTTAKE_TARGET_VELOCITY_SMALL_ADJUSTMENT_FACTOR
         }
     )
-
-
-    // TODO: Find a better way to do the manual overrides
-    bindSpawn(
-        risingEdge {
-            gamepad2.a
-        },
-        exec {
-            try {
-                flippers.raiseFlipper(Slot.A)
-            } catch (e: Exception) {
-                Log.e(TAG, "Gamepad 2 manual override failed to raise flipper", e)
-            }
-        }
-    )
-
-    bindSpawn(
-        risingEdge {
-            !gamepad2.a
-        },
-        exec {
-            flippers.lowerFlipper(Slot.A)
-        }
-    )
-
-    bindSpawn(
-        risingEdge {
-            gamepad2.b
-        },
-        exec {
-            try {
-                flippers.raiseFlipper(Slot.B)
-            } catch (e: Exception) {
-                Log.e(TAG, "Gamepad 2 manual override failed to raise flipper", e)
-            }
-        }
-    )
-
-    bindSpawn(
-        risingEdge {
-            !gamepad2.b
-        },
-        exec {
-            flippers.lowerFlipper(Slot.B)
-        }
-    )
-
-    bindSpawn(
-        risingEdge {
-            gamepad2.x
-        },
-        exec {
-            try {
-                flippers.raiseFlipper(Slot.C)
-            } catch (e: Exception) {
-                Log.e(TAG, "Gamepad 2 manual override failed to raise flipper", e)
-            }
-        }
-    )
-
-    bindSpawn(
-        risingEdge {
-            !gamepad2.x
-        },
-        exec {
-            flippers.lowerFlipper(Slot.C)
-        }
-    )
+    //#endregion
 
     drive.follower.startTeleopDrive(TeleOpConstants.TELEOP_BRAKE_MODE)
 
-
-    // Main loop
-    var loops = 0
-    var totalDriveLoopTime = Duration.ZERO
-    var totalSensorLoopTime = Duration.ZERO
-    var totalOuttakeLoopTime = Duration.ZERO
-    var totalFlippersLoopTime = Duration.ZERO
-    var totalIntakeLoopTime = Duration.ZERO
 
     schedule(
         loop(exec {
             telemetryM.addLine("(Gamepad 1) Slow down: left bumper, reset orientation: start")
             telemetryM.addLine("(Gamepad 2) Change drive mode: start")
-            val driveLoopTime =
-                measureTime {
-                    if (!isLaunching) {
-                        telemetryM.addData("is busy", drive.follower.isBusy)
-                        drive.manualPeriodic(
-                            -gamepad1.left_stick_y.toDouble(),
-                            -gamepad1.left_stick_x.toDouble(),
-                            -gamepad1.right_stick_x.toDouble() * 0.7,
-                            telemetryM
-                        )
-                    } else {
-                        drive.periodic(telemetryM)
-                    }
+            measureTime {
+                if (!isLaunching) {
+                    telemetryM.addData("is busy", drive.follower.isBusy)
+                    drive.manualPeriodic(
+                        -gamepad1.left_stick_y.toDouble() * TeleOpConstants.FORWARD_MULTIPLIER,
+                        -gamepad1.left_stick_x.toDouble() * TeleOpConstants.STRAFE_MULTIPLIER,
+                        -gamepad1.right_stick_x.toDouble() * TeleOpConstants.TURN_MULTIPLIER,
+                        telemetryM
+                    )
+                } else {
+                    drive.periodic(telemetryM)
                 }
-            totalDriveLoopTime += driveLoopTime
+            }
 
             telemetryM.hl()
 
             telemetryM.addData("Is Launching", isLaunching)
-            telemetryM.addLine((if (!trustingColorSensors) "NOT " else "") + "Trusting color sensors (Y Gamepad 2)")
-            telemetryM.addLine((if (!autoChooseRPM) "NOT " else "") + "Auto choose RPM (Right bumper Gamepad 2)")
-            val sensorLoopTime = measureTime {
-                if (loops % TeleOpConstants.COLOR_SENSOR_INTERVAL == 0) {
-                    colorSensors.update()
-                }
-                colorSensors.telemetry(telemetryM)
-            }
-            totalSensorLoopTime += sensorLoopTime
 
-            telemetryM.hl()
             telemetryM.addLine("(Gamepad 2) Start/stop outtake: left bumper, control velocity: dpad")
 
-            val outtakeLoopTime = measureTime {
+            loopTimer.section("Outtake") {
                 outtake.periodic(telemetryM, TeleOpConstants.DEBUG_MODE)
             }
-
-            totalOuttakeLoopTime += outtakeLoopTime
-            telemetryM.hl()
-
-            if (trustingColorSensors) {
-                telemetryM.addLine("(Gamepad 1) A for GREEN flipper, B for PURPLE flipper")
-            } else {
-                telemetryM.addLine("(Gamepad 1 & 2) A for A flipper, B for B flipper, X for C flipper")
-            }
-            val flippersLoopTime = measureTime {
-                flippers.periodic(telemetryM, TeleOpConstants.DEBUG_MODE)
-            }
-            totalFlippersLoopTime += flippersLoopTime
 
             telemetryM.hl()
 
             telemetryM.addLine("(Gamepad 1) Right trigger for intake in, left trigger for intake out")
-            val intakeLoopTime = measureTime {
-                intake.manualPeriodic(gamepad1.right_trigger.toDouble() - gamepad1.left_trigger.toDouble(), telemetryM)
+            loopTimer.section("Intake") {
+                intake.manualPeriodic(gamepad1.right_trigger.toDouble(), telemetryM)
             }
-            totalIntakeLoopTime += intakeLoopTime
 
-            loops++
-
-            var maxLoopTime = Duration.ZERO
-
-            telemetryM.addData("Average drive loop time", totalDriveLoopTime / loops)
-            telemetryM.addData("Average outtake loop time", totalOuttakeLoopTime / loops)
-            telemetryM.addData("Average flippers loop time", totalFlippersLoopTime / loops)
-            telemetryM.addData("Average intake loop time", totalIntakeLoopTime / loops)
-            telemetryM.addData("Average sensor loop time", totalSensorLoopTime / loops)
-            telemetryM.addData(
-                "Average total loop time",
-                (totalDriveLoopTime + totalOuttakeLoopTime + totalFlippersLoopTime + totalIntakeLoopTime + totalSensorLoopTime) / loops
-            )
-            maxLoopTime = maxLoopTime.coerceAtLeast(totalDriveLoopTime)
-            telemetryM.addData("Max total loop time", maxLoopTime)
-
+            telemetryM.hl()
+            loopTimer.end(telemetryM)
             telemetryM.update(telemetry)
         })
     )
 
-    Log.d(TAG, "HuskyTeleOp started")
+    Log.i(TAG, "HuskyTeleOp started")
     dropToScheduler()
 }
 
