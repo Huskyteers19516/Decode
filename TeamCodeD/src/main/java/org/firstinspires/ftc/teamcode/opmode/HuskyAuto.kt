@@ -8,17 +8,13 @@ import com.pedropathing.paths.PathPoint
 import dev.frozenmilk.dairy.mercurial.continuations.Closure
 import dev.frozenmilk.dairy.mercurial.continuations.Continuations.deadline
 import dev.frozenmilk.dairy.mercurial.continuations.Continuations.exec
+import dev.frozenmilk.dairy.mercurial.continuations.Continuations.jumpScope
 import dev.frozenmilk.dairy.mercurial.continuations.Continuations.loop
 import dev.frozenmilk.dairy.mercurial.continuations.Continuations.match
-import dev.frozenmilk.dairy.mercurial.continuations.Continuations.parallel
-import dev.frozenmilk.dairy.mercurial.continuations.Continuations.jumpScope
 import dev.frozenmilk.dairy.mercurial.continuations.Continuations.noop
-import dev.frozenmilk.dairy.mercurial.continuations.Continuations.scope
 import dev.frozenmilk.dairy.mercurial.continuations.Continuations.sequence
 import dev.frozenmilk.dairy.mercurial.continuations.Continuations.wait
-import dev.frozenmilk.dairy.mercurial.ftc.Context
 import dev.frozenmilk.dairy.mercurial.ftc.Mercurial
-import dev.frozenmilk.dairy.mercurial.ftc.Mercurial.teleop
 import org.firstinspires.ftc.teamcode.constants.AutoConstants
 import org.firstinspires.ftc.teamcode.constants.FlippersConstants
 import org.firstinspires.ftc.teamcode.hardware.*
@@ -28,7 +24,7 @@ import org.firstinspires.ftc.teamcode.utils.Slot
 import org.firstinspires.ftc.teamcode.utils.hl
 import kotlin.math.abs
 
-fun createHuskyAuto(goToTeleOp: Boolean) = Mercurial.PipelineProgram {
+fun createHuskyAuto() = Mercurial.Program {
     //#region Pre-Init
     val telemetryM = PanelsTelemetry.telemetry;
 
@@ -59,7 +55,12 @@ fun createHuskyAuto(goToTeleOp: Boolean) = Mercurial.PipelineProgram {
                 if (colorSensors.slots[Slot.A] == ColorSensors.Companion.Artifact.GREEN) {
                     telemetryM.addLine("WARNING: Green in slot A (back slot). Recommended to put purple artifact there.")
                 }
-                if (colorSensors.slots.count { it.value in listOf(ColorSensors.Companion.Artifact.GREEN, ColorSensors.Companion.Artifact.PURPLE) } < 3) {
+                if (colorSensors.slots.count {
+                        it.value in listOf(
+                            ColorSensors.Companion.Artifact.GREEN,
+                            ColorSensors.Companion.Artifact.PURPLE
+                        )
+                    } < 3) {
                     telemetryM.addLine("WARNING: Currently detecting less than 3 artifacts")
                 } else if (colorSensors.slots.count { it.value in listOf(ColorSensors.Companion.Artifact.GREEN) } != 1) {
                     telemetryM.addLine("WARNING: Detecting something other than 1 green artifact and 2 purple artifacts.")
@@ -82,15 +83,22 @@ fun createHuskyAuto(goToTeleOp: Boolean) = Mercurial.PipelineProgram {
         drive.follower.followPath(path, maxPower, holdEnd)
     }, wait { !drive.follower.isBusy })
 
-    fun turnTo(radians: Double) = sequence(deadline(wait(1.5), sequence(
-        exec {
-            drive.follower.turnTo(radians)
-        }, wait { abs(drive.follower.pose.heading - radians) < 0.007 }, jumpScope {
-            loop(exec {
-                // once it sees the april tag, stops aligning
-                camera.getTargetTag(alliance)?.let { drive.orientTowardsAprilTag(it, false); Log.d(TAG, "found april tag"); jump() }
-            })
-        },))
+    fun turnTo(radians: Double) = sequence(
+        deadline(
+            wait(1.5), sequence(
+                exec {
+                    drive.follower.turnTo(radians)
+                },
+                wait { abs(drive.follower.pose.heading - radians) < 0.007 },
+                jumpScope {
+                    loop(exec {
+                        // once it sees the april tag, stops aligning
+                        camera.getTargetTag(alliance)
+                            ?.let { drive.orientTowardsAprilTag(it, false); Log.d(TAG, "found april tag"); jump() }
+                    })
+                },
+            )
+        )
     )
 
     fun shoot(flipper: Slot) = sequence(
@@ -115,7 +123,7 @@ fun createHuskyAuto(goToTeleOp: Boolean) = Mercurial.PipelineProgram {
         .defaultBranch(noop())
 
     fun shootAllThree() = deadline(
-        match { Log.d(TAG, "matching motif");motif }
+        match { Log.d(TAG, "matching motif"); motif }
             .branch(
                 Motif.GPP,
                 sequence(
@@ -143,18 +151,20 @@ fun createHuskyAuto(goToTeleOp: Boolean) = Mercurial.PipelineProgram {
         jumpScope {
             loop(exec {
                 // once it sees the april tag, stops aligning
-                camera.getTargetTag(alliance)?.let { drive.orientTowardsAprilTag(it, false); Log.d(TAG, "found april tag"); jump() }
+                camera.getTargetTag(alliance)
+                    ?.let { drive.orientTowardsAprilTag(it, false); Log.d(TAG, "found april tag"); jump() }
             })
         },
 
-    )
+        )
 
     // todo: empty extras function
 
     fun shootRemaining() = deadline(
         wait { colorSensors.slots.all { it.value == ColorSensors.Companion.Artifact.NONE } }, loop(
-        shootColor(ColorSensors.Companion.Artifact.GREEN)
-    ))
+            shootColor(ColorSensors.Companion.Artifact.GREEN)
+        )
+    )
 
     fun doWithIntake(closure: Closure) = sequence(
         exec(intake::start),
@@ -203,7 +213,7 @@ fun createHuskyAuto(goToTeleOp: Boolean) = Mercurial.PipelineProgram {
                         needColorSensors = true
                     },
                     doWithIntake(
-                        sequence(followPath(paths.pickUpFirstRow), followPath(paths.firstRowToShoot),)
+                        sequence(followPath(paths.pickUpFirstRow), followPath(paths.firstRowToShoot))
                     ),
                     turnTo(paths.aimHeading),
                     shootAllThree(),
@@ -229,7 +239,9 @@ fun createHuskyAuto(goToTeleOp: Boolean) = Mercurial.PipelineProgram {
             outtake.periodic(telemetryM)
             flippers.periodic(telemetryM)
             drive.periodic(telemetryM)
-            if (needColorSensors) { colorSensors.update() }
+            if (needColorSensors) {
+                colorSensors.update()
+            }
             colorSensors.telemetry(telemetryM)
             if (motif == null) {
                 motif = camera.getObelisk()
@@ -244,15 +256,6 @@ fun createHuskyAuto(goToTeleOp: Boolean) = Mercurial.PipelineProgram {
         })
     )
     dropToScheduler()
-    if (goToTeleOp) {
-        createHuskyTeleOp(drive.follower.pose, alliance)
-    } else {
-        Mercurial.Program {
-            telemetry.addLine("Auto ended")
-            telemetry.update()
-        }
-    }
 }
 
-val HuskyAuto = Mercurial.autonomous("Husky Auto", "Huskyteers", "Husky TeleOp",createHuskyAuto(false))
-val HuskyPipelineAuto = Mercurial.pipelineAutonomous("Husky Auto DIRECTLY INTO TELEOP", "Huskyteers", createHuskyAuto(true))
+val HuskyAuto = Mercurial.autonomous("Husky Auto", "Huskyteers", "Husky TeleOp", createHuskyAuto())

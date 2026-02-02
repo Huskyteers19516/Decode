@@ -19,4 +19,12 @@ object TeleOpConstants {
     @JvmField
     var COLOR_SENSOR_INTERVAL = 3
 
+    @JvmField
+    var FORWARD_MULTIPLIER = 1.0
+
+    @JvmField
+    var STRAFE_MULTIPLIER = 1.0
+
+    @JvmField
+    var TURN_MULTIPLIER = 0.7
 }
