@@ -33,6 +33,7 @@ class Paths(private val follower: Follower) {
     lateinit var thirdRowEndPoint: Pose
     lateinit var endLocation: Pose
     lateinit var innerEndLocation: Pose
+    lateinit var goalLocation: Pose
     var aimHeading = 0.0;
 
 
@@ -58,7 +59,7 @@ class Paths(private val follower: Follower) {
         val pickupHeading = if (alliance == Alliance.RED) 0.0 else Math.toRadians(180.0)
 
 
-        val goalLocation = Pose(138.0, 144.0).mirrorIfBlue()
+        goalLocation = Pose(138.0, 144.0).mirrorIfBlue()
         aimHeading = calculateAimHeading(shootPosition, goalLocation)
 
         fromStartToShoot = follower.pathBuilder().addPath(

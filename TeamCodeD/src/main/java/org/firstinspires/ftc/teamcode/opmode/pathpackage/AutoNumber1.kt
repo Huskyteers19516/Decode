@@ -51,7 +51,7 @@ class AutoNumber1 (private val follower: Follower) {
             secondRowControlPoint = Pose(81.66764361078548, 66.83587338804217).mirrorIfBlue()
             secondRow = Pose(144 - ROBOT_LENGTH / 2 - ROBOT_FRONT_PROTRUSION - 6, 54.7 + 2.0).mirrorIfBlue()
             thirdRow = Pose(98.30656370656376, 35.80328185328186).mirrorIfBlue()
-            thirdRowControlPoint = Pose(83.03667953667953, 35.43976833976834).mirrorIfBlue()
+            thirdRowControlPoint = Pose(70.88745603751467, 67.51582649472451).mirrorIfBlue()
             thirdRowEndPoint = Pose(
                 144 - ROBOT_LENGTH / 2 - ROBOT_FRONT_PROTRUSION - 6,
                 58.085580304806555
