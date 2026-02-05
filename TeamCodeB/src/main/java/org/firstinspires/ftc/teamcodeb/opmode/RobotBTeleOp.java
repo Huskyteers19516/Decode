@@ -40,6 +40,8 @@ public class RobotBTeleOp extends OpMode {
     public Servo FeederB;
     public Servo FeederC;
     public Servo Angle_Changer_Hardware;
+    public DcMotorEx spinner;
+
 
     private DistanceAdjust distanceAdjust;
     private FlyWheelVelocity flyWheelVelocity;
@@ -63,6 +65,7 @@ public class RobotBTeleOp extends OpMode {
         FeederA = hardwareMap.get(Servo.class, "feederA");
         FeederB = hardwareMap.get(Servo.class, "feederB");
         FeederC = hardwareMap.get(Servo.class, "feederC");
+        spinner = hardwareMap.get()
         Angle_Changer_Hardware = hardwareMap.get(Servo.class, "hood");
 
         angleChangerWrapper = new AngleChanger(Angle_Changer_Hardware);
