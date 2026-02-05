@@ -3,6 +3,8 @@ package org.firstinspires.ftc.teamcode.opmode
 import android.util.Log
 import com.bylazar.telemetry.PanelsTelemetry
 import com.pedropathing.geometry.Pose
+import com.qualcomm.robotcore.hardware.DcMotor
+import com.qualcomm.robotcore.hardware.DcMotorEx
 import dev.frozenmilk.dairy.mercurial.continuations.Continuations.deadline
 import dev.frozenmilk.dairy.mercurial.continuations.Continuations.exec
 import dev.frozenmilk.dairy.mercurial.continuations.Continuations.loop
@@ -17,7 +19,14 @@ import org.firstinspires.ftc.teamcode.hardware.Outtake
 import org.firstinspires.ftc.teamcode.utils.Alliance
 import org.firstinspires.ftc.teamcode.utils.LoopTimer
 import org.firstinspires.ftc.teamcode.utils.hl
+import kotlin.jvm.java
 import kotlin.time.measureTime
+import org.firstinspires.ftc.teamcode.opmode.Paths
+import com.qualcomm.robotcore.util.Range
+import kotlin.io.path.Path
+
+
+
 
 const val TAG = "HuskyTeleOp"
 
@@ -51,6 +60,18 @@ fun createHuskyTeleOp(startPose: Pose, startAlliance: Alliance) = Mercurial.Prog
     val drive = Drive(hardwareMap)
     val camera = Camera(hardwareMap)
     drive.follower.setStartingPose(startPose)
+    val paths = Paths(drive.follower)
+    paths.buildPaths(alliance)
+    val turretMotor = hardwareMap.get(DcMotorEx::class.java, "turretMotor")
+
+    turretMotor.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
+    turretMotor.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
+
+    var isAutoAiming = true
+    var lastTurretError = 0.0
+    val kP = 0.02
+    val kD = 0.002
+    val ticksPerDegree = 180.0 / 360.0
 
     //#endregion
 
@@ -115,11 +136,21 @@ fun createHuskyTeleOp(startPose: Pose, startAlliance: Alliance) = Mercurial.Prog
         }
     )
 
+
+
     bindSpawn(
         risingEdge {
             gamepad2.dpad_left
         }, exec {
             outtake.velocityAdjustmentFactor -= TeleOpConstants.OUTTAKE_TARGET_VELOCITY_SMALL_ADJUSTMENT_FACTOR
+        }
+    )
+
+    bindSpawn(
+        risingEdge { gamepad1.b },
+        exec {
+            isAutoAiming = false
+            turretMotor.power = 0.0
         }
     )
     //#endregion
@@ -165,9 +196,35 @@ fun createHuskyTeleOp(startPose: Pose, startAlliance: Alliance) = Mercurial.Prog
             telemetryM.hl()
             loopTimer.end(telemetryM)
             telemetryM.update(telemetry)
+            if (isAutoAiming) {
+            val currentPose = drive.follower.pose
+
+
+            val targetAngleDegrees = Paths.calculateAimHeading(currentPose, paths.goalLocation)
+
+
+            val currentTurretAngle = turretMotor.currentPosition / ticksPerDegree
+
+
+            var error = (targetAngleDegrees - currentTurretAngle) % 360
+            if (error > 180) error -= 360
+            if (error <= -180) error += 360
+                if (Math.abs(error) > 0.5) {
+                    val derivative = error - lastTurretError
+                    val power = (error * kP) + (derivative * kD)
+                    turretMotor.power = Range.clip(power, -0.8, 0.8)
+                } else {
+                    turretMotor.power = 0.0
+                }
+                lastTurretError = error
+            } else {
+
+            }
+
+            telemetryM.addData("Turret Active", isAutoAiming)
+
         })
     )
-
     Log.i(TAG, "HuskyTeleOp started")
     dropToScheduler()
 }
