@@ -1,4 +1,9 @@
-package org.firstinspires.ftc.teamcode.opmode
+package org.firstinspires.ftc.teamcode.opmode.testing
+
+import org.firstinspires.ftc.teamcode.opmode.Paths
+import org.firstinspires.ftc.teamcode.opmode.TAG
+
+
 
 import android.util.Log
 import com.bylazar.telemetry.PanelsTelemetry
@@ -18,8 +23,7 @@ import dev.frozenmilk.dairy.mercurial.ftc.Mercurial
 import org.firstinspires.ftc.teamcode.constants.AutoConstants
 import org.firstinspires.ftc.teamcode.constants.FlippersConstants
 import org.firstinspires.ftc.teamcode.hardware.*
-import org.firstinspires.ftc.teamcode.opmode.pathpackage.AutoNumber1
-import org.firstinspires.ftc.teamcode.opmode.pathpackage.AutoNumber2
+import org.firstinspires.ftc.teamcode.opmode.pathpackage.AutoNumber3
 import org.firstinspires.ftc.teamcode.utils.Alliance
 import org.firstinspires.ftc.teamcode.utils.Motif
 import org.firstinspires.ftc.teamcode.utils.Slot
@@ -34,10 +38,7 @@ fun createHuskyAuto() = Mercurial.Program {
     // Changing Auto route number when it is necessarily. Comment out old one and put new one in
     var alliance = Alliance.RED
     val drive = Drive(hardwareMap)
-    //val paths = Paths(drive.follower)
-    //val paths = Autonumber2(drive.follower)
-    //val paths =
-    val paths = AutoNumber1(drive.follower)
+    val paths = AutoNumber3(drive.follower)
     val camera = Camera(hardwareMap)
     val colorSensors = ColorSensors(hardwareMap)
 
@@ -220,16 +221,20 @@ fun createHuskyAuto() = Mercurial.Program {
                         needColorSensors = true
                     },
                     doWithIntake(
-                        sequence(followPath(paths.pickUpFirstRow), followPath(paths.firstRowToShoot))
+                        sequence(followPath(paths.pickUpSecondRow), followPath(paths.secondRowToShoot))
                     ),
                     turnTo(paths.aimHeading),
                     shootAllThree(),
                     shootRemaining(),
-                    doWithIntake(sequence(followPath(paths.pickUpSecondRow), followPath(paths.secondRowToShoot))),
+                    doWithIntake(sequence(followPath(paths.pickUpGoal), followPath(paths.goalRowToShoot))),
                     turnTo(paths.aimHeading),
                     shootAllThree(),
                     shootRemaining(),
-                    doWithIntake(followPath(paths.pickUpThirdRow))
+                    doWithIntake(sequence(followPath(paths.pickUpGoal), followPath(paths.goalRowToShoot))),
+                    turnTo(paths.aimHeading),
+                    shootAllThree(),
+                    shootRemaining(),
+                    doWithIntake(sequence(followPath(paths.pickUpGoal))),
                 ),
             ),
             exec {

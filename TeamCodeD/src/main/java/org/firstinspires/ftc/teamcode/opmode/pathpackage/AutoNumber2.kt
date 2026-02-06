@@ -10,8 +10,7 @@ import org.firstinspires.ftc.teamcode.utils.Alliance
 import kotlin.math.atan2
 import kotlin.math.sqrt
 
-class AutoNumber1 (private val follower: Follower) {
-    // Long distance Auto, safety plan
+class AutoNumber2 (private val follower: Follower) {
         init {
             buildPaths(Alliance.RED)
         }
@@ -47,18 +46,18 @@ class AutoNumber1 (private val follower: Follower) {
                 Math.toRadians(126.0)
             ).mirrorIfBlue()
             shootPosition = Pose(84.8704156479217, 78.42542787286067).mirrorIfBlue()
-            firstRowControlPoint = Pose(95.64360815100704, 34.50871346338763).mirrorIfBlue()
+            firstRowControlPoint = Pose(100.862, 84.362).mirrorIfBlue()
             firstRow = Pose(144 - 6 - ROBOT_LENGTH / 2 - ROBOT_FRONT_PROTRUSION, 83.51).mirrorIfBlue()
-            secondRowControlPoint = Pose(98.84704526273782, 58.43289229694325).mirrorIfBlue()
+            secondRowControlPoint = Pose(92.02813599062134, 59.49237983587339).mirrorIfBlue()
             secondRow = Pose(144 - ROBOT_LENGTH / 2 - ROBOT_FRONT_PROTRUSION - 6, 54.7 + 2.0).mirrorIfBlue()
             thirdRow = Pose(98.30656370656376, 35.80328185328186).mirrorIfBlue()
-            thirdRowControlPoint = Pose(98.4460540393725, 83.38855829763673).mirrorIfBlue()
+            thirdRowControlPoint = Pose(95.04923798358733, 34.81008206330601).mirrorIfBlue()
             thirdRowEndPoint = Pose(
                 144 - ROBOT_LENGTH / 2 - ROBOT_FRONT_PROTRUSION - 6,
                 58.085580304806555
             ).mirrorIfBlue()
 
-            endLocation = Pose(96.23212192262602, 45.465416178194616).mirrorIfBlue()
+            endLocation = Pose(86.75849941383353, 47.25205158264947).mirrorIfBlue()
             val pickupHeading = if (alliance == Alliance.RED) 0.0 else Math.toRadians(180.0)
 
 

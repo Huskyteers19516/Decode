@@ -71,7 +71,7 @@ fun createHuskyTeleOp(startPose: Pose, startAlliance: Alliance) = Mercurial.Prog
     var lastTurretError = 0.0
     val kP = 0.02
     val kD = 0.002
-    val ticksPerDegree = 180.0 / 360.0
+    val ticksPerDegree = 1400.0 / 360.0
 
     //#endregion
 
@@ -207,12 +207,12 @@ fun createHuskyTeleOp(startPose: Pose, startAlliance: Alliance) = Mercurial.Prog
 
 
             var error = (targetAngleDegrees - currentTurretAngle) % 360
-            if (error > 180) error -= 360
-            if (error <= -180) error += 360
+            if (error > 270) error -= 360
+            if (error <= -270) error += 360
                 if (Math.abs(error) > 0.5) {
                     val derivative = error - lastTurretError
                     val power = (error * kP) + (derivative * kD)
-                    turretMotor.power = Range.clip(power, -0.8, 0.8)
+                    turretMotor.power = Range.clip(power, -0.5, 0.5)
                 } else {
                     turretMotor.power = 0.0
                 }

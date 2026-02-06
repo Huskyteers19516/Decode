@@ -29,7 +29,7 @@ class LauncherRotator : OpMode() {
     private val kD = 0.002
     private var lastError = 0.0
 
-    private val ticksPerDegree = 180.0 / 360.0
+    private val ticksPerDegree = 1400.0 / 360.0
     private lateinit var turretMotor: DcMotorEx
     private lateinit var follower: Follower
     private lateinit var paths: Paths
