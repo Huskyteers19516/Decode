@@ -1,5 +1,5 @@
 plugins {
-    id("dev.frozenmilk.android-library") version "11.0.0-1.1.0"
+    id("dev.frozenmilk.android-library") version "11.1.0-1.1.2"
 }
 
 android.namespace = "dev.frozenmilk.dairy"

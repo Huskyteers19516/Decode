@@ -1,5 +1,5 @@
 plugins {
-    id("dev.frozenmilk.jvm-library") version "11.0.0-1.1.0"
+    id("dev.frozenmilk.jvm-library") version "11.1.0-1.1.2"
 }
 
 ftc {

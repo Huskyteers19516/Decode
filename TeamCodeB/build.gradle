@@ -26,8 +26,6 @@ android {
         jvmToolchain(17)
     }
     buildTypes {
-        \
-        
         debug {
             apply plugin: 'dev.frozenmilk.sinister.sloth.load'
         }
@@ -50,7 +48,7 @@ buildscript {
 dependencies {
     implementation project(':FtcRobotController')
     implementation project(':Shared')
-    
+
     implementation("com.bylazar.sloth:fullpanels:0.2.4.1+1.0.12")
     implementation 'com.google.firebase:firebase-crashlytics-buildtools:3.0.6'
     debugImplementation("dev.frozenmilk.sinister:Sloth:0.2.4")
