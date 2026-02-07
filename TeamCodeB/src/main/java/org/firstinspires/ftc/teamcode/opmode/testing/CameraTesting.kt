@@ -7,7 +7,7 @@ import dev.frozenmilk.dairy.mercurial.continuations.Continuations.loop
 import dev.frozenmilk.dairy.mercurial.ftc.Mercurial
 import org.firstinspires.ftc.teamcode.hardware.Camera
 import org.firstinspires.ftc.teamcode.hardware.Drive
-import org.firstinspires.ftc.teamcode.utils.Alliance
+import com.huskyteers19516.shared.Alliance
 
 @Suppress("unused")
 val cameraTesting = Mercurial.teleop("Camera Testing", "Testing") {

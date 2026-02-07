@@ -48,9 +48,6 @@ buildscript {
 dependencies {
     implementation project(':FtcRobotController')
     implementation project(':Shared')
-
-    implementation 'com.bylazar:fullpanels:1.0.7'
-    debugImplementation("dev.frozenmilk.sinister:Sloth:0.2.4")
 }
 
 

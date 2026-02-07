@@ -8,7 +8,7 @@ import dev.frozenmilk.dairy.mercurial.continuations.Continuations.loop
 import dev.frozenmilk.dairy.mercurial.ftc.Mercurial
 import com.qualcomm.robotcore.hardware.DcMotorEx
 import com.qualcomm.robotcore.hardware.DcMotor
-import org.firstinspires.ftc.teamcode.utils.hl
+import com.huskyteers19516.shared.hl
 
 @Suppress("unused")
 val turretTesting = Mercurial.teleop("Turret Ticks Test", "Testing") {

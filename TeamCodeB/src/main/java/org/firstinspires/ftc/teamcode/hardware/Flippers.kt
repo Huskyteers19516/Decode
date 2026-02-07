@@ -4,7 +4,7 @@ import com.bylazar.telemetry.TelemetryManager
 import com.qualcomm.robotcore.hardware.HardwareMap
 import com.qualcomm.robotcore.hardware.Servo
 import org.firstinspires.ftc.teamcode.constants.FlippersConstants
-import org.firstinspires.ftc.teamcode.utils.Slot
+import com.huskyteers19516.shared.Slot
 
 class Flippers(hardwareMap: HardwareMap) {
     private var flippers = mapOf<Slot, Servo>(

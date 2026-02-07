@@ -5,7 +5,7 @@ import com.qualcomm.hardware.lynx.LynxI2cColorRangeSensor
 import com.qualcomm.robotcore.hardware.ColorRangeSensor
 import com.qualcomm.robotcore.hardware.HardwareMap
 import org.firstinspires.ftc.teamcode.constants.ColorSensorConstants
-import org.firstinspires.ftc.teamcode.utils.Slot
+import com.huskyteers19516.shared.Slot
 
 class ColorSensors(hardwareMap: HardwareMap) {
     val colorSensorA1: LynxI2cColorRangeSensor = hardwareMap.get(LynxI2cColorRangeSensor::class.java, "colorSensorA1")

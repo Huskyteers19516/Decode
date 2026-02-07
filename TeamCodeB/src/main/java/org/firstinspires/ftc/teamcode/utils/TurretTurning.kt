@@ -2,21 +2,15 @@ package org.firstinspires.ftc.teamcode
 
 import com.pedropathing.follower.Follower
 import com.pedropathing.geometry.Pose
-import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
 import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
 import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.hardware.DcMotorEx
 import com.qualcomm.robotcore.util.Range
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
 import org.firstinspires.ftc.teamcode.hardware.Camera
 import org.firstinspires.ftc.teamcode.opmode.Paths
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants
-import org.firstinspires.ftc.teamcode.utils.Alliance;
-
-import kotlin.math.atan2
+import com.huskyteers19516.shared.Alliance;
 
 
 @TeleOp(name = "Launcher_Rotator_Only")

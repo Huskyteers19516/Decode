@@ -5,12 +5,8 @@ import dev.frozenmilk.dairy.mercurial.continuations.Continuations.exec
 import dev.frozenmilk.dairy.mercurial.continuations.Continuations.loop
 import dev.frozenmilk.dairy.mercurial.ftc.Mercurial
 import org.firstinspires.ftc.teamcode.constants.TeleOpConstants
-import org.firstinspires.ftc.teamcode.hardware.Camera
-import org.firstinspires.ftc.teamcode.hardware.Flippers
-import org.firstinspires.ftc.teamcode.hardware.Intake
 import org.firstinspires.ftc.teamcode.hardware.Outtake
-import org.firstinspires.ftc.teamcode.utils.Slot
-import org.firstinspires.ftc.teamcode.utils.hl
+import com.huskyteers19516.shared.hl
 
 @Suppress("unused")
 val shooterTesting = Mercurial.teleop("Shooter Testing", "Testing") {

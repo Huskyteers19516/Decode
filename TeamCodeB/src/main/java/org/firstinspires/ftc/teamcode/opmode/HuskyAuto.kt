@@ -19,11 +19,10 @@ import org.firstinspires.ftc.teamcode.constants.AutoConstants
 import org.firstinspires.ftc.teamcode.constants.FlippersConstants
 import org.firstinspires.ftc.teamcode.hardware.*
 import org.firstinspires.ftc.teamcode.opmode.pathpackage.AutoNumber1
-import org.firstinspires.ftc.teamcode.opmode.pathpackage.AutoNumber2
-import org.firstinspires.ftc.teamcode.utils.Alliance
-import org.firstinspires.ftc.teamcode.utils.Motif
-import org.firstinspires.ftc.teamcode.utils.Slot
-import org.firstinspires.ftc.teamcode.utils.hl
+import com.huskyteers19516.shared.Alliance
+import com.huskyteers19516.shared.Motif
+import com.huskyteers19516.shared.Slot
+import com.huskyteers19516.shared.hl
 import kotlin.math.abs
 
 fun createHuskyAuto() = Mercurial.Program {

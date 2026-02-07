@@ -2,11 +2,7 @@ package com.huskyteers19516.shared
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
-import com.qualcomm.robotcore.hardware.CRServo
-import com.qualcomm.robotcore.hardware.DcMotorEx
-import com.qualcomm.robotcore.hardware.DcMotorSimple
-import com.qualcomm.robotcore.hardware.HardwareDevice
-import com.qualcomm.robotcore.hardware.Servo
+import com.qualcomm.robotcore.hardware.*
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit
 
@@ -85,10 +81,10 @@ class HardwareTesting : OpMode() {
             if (!joystickMode) {
                 if (controlMode == ControlMode.SERVO) {
                     val servo = currentDevice as Servo
-                    temporaryValue = currentDevice.position
+                    temporaryValue = servo.position
                 } else {
                     val motorOrServo = currentDevice as DcMotorSimple
-                    temporaryValue = currentDevice.power
+                    temporaryValue = motorOrServo.power
                 }
             }
         }

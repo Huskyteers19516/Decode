@@ -9,8 +9,8 @@ import org.firstinspires.ftc.teamcode.hardware.Camera
 import org.firstinspires.ftc.teamcode.hardware.Flippers
 import org.firstinspires.ftc.teamcode.hardware.Intake
 import org.firstinspires.ftc.teamcode.hardware.Outtake
-import org.firstinspires.ftc.teamcode.utils.Slot
-import org.firstinspires.ftc.teamcode.utils.hl
+import com.huskyteers19516.shared.Slot
+import com.huskyteers19516.shared.hl
 
 @Suppress("unused")
 val systemTesting = Mercurial.teleop("System Testing", "Testing") {

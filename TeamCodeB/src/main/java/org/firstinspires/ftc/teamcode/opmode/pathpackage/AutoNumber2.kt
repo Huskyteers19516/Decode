@@ -6,7 +6,7 @@ import com.pedropathing.geometry.BezierLine
 import com.pedropathing.geometry.Pose
 import com.pedropathing.paths.PathChain
 import org.firstinspires.ftc.teamcode.constants.AutoConstants
-import org.firstinspires.ftc.teamcode.utils.Alliance
+import com.huskyteers19516.shared.Alliance
 import kotlin.math.atan2
 import kotlin.math.sqrt
 

@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.hardware
 
 import com.bylazar.telemetry.TelemetryManager
+import com.huskyteers19516.shared.hl
 import com.pedropathing.ftc.drivetrains.Mecanum
 import com.pedropathing.geometry.Pose
 import com.qualcomm.robotcore.hardware.DcMotor
@@ -9,32 +10,8 @@ import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit
 import org.firstinspires.ftc.teamcode.constants.DriveConstants
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants
 import org.firstinspires.ftc.teamcode.pedroPathing.Drawing
-import com.huskyteers19516.shared.hl
-import org.firstinspires.ftc.vision.apriltag.AprilTagDetection
 
 class Drive(private val hardwareMap: HardwareMap) {
-
-
-    enum class State {
-        IN_PROGRESS, DONE
-    }
-
-    fun orientTowardsAprilTag(aprilTag: AprilTagDetection, teleOp: Boolean = true): State {
-
-        val headingError = aprilTag.ftcPose.bearing
-        if (teleOp) {
-            follower.setTeleOpDrive(0.0, 0.0, headingError * DriveConstants.TURN_COEFFICIENT)
-        } else {
-            follower.turn(Math.toRadians(headingError), true)
-        }
-        return if (headingError < 5) {
-            State.DONE
-        } else {
-            State.IN_PROGRESS
-        }
-    }
-
-
     val follower = Constants.createFollower(hardwareMap)
 
     var throttle = DriveConstants.NORMAL_MODE_SPEED

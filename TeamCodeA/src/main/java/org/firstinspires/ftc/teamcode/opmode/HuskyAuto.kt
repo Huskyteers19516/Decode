@@ -1,21 +1,23 @@
 package org.firstinspires.ftc.teamcode.opmode
 
+import android.util.Log
 import com.bylazar.telemetry.PanelsTelemetry
-import com.pedropathing.geometry.BezierLine
-import com.pedropathing.geometry.Pose
+import com.huskyteers19516.shared.Alliance
+import com.huskyteers19516.shared.hl
 import com.pedropathing.paths.PathChain
 import dev.frozenmilk.dairy.mercurial.continuations.Continuations.deadline
 import dev.frozenmilk.dairy.mercurial.continuations.Continuations.exec
 import dev.frozenmilk.dairy.mercurial.continuations.Continuations.loop
+import dev.frozenmilk.dairy.mercurial.continuations.Continuations.repeat
 import dev.frozenmilk.dairy.mercurial.continuations.Continuations.sequence
 import dev.frozenmilk.dairy.mercurial.continuations.Continuations.wait
 import dev.frozenmilk.dairy.mercurial.ftc.Mercurial
-import org.firstinspires.ftc.teamcode.hardware.*
-import com.huskyteers19516.shared.Alliance
-import com.huskyteers19516.shared.hl
+import org.firstinspires.ftc.teamcode.constants.AutoConstants.TIME_BETWEEN_SHOTS
+import org.firstinspires.ftc.teamcode.hardware.Drive
+import org.firstinspires.ftc.teamcode.hardware.Feeders
+import org.firstinspires.ftc.teamcode.hardware.Outtake
 
-@Suppress("UNUSED")
-val GoBack = Mercurial.autonomous {
+fun createHuskyAuto() = Mercurial.Program {
     //#region Pre-Init
     val telemetryM = PanelsTelemetry.telemetry;
 
@@ -39,13 +41,13 @@ val GoBack = Mercurial.autonomous {
                     paths.buildPaths(alliance)
                 }
                 telemetryM.hl()
-
-
                 telemetryM.update(telemetry)
             })
         )
     )
 
+    val outtake = Outtake(hardwareMap)
+    val feeders = Feeders(hardwareMap)
 
     //#endregion
 
@@ -54,23 +56,41 @@ val GoBack = Mercurial.autonomous {
     }, wait { !drive.follower.isBusy })
 
 
+    fun shoot() = sequence(
+        wait(outtake::canShoot),
+        feeders.shoot(),
+        wait(TIME_BETWEEN_SHOTS)
+    )
 
     waitForStart()
-
-
-
-    val startPose = Pose(blackboard.getOrDefault("x", 0.0) as Double, blackboard.getOrDefault("y", 0.0) as Double, blackboard.getOrDefault("heading", 0.0) as Double)
-    drive.follower.setStartingPose(startPose)
-    drive.follower.followPath(drive.follower.pathBuilder().addPath(
-        BezierLine(startPose, paths.startPosition)
-    ).setLinearHeadingInterpolation(blackboard.getOrDefault("heading", 0.0) as Double, paths.startPosition.heading).build())
+    Log.d(TAG, paths.startPosition.toString())
+    drive.follower.setStartingPose(paths.startPosition)
+    Log.d(TAG, paths.aimHeading.toString())
+    schedule(
+        sequence(
+            exec { outtake.active = true },
+            followPath(paths.fromStartToShoot),
+            repeat(3, shoot()),
+            exec {
+                drive.follower.holdPoint(paths.endLocation)
+            }
+        ),
+    )
 
     schedule(
         loop(exec {
+            outtake.periodic(telemetryM)
             drive.periodic(telemetryM)
+
+            blackboard["x"] = drive.follower.pose.x
+            blackboard["y"] = drive.follower.pose.y
+            blackboard["heading"] = drive.follower.pose.heading
 
             telemetryM.update(telemetry)
         })
     )
     dropToScheduler()
 }
+
+@Suppress("UNUSED")
+val HuskyAuto = Mercurial.autonomous("Husky Auto", "Huskyteers", "Husky TeleOp", createHuskyAuto())

@@ -2,9 +2,13 @@ package org.firstinspires.ftc.teamcode.opmode
 
 import android.util.Log
 import com.bylazar.telemetry.PanelsTelemetry
+import com.huskyteers19516.shared.Alliance
+import com.huskyteers19516.shared.LoopTimer
+import com.huskyteers19516.shared.hl
 import com.pedropathing.geometry.Pose
 import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.hardware.DcMotorEx
+import com.qualcomm.robotcore.util.Range
 import dev.frozenmilk.dairy.mercurial.continuations.Continuations.deadline
 import dev.frozenmilk.dairy.mercurial.continuations.Continuations.exec
 import dev.frozenmilk.dairy.mercurial.continuations.Continuations.loop
@@ -16,16 +20,7 @@ import org.firstinspires.ftc.teamcode.hardware.Camera
 import org.firstinspires.ftc.teamcode.hardware.Drive
 import org.firstinspires.ftc.teamcode.hardware.Intake
 import org.firstinspires.ftc.teamcode.hardware.Outtake
-import org.firstinspires.ftc.teamcode.utils.Alliance
-import org.firstinspires.ftc.teamcode.utils.LoopTimer
-import org.firstinspires.ftc.teamcode.utils.hl
-import kotlin.jvm.java
 import kotlin.time.measureTime
-import org.firstinspires.ftc.teamcode.opmode.Paths
-import com.qualcomm.robotcore.util.Range
-import kotlin.io.path.Path
-
-
 
 
 const val TAG = "HuskyTeleOp"
@@ -197,18 +192,18 @@ fun createHuskyTeleOp(startPose: Pose, startAlliance: Alliance) = Mercurial.Prog
             loopTimer.end(telemetryM)
             telemetryM.update(telemetry)
             if (isAutoAiming) {
-            val currentPose = drive.follower.pose
+                val currentPose = drive.follower.pose
 
 
-            val targetAngleDegrees = Paths.calculateAimHeading(currentPose, paths.goalLocation)
+                val targetAngleDegrees = Paths.calculateAimHeading(currentPose, paths.goalLocation)
 
 
-            val currentTurretAngle = turretMotor.currentPosition / ticksPerDegree
+                val currentTurretAngle = turretMotor.currentPosition / ticksPerDegree
 
 
-            var error = (targetAngleDegrees - currentTurretAngle) % 360
-            if (error > 270) error -= 360
-            if (error <= -270) error += 360
+                var error = (targetAngleDegrees - currentTurretAngle) % 360
+                if (error > 270) error -= 360
+                if (error <= -270) error += 360
                 if (Math.abs(error) > 0.5) {
                     val derivative = error - lastTurretError
                     val power = (error * kP) + (derivative * kD)
