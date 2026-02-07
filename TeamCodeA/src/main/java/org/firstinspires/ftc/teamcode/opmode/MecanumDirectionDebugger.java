@@ -1,12 +1,10 @@
-package org.firstinspires.ftc.teamcodea.opmode;
+package org.firstinspires.ftc.teamcode.opmode;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
-
-import org.firstinspires.ftc.teamcodea.pedroPathing.Constants;
+import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
 @TeleOp
 public class MecanumDirectionDebugger extends OpMode {
@@ -14,6 +12,7 @@ public class MecanumDirectionDebugger extends OpMode {
     private DcMotorEx frontLeft;
     private DcMotorEx backRight;
     private DcMotorEx backLeft;
+
     @Override
     public void init() {
         frontRight = hardwareMap.get(DcMotorEx.class, "front_right");

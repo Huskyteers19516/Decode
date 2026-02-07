@@ -1,7 +1,4 @@
-package org.firstinspires.ftc.teamcodea.opmode;
-
-import static org.firstinspires.ftc.teamcodea.OpModeConstants.START_P1;
-import static org.firstinspires.ftc.teamcodea.OpModeConstants.START_P2;
+package org.firstinspires.ftc.teamcode.opmode;
 
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.BezierLine;
@@ -14,9 +11,8 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.util.ElapsedTime;
-
-import org.firstinspires.ftc.teamcodea.OpModeConstants;
-import org.firstinspires.ftc.teamcodea.pedroPathing.Constants;
+import org.firstinspires.ftc.teamcode.OpModeConstants;
+import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
 @Autonomous(name = "auto for no intake", group = "Bot2")
 public class RobotAutoShort extends OpMode {
@@ -28,23 +24,10 @@ public class RobotAutoShort extends OpMode {
     private DcMotorEx launcher;
     private CRServo leftFeeder;
     private CRServo rightFeeder;
-
-    private enum LaunchState { IDLE, PREPARE, LAUNCH }
     private LaunchState launchState;
-
-    private enum AutoState {
-        WAITING,
-        LAUNCH,
-        WAIT_FOR_LAUNCH,
-        PEDRO_PATH1,
-        PEDRO_PATH2,
-        COMPLETE
-    }
     private AutoState autoState;
-
     private Follower follower;
     private Paths paths;
-
     private int shotsToFire = 3;
 
     @Override
@@ -120,32 +103,6 @@ public class RobotAutoShort extends OpMode {
         }
     }
 
-    public static class Paths {
-
-        public PathChain Path1;
-        public PathChain Path2;
-
-        public Paths(Follower follower) {
-            Path1 = follower
-                    .pathBuilder()
-                    .addPath(
-                            new BezierLine(new Pose(22.364, 120.831), new Pose(47.464, 95.410))
-                    )
-                    .setConstantHeadingInterpolation(Math.toRadians(135))
-                    .build();
-
-            Path2 = follower
-                    .pathBuilder()
-                    .addPath(
-                            new BezierLine(new Pose(47.464, 95.410), new Pose(60.818, 128.072))
-                    )
-                    .setTangentHeadingInterpolation()
-                    .build();
-        }
-    }
-
-
-
     boolean launch(boolean shotRequested) {
 
         switch (launchState) {
@@ -179,5 +136,40 @@ public class RobotAutoShort extends OpMode {
                 break;
         }
         return false;
+    }
+
+    private enum LaunchState {IDLE, PREPARE, LAUNCH}
+
+    private enum AutoState {
+        WAITING,
+        LAUNCH,
+        WAIT_FOR_LAUNCH,
+        PEDRO_PATH1,
+        PEDRO_PATH2,
+        COMPLETE
+    }
+
+    public static class Paths {
+
+        public PathChain Path1;
+        public PathChain Path2;
+
+        public Paths(Follower follower) {
+            Path1 = follower
+                    .pathBuilder()
+                    .addPath(
+                            new BezierLine(new Pose(22.364, 120.831), new Pose(47.464, 95.410))
+                    )
+                    .setConstantHeadingInterpolation(Math.toRadians(135))
+                    .build();
+
+            Path2 = follower
+                    .pathBuilder()
+                    .addPath(
+                            new BezierLine(new Pose(47.464, 95.410), new Pose(60.818, 128.072))
+                    )
+                    .setTangentHeadingInterpolation()
+                    .build();
+        }
     }
 }

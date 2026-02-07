@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcodea.pedroPathing;
+package org.firstinspires.ftc.teamcode.pedroPathing;
 
 
 import com.pedropathing.follower.Follower;
@@ -8,8 +8,6 @@ import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.PathChain;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
-
-import org.firstinspires.ftc.teamcodea.pedroPathing.Constants;
 
 @Autonomous(name = "Pedro Pathing Autonomous", group = "Autonomous")
 
@@ -34,7 +32,6 @@ public class BlueHaveIntakeShortShoot extends OpMode {
 
     public void loop() {
         follower.update();
-
 
 
     }
@@ -98,8 +95,6 @@ public class BlueHaveIntakeShortShoot extends OpMode {
                     .build();
         }
     }
-
-
 
 
 }

@@ -1,10 +1,9 @@
-package org.firstinspires.ftc.teamcodea.opmode;
+package org.firstinspires.ftc.teamcode.opmode;
 
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.BezierCurve;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.PathChain;
-
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.CRServo;
@@ -12,76 +11,35 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.util.ElapsedTime;
+import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
-import org.firstinspires.ftc.teamcodea.pedroPathing.Constants;
-
-@Autonomous(name="StarterBot_LongRange", group="StarterBot")
+@Autonomous(name = "StarterBot_LongRange", group = "StarterBot")
 public class RobotAutoLong extends OpMode {
-
-    static class Config {
-        static double launcherTargetVelocity = 1125;
-        static double launcherMinVelocity = 1075;
-        static double PID_P = 300;
-        static double PID_I = 0;
-        static double PID_D = 0;
-        static double PID_F = 10;
-    }
 
     final double FEED_TIME = 0.20;
     final double LAUNCHER_TARGET_VELOCITY = 1125;
     final double LAUNCHER_MIN_VELOCITY = 1075;
     final double TIME_BETWEEN_SHOTS = 2;
-
     private ElapsedTime shotTimer = new ElapsedTime();
     private ElapsedTime feederTimer = new ElapsedTime();
-
     private DcMotorEx leftlauncher;
     private DcMotorEx rightlauncher;
     private CRServo leftFeeder;
     private CRServo rightFeeder;
-
-    private enum LaunchState { IDLE, PREPARE, LAUNCH }
     private LaunchState launchState;
-
-    private enum AutoState {
-        LAUNCH,
-        WAIT_FOR_LAUNCH,
-        PEDRO_PATH,
-        PEDRO_WAIT,
-        COMPLETE
-    }
     private AutoState autoState;
-
     private Follower follower;
     private Paths paths;
-
-    public static class Paths {
-        public final PathChain LongPath;
-
-        public Paths(Follower follower) {
-            LongPath = follower
-                    .pathBuilder()
-                    .addPath(new BezierCurve(
-                            new Pose(127.428, 125.819),
-                            new Pose(41.832, 110.695),
-                            new Pose(130.807, 75.298),
-                            new Pose(92.675, 26.869),
-                            new Pose(17.216, 13.837)
-                    ))
-                    .setLinearHeadingInterpolation(Math.toRadians(45), Math.toRadians(45))
-                    .build();
-        }
-    }
 
     @Override
     public void init() {
         autoState = AutoState.LAUNCH;
         launchState = LaunchState.IDLE;
 
-        leftlauncher = hardwareMap.get(DcMotorEx.class,"left_launcher");
-        rightlauncher = hardwareMap.get(DcMotorEx.class,"right_launcher");
-        leftFeeder = hardwareMap.get(CRServo.class,"left_feeder");
-        rightFeeder = hardwareMap.get(CRServo.class,"right_feeder");
+        leftlauncher = hardwareMap.get(DcMotorEx.class, "left_launcher");
+        rightlauncher = hardwareMap.get(DcMotorEx.class, "right_launcher");
+        leftFeeder = hardwareMap.get(CRServo.class, "left_feeder");
+        rightFeeder = hardwareMap.get(CRServo.class, "right_feeder");
 
         leftlauncher.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
         rightlauncher.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
@@ -90,9 +48,9 @@ public class RobotAutoLong extends OpMode {
         rightlauncher.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
 
         leftlauncher.setPIDFCoefficients(DcMotorEx.RunMode.RUN_USING_ENCODER,
-                new PIDFCoefficients(Config.PID_P,Config.PID_I,Config.PID_D,Config.PID_F));
+                new PIDFCoefficients(Config.PID_P, Config.PID_I, Config.PID_D, Config.PID_F));
         rightlauncher.setPIDFCoefficients(DcMotorEx.RunMode.RUN_USING_ENCODER,
-                new PIDFCoefficients(Config.PID_P,Config.PID_I,Config.PID_D,Config.PID_F));
+                new PIDFCoefficients(Config.PID_P, Config.PID_I, Config.PID_D, Config.PID_F));
 
         leftFeeder.setDirection(DcMotorSimple.Direction.REVERSE);
 
@@ -100,7 +58,7 @@ public class RobotAutoLong extends OpMode {
         follower.setStartingPose(new Pose(72, 8, Math.toRadians(90)));
         paths = new Paths(follower);
 
-        telemetry.addData("Status","Initialized");
+        telemetry.addData("Status", "Initialized");
     }
 
     @Override
@@ -171,5 +129,42 @@ public class RobotAutoLong extends OpMode {
                 break;
         }
         return false;
+    }
+
+    private enum LaunchState {IDLE, PREPARE, LAUNCH}
+
+    private enum AutoState {
+        LAUNCH,
+        WAIT_FOR_LAUNCH,
+        PEDRO_PATH,
+        PEDRO_WAIT,
+        COMPLETE
+    }
+
+    static class Config {
+        static double launcherTargetVelocity = 1125;
+        static double launcherMinVelocity = 1075;
+        static double PID_P = 300;
+        static double PID_I = 0;
+        static double PID_D = 0;
+        static double PID_F = 10;
+    }
+
+    public static class Paths {
+        public final PathChain LongPath;
+
+        public Paths(Follower follower) {
+            LongPath = follower
+                    .pathBuilder()
+                    .addPath(new BezierCurve(
+                            new Pose(127.428, 125.819),
+                            new Pose(41.832, 110.695),
+                            new Pose(130.807, 75.298),
+                            new Pose(92.675, 26.869),
+                            new Pose(17.216, 13.837)
+                    ))
+                    .setLinearHeadingInterpolation(Math.toRadians(45), Math.toRadians(45))
+                    .build();
+        }
     }
 }

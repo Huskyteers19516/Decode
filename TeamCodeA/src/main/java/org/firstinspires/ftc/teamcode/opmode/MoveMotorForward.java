@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcodea.opmode;
+package org.firstinspires.ftc.teamcode.opmode;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -8,6 +8,7 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 @TeleOp
 public class MoveMotorForward extends OpMode {
     private DcMotor motor;
+
     @Override
     public void init() {
         // Initialize motor here
