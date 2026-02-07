@@ -3,9 +3,6 @@ pluginManagement {
         gradlePluginPortal()
         mavenCentral()
         google()
-        maven {
-            url "https://repo.dairy.foundation/releases"
-        }
     }
 }
 
@@ -13,7 +10,3 @@ include ':FtcRobotController'
 include ':Shared'
 include ':TeamCodeA'
 include ':TeamCodeB'
-include ':TeamCodeC'
-include ':TeamCodeD'
-include ':Mercurial'
-include ':MercurialFTC'
