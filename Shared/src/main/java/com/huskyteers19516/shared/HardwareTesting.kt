@@ -130,6 +130,7 @@ class HardwareTesting : OpMode() {
 
             if (controlMode == ControlMode.MOTOR) {
                 val motor = currentDevice as DcMotorEx
+                telemetry.addData("Current position (ticks)", motor.currentPosition)
                 telemetry.addData("Current velocity (ticks/sec)", motor.velocity)
                 telemetry.addData(
                     "Current velocity (deg/sec)",
