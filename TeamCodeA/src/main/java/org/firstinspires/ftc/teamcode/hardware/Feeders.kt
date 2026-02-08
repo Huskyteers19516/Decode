@@ -16,7 +16,7 @@ class Feeders(hardwareMap: HardwareMap) {
 
 
     init {
-        leftFeeder.direction = DcMotorSimple.Direction.FORWARD
+        leftFeeder.direction = DcMotorSimple.Direction.REVERSE
         rightFeeder.direction = DcMotorSimple.Direction.REVERSE
 
         leftFeeder.power = STOP_SPEED

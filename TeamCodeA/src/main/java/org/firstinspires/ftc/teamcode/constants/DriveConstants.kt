@@ -5,7 +5,7 @@ import com.bylazar.configurables.annotations.Configurable
 @Configurable
 object DriveConstants {
     @JvmField
-    var DEFAULT_DRIVE_MODE_IS_ROBOT_CENTRIC = false
+    var DEFAULT_DRIVE_MODE_IS_ROBOT_CENTRIC = true
 
     @JvmField
     var NORMAL_MODE_SPEED = 1.0

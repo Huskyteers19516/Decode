@@ -60,6 +60,10 @@ fun createHuskyTeleOp() = Mercurial.Program {
         exec { drive.resetOrientation() }
     )
 
+    bindSpawn(
+        risingEdge { gamepad1.start },
+        exec { drive.isRobotCentric = !drive.isRobotCentric }
+    )
 
     //#region Velocity adjustment factors
 
