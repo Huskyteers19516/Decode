@@ -49,6 +49,6 @@ dependencies {
     implementation project(':FtcRobotController')
     implementation project(':Shared')
 
-    implementation files("../libs/PsiKit-0.0.4.jar")
+    implementation files("../libs/core.jar")
     implementation files("../libs/ftc-release.aar")
 }
