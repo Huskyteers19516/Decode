@@ -11,7 +11,7 @@ repositories {
     maven {
         url = "https://repo.dairy.foundation/snapshots"
     }
-    maven { url = 'https://central.sonatype.com/repository/maven-snapshots/'}
+    maven { url = 'https://central.sonatype.com/repository/maven-snapshots/' }
 }
 
 dependencies {
@@ -29,8 +29,26 @@ dependencies {
     implementation 'com.pedropathing:ftc:2.1.0-SNAPSHOT'
     implementation 'com.pedropathing:telemetry:1.0.0'
 
-    implementation "com.bylazar.sloth:fullpanels:0.2.4.1+1.0.12"
+
+    implementation "com.bylazar.sloth:panels:0.2.4.1+1.0.5"
+    implementation "com.bylazar.sloth:opmodecontrol:0.2.4.1+1.0.3"
+    implementation "com.bylazar.sloth:telemetry:0.2.4.1+1.0.5"
+    implementation "com.bylazar.sloth:configurables:0.2.4.1+1.0.5"
+    implementation "com.bylazar.sloth:themes:0.2.4.1+1.0.3"
+    implementation "com.bylazar.sloth:capture:0.2.4.1+1.0.3"
+    implementation "com.bylazar.sloth:gamepad:0.2.4.1+1.0.4"
+    implementation "com.bylazar.sloth:field:0.2.4.1+1.0.6"
+    implementation "com.bylazar.sloth:docs:0.2.4.1+1.0.5"
+    implementation "com.bylazar.sloth:battery:0.2.4.1+1.0.3"
+    implementation "com.bylazar.sloth:utils:0.2.4.1+1.0.4"
+    implementation "com.bylazar.sloth:pinger:0.2.4.1+1.0.3"
+    implementation "com.bylazar.sloth:graph:0.2.4.1+1.0.4"
+    implementation "com.bylazar.sloth:lights:0.2.4.1+1.0.3"
+    implementation "com.bylazar.sloth:camerastream:0.2.4.1+1.0.0"
     debugImplementation("dev.frozenmilk.sinister:Sloth:0.2.4")
 
     implementation project(":MercurialFTC")
 }
+
+// regex
+

@@ -12,5 +12,7 @@ object PsiKitConfig {
     fun configure(context: Context, ftcEventLoop: FtcEventLoop) {
         PsiKitAutoLogSettings.enabledByDefault = true
         PsiKitAutoLogSettings.enableLinearByDefault = true
+//        System.setProperty(PsiKitAutoLogSettings.PROPERTY_RLOG_PORT, "5900")
+        System.setProperty(PsiKitAutoLogSettings.PROPERTY_RLOG_FOLDER, "/sdcard/FIRST/PsiKit/")
     }
 }

@@ -18,8 +18,17 @@ repositories {
     maven("https://repo.dairy.foundation/releases")
 }
 
+android {
+    buildFeatures {
+        buildConfig = true
+    }
+}
+
 dependencies {
     api("dev.frozenmilk.sinister:Sloth:0.2.4")
     api(project(":Mercurial"))
     api("org.jetbrains.kotlin:kotlin-reflect")
+    implementation(files("../libs/core.jar"))
+    implementation(files("../libs/ftc-release.aar"))
+
 }

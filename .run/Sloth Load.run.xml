@@ -10,7 +10,7 @@
       </option>
       <option name="taskNames">
         <list>
-          <option value=":TeamCodeA:deploySloth" />
+          <option value=":TeamCodeB:deploySloth" />
         </list>
       </option>
       <option name="vmOptions" />

@@ -1,11 +1,11 @@
 package org.firstinspires.ftc.teamcode.opmode.testing
 
 import com.bylazar.telemetry.PanelsTelemetry
+import com.huskyteers19516.shared.hl
 import dev.frozenmilk.dairy.mercurial.continuations.Continuations.exec
 import dev.frozenmilk.dairy.mercurial.continuations.Continuations.loop
 import dev.frozenmilk.dairy.mercurial.ftc.Mercurial
 import org.firstinspires.ftc.teamcode.hardware.Drive
-import com.huskyteers19516.shared.hl
 
 @Suppress("unused")
 val driveTesting = Mercurial.teleop("Drive Testing", "Testing") {
