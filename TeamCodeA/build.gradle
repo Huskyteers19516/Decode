@@ -25,6 +25,9 @@ android {
     kotlin {
         jvmToolchain(17)
     }
+    kotlinOptions {
+        jvmTarget = '17'
+    }
     buildTypes {
         debug {
             apply plugin: 'dev.frozenmilk.sinister.sloth.load'
@@ -48,6 +51,7 @@ buildscript {
 dependencies {
     implementation project(':FtcRobotController')
     implementation project(':Shared')
+    implementation 'androidx.core:core-ktx:1.17.0'
 }
 
 
