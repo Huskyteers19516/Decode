@@ -166,7 +166,7 @@ fun createHuskyAuto() = Mercurial.Program {
             deadline(
                 wait(AutoConstants.CUTOFF_SECONDS),
                 sequence(
-                    exec { outtake.active = true },
+                    exec { outtake.shooterActive = true },
                     followPath(paths.fromStartToShoot.apply {
                         headingInterpolator = object : HeadingInterpolator {
                             val faceObelisk = HeadingInterpolator.facingPoint(Paths.obelisk)

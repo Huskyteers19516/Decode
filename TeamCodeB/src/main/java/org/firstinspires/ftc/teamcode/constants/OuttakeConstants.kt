@@ -17,7 +17,7 @@ object OuttakeConstants {
     var SHOOTER_KS: Double = 10.0
 
     @JvmField
-    var TURRET_KP: Double = 300.0
+    var TURRET_KP: Double = 5.0
 
     @JvmField
     var TURRET_KI: Double = 0.0
@@ -33,4 +33,7 @@ object OuttakeConstants {
 
     @JvmField
     var ALLOWANCE: Double = 60.0
+
+    @JvmField
+    var TURRET_TICKS_PER_REV = 1400.0 / (2 * Math.PI)
 }

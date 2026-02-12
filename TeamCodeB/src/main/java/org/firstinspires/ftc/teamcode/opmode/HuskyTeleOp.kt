@@ -57,16 +57,6 @@ fun createHuskyTeleOp(startPose: Pose, startAlliance: Alliance) = Mercurial.Prog
     drive.follower.setStartingPose(startPose)
     val paths = Paths(drive.follower)
     paths.buildPaths(alliance)
-    val turretMotor = hardwareMap.get(DcMotorEx::class.java, "turretMotor")
-
-    turretMotor.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
-    turretMotor.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
-
-    var isAutoAiming = true
-    var lastTurretError = 0.0
-    val kP = 0.02
-    val kD = 0.002
-    val ticksPerDegree = 1400.0 / 360.0
 
     //#endregion
 
@@ -132,7 +122,6 @@ fun createHuskyTeleOp(startPose: Pose, startAlliance: Alliance) = Mercurial.Prog
     )
 
 
-
     bindSpawn(
         risingEdge {
             gamepad2.dpad_left
@@ -142,10 +131,9 @@ fun createHuskyTeleOp(startPose: Pose, startAlliance: Alliance) = Mercurial.Prog
     )
 
     bindSpawn(
-        risingEdge { gamepad1.b },
+        risingEdge { gamepad1.dpad_down },
         exec {
-            isAutoAiming = false
-            turretMotor.power = 0.0
+            outtake.turretAutoAiming = !outtake.turretAutoAiming
         }
     )
     //#endregion
@@ -191,33 +179,6 @@ fun createHuskyTeleOp(startPose: Pose, startAlliance: Alliance) = Mercurial.Prog
             telemetryM.hl()
             loopTimer.end(telemetryM)
             telemetryM.update(telemetry)
-            if (isAutoAiming) {
-                val currentPose = drive.follower.pose
-
-
-                val targetAngleDegrees = Paths.calculateAimHeading(currentPose, paths.goalLocation)
-
-
-                val currentTurretAngle = turretMotor.currentPosition / ticksPerDegree
-
-
-                var error = (targetAngleDegrees - currentTurretAngle) % 360
-                if (error > 270) error -= 360
-                if (error <= -270) error += 360
-                if (Math.abs(error) > 0.5) {
-                    val derivative = error - lastTurretError
-                    val power = (error * kP) + (derivative * kD)
-                    turretMotor.power = Range.clip(power, -0.5, 0.5)
-                } else {
-                    turretMotor.power = 0.0
-                }
-                lastTurretError = error
-            } else {
-
-            }
-
-            telemetryM.addData("Turret Active", isAutoAiming)
-
         })
     )
     Log.i(TAG, "HuskyTeleOp started")

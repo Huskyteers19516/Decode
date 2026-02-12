@@ -2,15 +2,19 @@ package org.firstinspires.ftc.teamcode.hardware
 
 import android.util.Log
 import com.bylazar.telemetry.TelemetryManager
+import com.pedropathing.geometry.Pose
 import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.hardware.DcMotorEx
 import com.qualcomm.robotcore.hardware.HardwareMap
+import com.qualcomm.robotcore.hardware.Servo
 import org.firstinspires.ftc.teamcode.constants.OuttakeConstants
+import org.firstinspires.ftc.teamcode.opmode.Paths
 import kotlin.math.abs
 import kotlin.math.pow
 
 class Outtake(hardwareMap: HardwareMap) {
     private val outtakeMotor: DcMotorEx = hardwareMap.get(DcMotorEx::class.java, "outtake")
+    private val hoodServo: Servo = hardwareMap.get(Servo::class.java, "hood")
     private val turretMotor: DcMotorEx = hardwareMap.get(DcMotorEx::class.java, "turret")
 
     init {
@@ -33,18 +37,19 @@ class Outtake(hardwareMap: HardwareMap) {
 
     var targetVelocity = OuttakeConstants.DEFAULT_TARGET_VELOCITY;
     var velocityAdjustmentFactor = 0.0
-    var active = false
+    var shooterActive = false
+    var turretAutoAiming = false
 
     fun manualPeriodic(manualPower: Double, telemetry: TelemetryManager) {
         outtakeMotor.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
         turretMotor.mode = DcMotor.RunMode.RUN_TO_POSITION
         outtakeMotor.power = manualPower
-        telemetry.addData("Outtake active", active)
+        telemetry.addData("Outtake active", shooterActive)
         telemetry.addData("Outtake power", outtakeMotor.power)
         telemetry.addData("Outtake velocity", outtakeMotor.velocity)
     }
 
-    fun periodic(telemetry: TelemetryManager, debugging: Boolean = false) {
+    fun periodic(pose: Pose, goalPose: Pose, telemetry: TelemetryManager, debugging: Boolean = false) {
         outtakeMotor.mode = DcMotor.RunMode.RUN_USING_ENCODER
         turretMotor.mode = DcMotor.RunMode.RUN_TO_POSITION
 
@@ -57,17 +62,22 @@ class Outtake(hardwareMap: HardwareMap) {
                 OuttakeConstants.SHOOTER_KS
             )
         }
-        if (active) {
+        if (turretAutoAiming) {
+            val angleToTarget = Paths.calculateAimHeading(pose, goalPose)
+            val relativeAngle = angleToTarget - pose.heading
+            val targetPosition = (relativeAngle) * OuttakeConstants.TURRET_TICKS_PER_REV
+        }
+        if (shooterActive) {
             outtakeMotor.velocity = targetVelocity + velocityAdjustmentFactor
         } else {
             outtakeMotor.power = 0.0
         }
-        telemetry.addData("Outtake active", active)
+        telemetry.addData("Outtake active", shooterActive)
         val velocity = outtakeMotor.velocity
         telemetry.addData("Outtake velocity", velocity)
         telemetry.addData("Outtake target velocity", targetVelocity + velocityAdjustmentFactor)
         telemetry.addData("Outtake velocity adjustment factor", velocityAdjustmentFactor)
-        telemetry.addData("Outtake status", if (active && canShoot()) "CAN SHOOT" else "NOT READY")
+        telemetry.addData("Outtake status", if (shooterActive && canShoot()) "CAN SHOOT" else "NOT READY")
         if (!debugging) return
         telemetry.addData("Outtake power", outtakeMotor.power)
     }
@@ -79,7 +89,7 @@ class Outtake(hardwareMap: HardwareMap) {
     }
 
     fun toggle() {
-        active = !active
+        shooterActive = !shooterActive
     }
 
     companion object {
@@ -95,9 +105,6 @@ class Outtake(hardwareMap: HardwareMap) {
 
         fun getBestTargetVelocity(range: Double): Double {
             Log.d("HuskyTeleOp", "using range: $range in")
-
-//            return 0.178272 * range.pow(2.0) + 0.0769583 * range + 49.28455
-            return 446.88 * range.pow(0.295259)
 
             val sorted = knownValues.sortedBy { it.first }
 

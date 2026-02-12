@@ -6,6 +6,7 @@ import com.qualcomm.robotcore.hardware.Servo
 import org.firstinspires.ftc.teamcode.constants.FlippersConstants
 import com.huskyteers19516.shared.Slot
 
+@Deprecated("we are not using flippers")
 class Flippers(hardwareMap: HardwareMap) {
     private var flippers = mapOf<Slot, Servo>(
         Slot.A to hardwareMap.get<Servo>(Servo::class.java, "feederA"),
