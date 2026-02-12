@@ -6,9 +6,6 @@ import com.huskyteers19516.shared.Alliance
 import com.huskyteers19516.shared.LoopTimer
 import com.huskyteers19516.shared.hl
 import com.pedropathing.geometry.Pose
-import com.qualcomm.robotcore.hardware.DcMotor
-import com.qualcomm.robotcore.hardware.DcMotorEx
-import com.qualcomm.robotcore.util.Range
 import dev.frozenmilk.dairy.mercurial.continuations.Continuations.deadline
 import dev.frozenmilk.dairy.mercurial.continuations.Continuations.exec
 import dev.frozenmilk.dairy.mercurial.continuations.Continuations.loop
@@ -16,7 +13,6 @@ import dev.frozenmilk.dairy.mercurial.continuations.Continuations.wait
 import dev.frozenmilk.dairy.mercurial.ftc.Mercurial
 import org.firstinspires.ftc.teamcode.constants.DriveConstants
 import org.firstinspires.ftc.teamcode.constants.TeleOpConstants
-import org.firstinspires.ftc.teamcode.hardware.Camera
 import org.firstinspires.ftc.teamcode.hardware.Drive
 import org.firstinspires.ftc.teamcode.hardware.Intake
 import org.firstinspires.ftc.teamcode.hardware.Outtake
@@ -53,7 +49,7 @@ fun createHuskyTeleOp(startPose: Pose, startAlliance: Alliance) = Mercurial.Prog
     val outtake = Outtake(hardwareMap)
     val intake = Intake(hardwareMap)
     val drive = Drive(hardwareMap)
-    val camera = Camera(hardwareMap)
+//    val camera = Camera(hardwareMap)
     drive.follower.setStartingPose(startPose)
     val paths = Paths(drive.follower)
     paths.buildPaths(alliance)
@@ -166,7 +162,11 @@ fun createHuskyTeleOp(startPose: Pose, startAlliance: Alliance) = Mercurial.Prog
             telemetryM.addLine("(Gamepad 2) Start/stop outtake: left bumper, control velocity: dpad")
 
             loopTimer.section("Outtake") {
-                outtake.periodic(telemetryM, TeleOpConstants.DEBUG_MODE)
+                val turretAngle = Paths.calculateAimHeading(drive.follower.pose, paths.goalLocation)
+                val relativeAngle = turretAngle - drive.follower.pose.heading
+                telemetryM.addData("Turret angle", turretAngle)
+                telemetryM.addData("Relative turret angle", relativeAngle)
+                outtake.periodic(telemetryM, TeleOpConstants.DEBUG_MODE, relativeAngle)
             }
 
             telemetryM.hl()
@@ -185,4 +185,9 @@ fun createHuskyTeleOp(startPose: Pose, startAlliance: Alliance) = Mercurial.Prog
     dropToScheduler()
 }
 
-val HuskyTeleOp = Mercurial.teleop("Husky TeleOp", "Huskyteers", createHuskyTeleOp(Pose(), Alliance.RED))
+val HuskyTeleOp =
+    Mercurial.teleop(
+        "Husky TeleOp",
+        "Huskyteers",
+        createHuskyTeleOp(Pose(72.0, 72.0, Math.toRadians(90.0)), Alliance.RED)
+    )

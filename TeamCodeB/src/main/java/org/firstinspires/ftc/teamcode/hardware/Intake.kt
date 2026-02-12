@@ -2,17 +2,20 @@ package org.firstinspires.ftc.teamcode.hardware
 
 import com.bylazar.telemetry.TelemetryManager
 import com.qualcomm.robotcore.hardware.DcMotor
+import com.qualcomm.robotcore.hardware.DcMotorEx
+import com.qualcomm.robotcore.hardware.DcMotorSimple
 import com.qualcomm.robotcore.hardware.HardwareMap
 import org.firstinspires.ftc.teamcode.constants.IntakeConstants
 
 
 class Intake(hardwareMap: HardwareMap) {
-    private val intakeMotor = hardwareMap.dcMotor["intake"]
+    private val intakeMotor = hardwareMap.get(DcMotorEx::class.java, "intake")
 
     init {
         intakeMotor.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
         intakeMotor.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
         intakeMotor.power = 0.0
+        intakeMotor.direction = DcMotorSimple.Direction.REVERSE
     }
 
     var active = false

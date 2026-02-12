@@ -2,15 +2,9 @@ package org.firstinspires.ftc.teamcode.hardware
 
 import android.util.Log
 import com.bylazar.telemetry.TelemetryManager
-import com.pedropathing.geometry.Pose
-import com.qualcomm.robotcore.hardware.DcMotor
-import com.qualcomm.robotcore.hardware.DcMotorEx
-import com.qualcomm.robotcore.hardware.HardwareMap
-import com.qualcomm.robotcore.hardware.Servo
+import com.qualcomm.robotcore.hardware.*
 import org.firstinspires.ftc.teamcode.constants.OuttakeConstants
-import org.firstinspires.ftc.teamcode.opmode.Paths
 import kotlin.math.abs
-import kotlin.math.pow
 
 class Outtake(hardwareMap: HardwareMap) {
     private val outtakeMotor: DcMotorEx = hardwareMap.get(DcMotorEx::class.java, "outtake")
@@ -29,10 +23,13 @@ class Outtake(hardwareMap: HardwareMap) {
         outtakeMotor.power = 0.0
 
         turretMotor.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
+        turretMotor.direction = DcMotorSimple.Direction.REVERSE
         turretMotor.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
         turretMotor.setPositionPIDFCoefficients(
             OuttakeConstants.TURRET_KP,
         )
+        turretMotor.power = 0.5
+        turretMotor.targetPosition = 0
     }
 
     var targetVelocity = OuttakeConstants.DEFAULT_TARGET_VELOCITY;
@@ -49,7 +46,7 @@ class Outtake(hardwareMap: HardwareMap) {
         telemetry.addData("Outtake velocity", outtakeMotor.velocity)
     }
 
-    fun periodic(pose: Pose, goalPose: Pose, telemetry: TelemetryManager, debugging: Boolean = false) {
+    fun periodic(telemetry: TelemetryManager, debugging: Boolean = false, turretAngle: Double? = null) {
         outtakeMotor.mode = DcMotor.RunMode.RUN_USING_ENCODER
         turretMotor.mode = DcMotor.RunMode.RUN_TO_POSITION
 
@@ -61,11 +58,20 @@ class Outtake(hardwareMap: HardwareMap) {
                 OuttakeConstants.SHOOTER_KD,
                 OuttakeConstants.SHOOTER_KS
             )
+            turretMotor.setPositionPIDFCoefficients(
+                OuttakeConstants.TURRET_KP,
+            )
         }
-        if (turretAutoAiming) {
-            val angleToTarget = Paths.calculateAimHeading(pose, goalPose)
-            val relativeAngle = angleToTarget - pose.heading
-            val targetPosition = (relativeAngle) * OuttakeConstants.TURRET_TICKS_PER_REV
+        if (turretAngle != null) {
+            if (turretAutoAiming) {
+                val targetPosition = (turretAngle) * OuttakeConstants.TURRET_TICKS_PER_REV
+                turretMotor.power = 0.3
+                turretMotor.targetPosition = targetPosition.toInt()
+            } else {
+                turretMotor.targetPosition = 0
+            }
+            telemetry.addData("Turret current position", turretMotor.currentPosition)
+            telemetry.addData("Turret target position", turretMotor.targetPosition)
         }
         if (shooterActive) {
             outtakeMotor.velocity = targetVelocity + velocityAdjustmentFactor

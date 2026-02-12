@@ -1,6 +1,7 @@
 package dev.frozenmilk.dairy.mercurial.ftc
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
+import com.qualcomm.robotcore.hardware.VoltageSensor
 import dev.frozenmilk.dairy.BuildConfig
 import dev.frozenmilk.dairy.mercurial.continuations.Continuations
 import dev.frozenmilk.dairy.mercurial.continuations.Continuations.exec
@@ -47,6 +48,7 @@ object MercurialProgramScanner : OpModeScanner() {
             if (BuildConfig.BUILD_TYPE == "debug") {
                 ensurePsiKitStarted()
                 internalStartOnce()
+                hardwareMap.get(VoltageSensor::class.java, "Control Hub")
             }
             val scheduler = Scheduler.Standard()
             val context = Context(

@@ -17,7 +17,7 @@ object OuttakeConstants {
     var SHOOTER_KS: Double = 10.0
 
     @JvmField
-    var TURRET_KP: Double = 5.0
+    var TURRET_KP: Double = 0.5
 
     @JvmField
     var TURRET_KI: Double = 0.0
