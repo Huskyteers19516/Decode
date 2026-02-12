@@ -20,13 +20,13 @@ import dev.frozenmilk.dairy.mercurial.continuations.Continuations.noop
 import dev.frozenmilk.dairy.mercurial.continuations.Continuations.sequence
 import dev.frozenmilk.dairy.mercurial.continuations.Continuations.wait
 import dev.frozenmilk.dairy.mercurial.ftc.Mercurial
+import com.qualcomm.robotcore.hardware.DcMotor
+import com.qualcomm.robotcore.hardware.DcMotorEx
 import org.firstinspires.ftc.teamcode.constants.AutoConstants
-import org.firstinspires.ftc.teamcode.constants.FlippersConstants
 import org.firstinspires.ftc.teamcode.hardware.*
 import org.firstinspires.ftc.teamcode.opmode.pathpackage.AutoNumber3
 import com.huskyteers19516.shared.Alliance
 import com.huskyteers19516.shared.Motif
-import com.huskyteers19516.shared.Slot
 import com.huskyteers19516.shared.hl
 import kotlin.math.abs
 
@@ -40,7 +40,6 @@ fun createHuskyAuto() = Mercurial.Program {
     val drive = Drive(hardwareMap)
     val paths = AutoNumber3(drive.follower)
     val camera = Camera(hardwareMap)
-    val colorSensors = ColorSensors(hardwareMap)
 
     schedule(
         deadline(
@@ -58,22 +57,6 @@ fun createHuskyAuto() = Mercurial.Program {
                     paths.buildPaths(alliance)
                 }
                 telemetryM.hl()
-                colorSensors.update()
-                colorSensors.telemetry(telemetryM)
-                if (colorSensors.slots[Slot.A] == ColorSensors.Companion.Artifact.GREEN) {
-                    telemetryM.addLine("WARNING: Green in slot A (back slot). Recommended to put purple artifact there.")
-                }
-                if (colorSensors.slots.count {
-                        it.value in listOf(
-                            ColorSensors.Companion.Artifact.GREEN,
-                            ColorSensors.Companion.Artifact.PURPLE
-                        )
-                    } < 3) {
-                    telemetryM.addLine("WARNING: Currently detecting less than 3 artifacts")
-                } else if (colorSensors.slots.count { it.value in listOf(ColorSensors.Companion.Artifact.GREEN) } != 1) {
-                    telemetryM.addLine("WARNING: Detecting something other than 1 green artifact and 2 purple artifacts.")
-                }
-
                 telemetryM.update(telemetry)
             })
         )
@@ -81,7 +64,11 @@ fun createHuskyAuto() = Mercurial.Program {
 
     val outtake = Outtake(hardwareMap)
     val intake = Intake(hardwareMap)
-    val flippers = Flippers(hardwareMap)
+    val transcript = hardwareMap.get(DcMotorEx::class.java, "transcript").apply {
+        mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
+        zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
+        power = 0.0
+    }
 
     var motif: Motif? = null
 
@@ -109,51 +96,42 @@ fun createHuskyAuto() = Mercurial.Program {
         )
     )
 
-    fun shoot(flipper: Slot) = sequence(
+    fun shoot() = sequence(
         wait(outtake::canShoot),
         exec {
-            flippers.raiseFlipper(flipper)
+            transcript.power = 1.0
         },
-        wait(FlippersConstants.FLIPPER_WAIT_TIME),
+        wait(0.25),
         exec {
-            flippers.lowerFlipper(flipper)
+            transcript.power = 0.0
         },
-        wait(FlippersConstants.FLIPPER_WAIT_TIME),
+        wait(0.1),
     )
-
-
-    fun shootColor(color: ColorSensors.Companion.Artifact) = match { colorSensors.getBestSlot(color) }
-        .branch(
-            Slot.A, shoot(Slot.A)
-        )
-        .branch(Slot.B, shoot(Slot.B))
-        .branch(Slot.C, shoot(Slot.C))
-        .defaultBranch(noop())
 
     fun shootAllThree() = deadline(
         match { Log.d(TAG, "matching motif"); motif }
             .branch(
                 Motif.GPP,
                 sequence(
-                    shootColor(ColorSensors.Companion.Artifact.GREEN),
-                    shootColor(ColorSensors.Companion.Artifact.PURPLE),
-                    shootColor(ColorSensors.Companion.Artifact.PURPLE),
+                    shoot(),
+                    shoot(),
+                    shoot(),
                 )
             )
             .branch(
                 Motif.PGP,
                 sequence(
-                    shootColor(ColorSensors.Companion.Artifact.PURPLE),
-                    shootColor(ColorSensors.Companion.Artifact.GREEN),
-                    shootColor(ColorSensors.Companion.Artifact.PURPLE),
+                    shoot(),
+                    shoot(),
+                    shoot(),
                 )
             )
             .branch(
                 Motif.PPG,
                 sequence(
-                    shootColor(ColorSensors.Companion.Artifact.PURPLE),
-                    shootColor(ColorSensors.Companion.Artifact.PURPLE),
-                    shootColor(ColorSensors.Companion.Artifact.GREEN),
+                    shoot(),
+                    shoot(),
+                    shoot(),
                 )
             ),
         jumpScope {
@@ -168,11 +146,7 @@ fun createHuskyAuto() = Mercurial.Program {
 
     // todo: empty extras function
 
-    fun shootRemaining() = deadline(
-        wait { colorSensors.slots.all { it.value == ColorSensors.Companion.Artifact.NONE } }, loop(
-            shootColor(ColorSensors.Companion.Artifact.GREEN)
-        )
-    )
+    fun shootRemaining() = noop()
 
     fun doWithIntake(closure: Closure) = sequence(
         exec(intake::start),
@@ -182,8 +156,6 @@ fun createHuskyAuto() = Mercurial.Program {
             drive.follower.setMaxPower(1.0);
         }
     )
-
-    var needColorSensors = false
 
     waitForStart()
     Log.d(TAG, paths.startPosition.toString())
@@ -217,9 +189,6 @@ fun createHuskyAuto() = Mercurial.Program {
                     },
                     shootAllThree(),
                     shootRemaining(),
-                    exec {
-                        needColorSensors = true
-                    },
                     doWithIntake(
                         sequence(followPath(paths.pickUpSecondRow), followPath(paths.secondRowToShoot))
                     ),
@@ -249,12 +218,7 @@ fun createHuskyAuto() = Mercurial.Program {
             telemetry.addData("Motif", motif)
             intake.periodic(telemetryM)
             outtake.periodic(telemetryM)
-            flippers.periodic(telemetryM)
             drive.periodic(telemetryM)
-            if (needColorSensors) {
-                colorSensors.update()
-            }
-            colorSensors.telemetry(telemetryM)
             if (motif == null) {
                 motif = camera.getObelisk()
             }

@@ -15,7 +15,6 @@ import dev.frozenmilk.dairy.mercurial.ftc.Mercurial
 import org.firstinspires.ftc.teamcode.constants.OuttakeConstants
 import org.firstinspires.ftc.teamcode.constants.TeleOpConstants
 import org.firstinspires.ftc.teamcode.hardware.Camera
-import org.firstinspires.ftc.teamcode.hardware.ColorSensors
 import org.firstinspires.ftc.teamcode.hardware.Drive
 import org.firstinspires.ftc.teamcode.hardware.Flippers
 import org.firstinspires.ftc.teamcode.hardware.Intake
@@ -23,16 +22,14 @@ import org.firstinspires.ftc.teamcode.hardware.Outtake
 
 private enum class TestMode {
     DRIVE,
-    SHOOTER,
     SYSTEM,
     TURRET,
-    COLOR_SENSOR,
     CAMERA,
     LAUNCHER
 }
 
 @Suppress("bigMac")
-val BigMacBundletesting= Mercurial.teleop("All In One Testing", "Testing") {
+val BigMacBundletesting= Mercurial.teleop("Big Mac Testing", "Testing") {
     val telemetryM = PanelsTelemetry.telemetry
 
     fun nextMode(mode: TestMode): TestMode {
@@ -70,7 +67,6 @@ val BigMacBundletesting= Mercurial.teleop("All In One Testing", "Testing") {
     val intake = Intake(hardwareMap)
     val flippers = Flippers(hardwareMap)
     val camera = Camera(hardwareMap)
-    val colorSensors = ColorSensors(hardwareMap)
 
     val turretMotor = getMotorOrNull("turretMotor")
     turretMotor?.let {
@@ -97,7 +93,6 @@ val BigMacBundletesting= Mercurial.teleop("All In One Testing", "Testing") {
     var mode = TestMode.DRIVE
     var modeLocked = false
     var driveIndividualMode = true
-    var shooterVelocityMode = true
     var systemVelocityMode = true
 
     var turretTargetTicks = 0
@@ -134,7 +129,6 @@ val BigMacBundletesting= Mercurial.teleop("All In One Testing", "Testing") {
     bindExec(risingEdge { modeLocked && gamepad1.start }, exec {
         when (mode) {
             TestMode.DRIVE -> driveIndividualMode = !driveIndividualMode
-            TestMode.SHOOTER -> shooterVelocityMode = !shooterVelocityMode
             TestMode.SYSTEM -> systemVelocityMode = !systemVelocityMode
             else -> {}
         }
@@ -143,7 +137,7 @@ val BigMacBundletesting= Mercurial.teleop("All In One Testing", "Testing") {
     bindExec(risingEdge { modeLocked && gamepad1.dpad_up }, exec {
         when (mode) {
             TestMode.DRIVE -> drive.resetOrientation()
-            TestMode.SHOOTER, TestMode.SYSTEM -> {
+            TestMode.SYSTEM -> {
                 outtake.targetVelocity += TeleOpConstants.OUTTAKE_TARGET_VELOCITY_BIG_ADJUSTMENT_FACTOR
             }
             else -> {}
@@ -153,7 +147,7 @@ val BigMacBundletesting= Mercurial.teleop("All In One Testing", "Testing") {
     bindExec(risingEdge { modeLocked && gamepad1.dpad_down }, exec {
         when (mode) {
             TestMode.DRIVE -> drive.isRobotCentric = !drive.isRobotCentric
-            TestMode.SHOOTER, TestMode.SYSTEM -> {
+            TestMode.SYSTEM -> {
                 outtake.targetVelocity -= TeleOpConstants.OUTTAKE_TARGET_VELOCITY_BIG_ADJUSTMENT_FACTOR
             }
             else -> {}
@@ -162,7 +156,7 @@ val BigMacBundletesting= Mercurial.teleop("All In One Testing", "Testing") {
 
     bindExec(risingEdge { modeLocked && gamepad1.dpad_left }, exec {
         when (mode) {
-            TestMode.SHOOTER, TestMode.SYSTEM -> {
+            TestMode.SYSTEM -> {
                 outtake.targetVelocity -= TeleOpConstants.OUTTAKE_TARGET_VELOCITY_SMALL_ADJUSTMENT_FACTOR
             }
             TestMode.LAUNCHER -> hoodMaxServoPosCal -= hoodServoCalStep
@@ -172,7 +166,7 @@ val BigMacBundletesting= Mercurial.teleop("All In One Testing", "Testing") {
 
     bindExec(risingEdge { modeLocked && gamepad1.dpad_right }, exec {
         when (mode) {
-            TestMode.SHOOTER, TestMode.SYSTEM -> {
+            TestMode.SYSTEM -> {
                 outtake.targetVelocity += TeleOpConstants.OUTTAKE_TARGET_VELOCITY_SMALL_ADJUSTMENT_FACTOR
             }
             TestMode.LAUNCHER -> hoodMaxServoPosCal += hoodServoCalStep
@@ -182,7 +176,7 @@ val BigMacBundletesting= Mercurial.teleop("All In One Testing", "Testing") {
 
     bindExec(risingEdge { modeLocked && gamepad1.y }, exec {
         when (mode) {
-            TestMode.SHOOTER, TestMode.SYSTEM -> outtake.toggle()
+            TestMode.SYSTEM -> outtake.toggle()
             TestMode.TURRET -> {
                 turretMotor?.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
                 turretMotor?.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
@@ -298,12 +292,6 @@ val BigMacBundletesting= Mercurial.teleop("All In One Testing", "Testing") {
                         drive.debugTelemetry(telemetryM)
                     }
 
-                    TestMode.SHOOTER -> {
-                        telemetryM.addLine("Shooter: start toggle velocity/manual, dpad adjust, Y toggle")
-                        if (shooterVelocityMode) outtake.periodic(telemetryM, true)
-                        else outtake.manualPeriodic(-gamepad1.right_stick_y.toDouble(), telemetryM)
-                    }
-
                     TestMode.SYSTEM -> {
                         telemetryM.addLine("System: left stick(intake), A/B/X flippers, dpad+Y outtake, start mode")
                         if (systemVelocityMode) outtake.periodic(telemetryM, true)
@@ -334,11 +322,6 @@ val BigMacBundletesting= Mercurial.teleop("All In One Testing", "Testing") {
                             telemetryM.addData("Estimated Degrees", "%.2f".format(estimatedDegrees))
                             telemetryM.addData("Motor Mode", turretMotor.mode)
                         }
-                    }
-
-                    TestMode.COLOR_SENSOR -> {
-                        telemetryM.addLine("Color Sensor test")
-                        colorSensors.debugTelemetry(telemetryM)
                     }
 
                     TestMode.CAMERA -> {

@@ -66,7 +66,7 @@ object MercurialProgramScanner : OpModeScanner() {
             )
 
             context.run {
-                val _ = schedule(
+                val a_ = schedule(
                     Continuations.loop(
                         exec {
                             lastBeforeUserStart = Logger.getRealTimestamp()
