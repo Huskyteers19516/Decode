@@ -6,6 +6,8 @@ import com.huskyteers19516.shared.Alliance
 import com.huskyteers19516.shared.LoopTimer
 import com.huskyteers19516.shared.hl
 import com.pedropathing.geometry.Pose
+import com.qualcomm.robotcore.hardware.DcMotor
+import com.qualcomm.robotcore.hardware.DcMotorEx
 import dev.frozenmilk.dairy.mercurial.continuations.Continuations.deadline
 import dev.frozenmilk.dairy.mercurial.continuations.Continuations.exec
 import dev.frozenmilk.dairy.mercurial.continuations.Continuations.loop
@@ -13,6 +15,7 @@ import dev.frozenmilk.dairy.mercurial.continuations.Continuations.wait
 import dev.frozenmilk.dairy.mercurial.ftc.Mercurial
 import org.firstinspires.ftc.teamcode.constants.DriveConstants
 import org.firstinspires.ftc.teamcode.constants.TeleOpConstants
+import org.firstinspires.ftc.teamcode.hardware.Camera
 import org.firstinspires.ftc.teamcode.hardware.Drive
 import org.firstinspires.ftc.teamcode.hardware.Intake
 import org.firstinspires.ftc.teamcode.hardware.Outtake
@@ -48,8 +51,13 @@ fun createHuskyTeleOp(startPose: Pose, startAlliance: Alliance) = Mercurial.Prog
 
     val outtake = Outtake(hardwareMap)
     val intake = Intake(hardwareMap)
+    val transfer = hardwareMap.get(DcMotorEx::class.java, "transfer").apply {
+        mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
+        zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
+        power = 0.0
+    }
     val drive = Drive(hardwareMap)
-//    val camera = Camera(hardwareMap)
+    val camera = Camera(hardwareMap)
     drive.follower.setStartingPose(startPose)
     val paths = Paths(drive.follower)
     paths.buildPaths(alliance)
@@ -59,6 +67,7 @@ fun createHuskyTeleOp(startPose: Pose, startAlliance: Alliance) = Mercurial.Prog
     waitForStart()
     val loopTimer = LoopTimer()
     val isLaunching = false
+    var transferPulseEndNs = 0L
 
     schedule(
         loop(
@@ -132,6 +141,27 @@ fun createHuskyTeleOp(startPose: Pose, startAlliance: Alliance) = Mercurial.Prog
             outtake.turretAutoAiming = !outtake.turretAutoAiming
         }
     )
+
+    bindSpawn(
+        risingEdge { gamepad2.left_bumper },
+        exec {
+           outtake.canShoot()
+        }
+
+    )
+
+    bindSpawn(
+        risingEdge { gamepad2.right_bumper },
+        exec {
+            outtake.stopshoot()
+        }
+    )
+    bindSpawn(
+        risingEdge { gamepad2.right_bumper },
+        exec{
+            outtake.stopshoot()
+        }
+    )
     //#endregion
 
     drive.follower.startTeleopDrive(TeleOpConstants.TELEOP_BRAKE_MODE)
@@ -158,16 +188,20 @@ fun createHuskyTeleOp(startPose: Pose, startAlliance: Alliance) = Mercurial.Prog
             telemetryM.hl()
 
             telemetryM.addData("Is Launching", isLaunching)
+            telemetryM.addData("Can Shoot", outtake.canShoot())
+            telemetryM.addData("Transfer Pulsing", System.nanoTime() < transferPulseEndNs)
 
-            telemetryM.addLine("(Gamepad 2) Start/stop outtake: left bumper, control velocity: dpad")
+            telemetryM.addLine("(Gamepad 2) Start/stop outtake: left bumper, feed pulse: right bumper, velocity: dpad")
 
             loopTimer.section("Outtake") {
                 val turretAngle = Paths.calculateAimHeading(drive.follower.pose, paths.goalLocation)
                 val relativeAngle = turretAngle - drive.follower.pose.heading
                 telemetryM.addData("Turret angle", turretAngle)
                 telemetryM.addData("Relative turret angle", relativeAngle)
-                outtake.periodic(telemetryM, TeleOpConstants.DEBUG_MODE, relativeAngle)
+                val goalTag = camera.getTargetTag(alliance)
+                outtake.periodic(telemetryM, TeleOpConstants.DEBUG_MODE, relativeAngle, goalTag)
             }
+            transfer.power = if (System.nanoTime() < transferPulseEndNs) 1.0 else 0.0
 
             telemetryM.hl()
 

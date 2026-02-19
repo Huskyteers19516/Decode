@@ -4,11 +4,13 @@ import com.bylazar.telemetry.TelemetryManager
 import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.hardware.DcMotorEx
 import com.qualcomm.robotcore.hardware.HardwareMap
+import kotlinx.coroutines.flow.DEFAULT_CONCURRENCY_PROPERTY_NAME
 import org.firstinspires.ftc.teamcode.constants.OuttakeConstants
 import kotlin.math.abs
 
 class Outtake(hardwareMap: HardwareMap) {
     private val outtakeMotor: DcMotorEx = hardwareMap.get(DcMotorEx::class.java, "launcher")
+    private val outtakeSpinner : DcMotorEx = hardwareMap.get(DcMotorEx::class.java,"outtakeSpinner")
 
     init {
         outtakeMotor.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.FLOAT

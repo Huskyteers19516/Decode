@@ -64,7 +64,7 @@ fun createHuskyAuto() = Mercurial.Program {
 
     val outtake = Outtake(hardwareMap)
     val intake = Intake(hardwareMap)
-    val transcript = hardwareMap.get(DcMotorEx::class.java, "transcript").apply {
+    val transfer = hardwareMap.get(DcMotorEx::class.java, "transfer").apply {
         mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
         zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
         power = 0.0
@@ -99,13 +99,20 @@ fun createHuskyAuto() = Mercurial.Program {
     fun shoot() = sequence(
         wait(outtake::canShoot),
         exec {
-            transcript.power = 1.0
+            transfer.power = 1.0
         },
         wait(0.25),
         exec {
-            transcript.power = 0.0
+            transfer.power = 0.0
         },
         wait(0.1),
+    )
+
+    fun keepshoot()= sequence(
+
+        wait(outtake::canShoot),
+        exec { transfer.power =1.0 },
+        wait(1.0)
     )
 
 

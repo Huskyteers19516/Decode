@@ -3,12 +3,17 @@ package org.firstinspires.ftc.teamcode.hardware
 import android.util.Log
 import com.bylazar.telemetry.TelemetryManager
 import com.qualcomm.robotcore.hardware.*
+import dev.frozenmilk.dairy.mercurial.continuations.Continuations.exec
 import org.firstinspires.ftc.teamcode.constants.OuttakeConstants
+import org.firstinspires.ftc.vision.apriltag.AprilTagDetection
 import kotlin.math.abs
+import dev.frozenmilk.dairy.mercurial.continuations.Continuations.sequence
+import dev.frozenmilk.dairy.mercurial.continuations.Continuations.wait
 
 class Outtake(hardwareMap: HardwareMap) {
     private val outtakeMotor: DcMotorEx = hardwareMap.get(DcMotorEx::class.java, "outtake")
     private val hoodServo: Servo = hardwareMap.get(Servo::class.java, "hood")
+    private val outtakeBlockerServo: Servo = hardwareMap.get(Servo::class.java, "blocker")
     private val turretMotor: DcMotorEx = hardwareMap.get(DcMotorEx::class.java, "turret")
 
     init {
@@ -35,7 +40,10 @@ class Outtake(hardwareMap: HardwareMap) {
     var targetVelocity = OuttakeConstants.DEFAULT_TARGET_VELOCITY;
     var velocityAdjustmentFactor = 0.0
     var shooterActive = false
+   
     var turretAutoAiming = false
+
+    private var aprilTagAdjustment = 0
 
     fun manualPeriodic(manualPower: Double, telemetry: TelemetryManager) {
         outtakeMotor.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
@@ -46,7 +54,7 @@ class Outtake(hardwareMap: HardwareMap) {
         telemetry.addData("Outtake velocity", outtakeMotor.velocity)
     }
 
-    fun periodic(telemetry: TelemetryManager, debugging: Boolean = false, turretAngle: Double? = null) {
+    fun periodic(telemetry: TelemetryManager,  debugging: Boolean = false, turretAngle: Double? = null, goalTag: AprilTagDetection? = null) {
         outtakeMotor.mode = DcMotor.RunMode.RUN_USING_ENCODER
         turretMotor.mode = DcMotor.RunMode.RUN_TO_POSITION
 
@@ -64,7 +72,9 @@ class Outtake(hardwareMap: HardwareMap) {
         }
         if (turretAngle != null) {
             if (turretAutoAiming) {
-                val targetPosition = (turretAngle) * OuttakeConstants.TURRET_TICKS_PER_REV
+                aprilTagAdjustment = goalTag?.ftcPose?.bearing?.toInt() ?: 0
+
+                val targetPosition = (turretAngle + aprilTagAdjustment) * OuttakeConstants.TURRET_TICKS_PER_REV
                 turretMotor.power = 0.3
                 turretMotor.targetPosition = targetPosition.toInt()
             } else {
@@ -93,6 +103,25 @@ class Outtake(hardwareMap: HardwareMap) {
             targetVelocity + velocityAdjustmentFactor - (velocity ?: outtakeMotor.velocity)
         ) < OuttakeConstants.ALLOWANCE
     }
+
+    fun openOuttakeBlocker() {
+        outtakeBlockerServo.position = 1.0
+    }
+    fun closeOuttakeBlocker() {
+        outtakeBlockerServo.position = 0.0
+    }
+
+    fun shoot() = sequence(
+        wait(::canShoot),
+        exec(::openOuttakeBlocker),
+        wait(0.25),
+        exec { outtakeMotor.velocity = targetVelocity + velocityAdjustmentFactor },
+    )
+    fun stopshoot() = sequence(
+        exec(::closeOuttakeBlocker),
+        wait(0.25),
+        exec { outtakeMotor.velocity = 0.0 },
+    )
 
     fun toggle() {
         shooterActive = !shooterActive
@@ -141,4 +170,5 @@ class Outtake(hardwareMap: HardwareMap) {
         }
 
     }
+
 }
