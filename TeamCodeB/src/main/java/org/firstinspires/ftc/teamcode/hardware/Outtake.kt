@@ -3,12 +3,9 @@ package org.firstinspires.ftc.teamcode.hardware
 import android.util.Log
 import com.bylazar.telemetry.TelemetryManager
 import com.qualcomm.robotcore.hardware.*
-import dev.frozenmilk.dairy.mercurial.continuations.Continuations.exec
 import org.firstinspires.ftc.teamcode.constants.OuttakeConstants
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection
 import kotlin.math.abs
-import dev.frozenmilk.dairy.mercurial.continuations.Continuations.sequence
-import dev.frozenmilk.dairy.mercurial.continuations.Continuations.wait
 
 class Outtake(hardwareMap: HardwareMap) {
     private val outtakeMotor: DcMotorEx = hardwareMap.get(DcMotorEx::class.java, "outtake")
@@ -45,10 +42,13 @@ class Outtake(hardwareMap: HardwareMap) {
     var turretManualAiming= false
     var turretleft = false
     var turretright = false;
-    var shootOne  = false;
-    var stopShoot = false;
+    private var shootOneUntilNs = 0
 
     private var aprilTagAdjustment = 0
+
+    private fun launcherRunning(): Boolean {
+        return shooterActive || System.nanoTime() < shootOneUntilNs
+    }
 
     fun manualPeriodic(manualPower: Double, telemetry: TelemetryManager) {
         outtakeMotor.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
@@ -98,24 +98,19 @@ class Outtake(hardwareMap: HardwareMap) {
             turretMotor.power = -0.2
         }
 
-        if(shootOne){
-            outtakeMotor.velocity= targetVelocity;
-        }
-        if(stopShoot){
-            outtakeMotor.velocity=0.0;
-        }
-
-        if (shooterActive) {
-            outtakeMotor.velocity = targetVelocity + velocityAdjustmentFactor
+        val shootOneActive = System.nanoTime() < shootOneUntilNs
+        if (shooterActive || shootOneActive) {
+            outtakeMotor.power = 1.0
         } else {
             outtakeMotor.power = 0.0
         }
-        telemetry.addData("Outtake active", shooterActive)
+        telemetry.addData("Outtake active", shooterActive || shootOneActive)
+        telemetry.addData("Outtake shoot one active", shootOneActive)
         val velocity = outtakeMotor.velocity
         telemetry.addData("Outtake velocity", velocity)
-        telemetry.addData("Outtake target velocity", targetVelocity + velocityAdjustmentFactor)
+        telemetry.addData("Outtake target velocity", "disabled (power mode)")
         telemetry.addData("Outtake velocity adjustment factor", velocityAdjustmentFactor)
-        telemetry.addData("Outtake status", if (shooterActive && canShoot()) "CAN SHOOT" else "NOT READY")
+        telemetry.addData("Outtake status", if ((shooterActive || shootOneActive) && canShoot()) "CAN SHOOT" else "NOT READY")
         if (!debugging) return
         telemetry.addData("Outtake power", outtakeMotor.power)
     }
@@ -133,17 +128,29 @@ class Outtake(hardwareMap: HardwareMap) {
         outtakeBlockerServo.position = 0.0
     }
 
-    fun shoot() = sequence(
-        wait(::canShoot),
-        exec(::openOuttakeBlocker),
-        wait(0.25),
-        exec { outtakeMotor.velocity = targetVelocity + velocityAdjustmentFactor },
-    )
-    fun stopshoot() = sequence(
-        exec(::closeOuttakeBlocker),
-        wait(0.25),
-        exec { outtakeMotor.velocity = 0.0 },
-    )
+    fun shootOne() {
+        openOuttakeBlocker()
+        shootOneUntilNs = 1
+    }
+
+    fun startshoot() {
+        shooterActive = true
+        openOuttakeBlocker()
+    }
+
+    fun applyIntakeSafetyLock() {
+        if (!launcherRunning()) {
+            closeOuttakeBlocker()
+            outtakeMotor.power = 0.0
+        }
+    }
+
+    fun stopshoot() {
+        shooterActive = false
+        shootOneUntilNs = 0
+        closeOuttakeBlocker()
+        outtakeMotor.power = 0.0
+    }
 
     fun toggle() {
         shooterActive = !shooterActive
