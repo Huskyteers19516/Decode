@@ -42,6 +42,11 @@ class Outtake(hardwareMap: HardwareMap) {
     var shooterActive = false
    
     var turretAutoAiming = false
+    var turretManualAiming= false
+    var turretleft = false
+    var turretright = false;
+    var shootOne  = false;
+    var stopShoot = false;
 
     private var aprilTagAdjustment = 0
 
@@ -77,12 +82,29 @@ class Outtake(hardwareMap: HardwareMap) {
                 val targetPosition = (turretAngle + aprilTagAdjustment) * OuttakeConstants.TURRET_TICKS_PER_REV
                 turretMotor.power = 0.3
                 turretMotor.targetPosition = targetPosition.toInt()
-            } else {
+            } else if(turretManualAiming) {
+                turretAutoAiming= false;
+            }else{
                 turretMotor.targetPosition = 0
             }
             telemetry.addData("Turret current position", turretMotor.currentPosition)
             telemetry.addData("Turret target position", turretMotor.targetPosition)
         }
+
+        if(turretleft){
+            turretMotor.power=0.2
+        }
+        if(turretright){
+            turretMotor.power = -0.2
+        }
+
+        if(shootOne){
+            outtakeMotor.velocity= targetVelocity;
+        }
+        if(stopShoot){
+            outtakeMotor.velocity=0.0;
+        }
+
         if (shooterActive) {
             outtakeMotor.velocity = targetVelocity + velocityAdjustmentFactor
         } else {

@@ -80,12 +80,12 @@ fun createHuskyTeleOp(startPose: Pose, startAlliance: Alliance) = Mercurial.Prog
     // Drive controls
 
     bindSpawn(
-        risingEdge { gamepad1.left_bumper },
+        risingEdge { gamepad2.left_bumper },
         exec { drive.throttle = DriveConstants.SLOW_MODE_SPEED }
     )
 
     bindSpawn(
-        risingEdge { !gamepad1.left_bumper },
+        risingEdge { !gamepad2.left_bumper },
         exec { drive.throttle = DriveConstants.NORMAL_MODE_SPEED }
     )
 
@@ -104,7 +104,7 @@ fun createHuskyTeleOp(startPose: Pose, startAlliance: Alliance) = Mercurial.Prog
 
     bindSpawn(
         risingEdge {
-            gamepad2.dpad_up
+            gamepad1.dpad_up
         }, exec {
             outtake.velocityAdjustmentFactor += TeleOpConstants.OUTTAKE_TARGET_VELOCITY_BIG_ADJUSTMENT_FACTOR
         }
@@ -112,7 +112,7 @@ fun createHuskyTeleOp(startPose: Pose, startAlliance: Alliance) = Mercurial.Prog
 
     bindSpawn(
         risingEdge {
-            gamepad2.dpad_down
+            gamepad1.dpad_down
         }, exec {
             outtake.velocityAdjustmentFactor -= TeleOpConstants.OUTTAKE_TARGET_VELOCITY_BIG_ADJUSTMENT_FACTOR
         }
@@ -120,7 +120,7 @@ fun createHuskyTeleOp(startPose: Pose, startAlliance: Alliance) = Mercurial.Prog
 
     bindSpawn(
         risingEdge {
-            gamepad2.dpad_right
+            gamepad1.dpad_right
         }, exec {
             outtake.velocityAdjustmentFactor += TeleOpConstants.OUTTAKE_TARGET_VELOCITY_SMALL_ADJUSTMENT_FACTOR
         }
@@ -129,44 +129,84 @@ fun createHuskyTeleOp(startPose: Pose, startAlliance: Alliance) = Mercurial.Prog
 
     bindSpawn(
         risingEdge {
-            gamepad2.dpad_left
+            gamepad1.dpad_left
         }, exec {
             outtake.velocityAdjustmentFactor -= TeleOpConstants.OUTTAKE_TARGET_VELOCITY_SMALL_ADJUSTMENT_FACTOR
         }
     )
 
     bindSpawn(
-        risingEdge { gamepad1.dpad_down },
+        risingEdge { gamepad1.a },
         exec {
             outtake.turretAutoAiming = !outtake.turretAutoAiming
         }
     )
 
     bindSpawn(
-        risingEdge { gamepad2.left_bumper },
+        risingEdge{gamepad1.right_bumper},
         exec {
            outtake.canShoot()
         }
 
     )
-
     bindSpawn(
-        risingEdge { gamepad2.right_bumper },
+        risingEdge { gamepad1.left_bumper },
         exec {
             outtake.stopshoot()
         }
     )
     bindSpawn(
-        risingEdge { gamepad2.right_bumper },
+        risingEdge { gamepad2.left_bumper },
         exec{
             outtake.stopshoot()
+        }
+    )
+    bindSpawn(
+        risingEdge { gamepad1.rightTriggerWasPressed() },
+        exec{
+            outtake.shootOne
+             wait(0.25)
+            outtake.stopShoot
+        }
+    )
+
+    bindSpawn(
+        risingEdge { gamepad2.dpad_up },
+
+        exec{
+            telemetry.addLine("manual turret mode")
+            outtake.turretManualAiming= !outtake.turretManualAiming
+        }
+    )
+    bindSpawn(
+        risingEdge { gamepad2.dpadLeftWasPressed()&& outtake.turretManualAiming },
+        exec{
+            outtake.turretleft =true
+        }
+    )
+    bindSpawn(
+        risingEdge { gamepad2.dpadLeftWasReleased()&& outtake.turretManualAiming },
+        exec{
+            outtake.turretleft = false
+        }
+    )
+    bindSpawn(
+        risingEdge { gamepad2.dpadRightWasPressed()&& outtake.turretManualAiming },
+        exec{
+            outtake.turretright = true
+        }
+    )
+    bindSpawn(
+        risingEdge { gamepad2.dpadRightWasReleased()&& outtake.turretManualAiming },
+        exec{
+            outtake.turretright = false
         }
     )
     //#endregion
 
     drive.follower.startTeleopDrive(TeleOpConstants.TELEOP_BRAKE_MODE)
 
-
+    
     schedule(
         loop(exec {
             telemetryM.addLine("(Gamepad 1) Slow down: left bumper, reset orientation: start")
