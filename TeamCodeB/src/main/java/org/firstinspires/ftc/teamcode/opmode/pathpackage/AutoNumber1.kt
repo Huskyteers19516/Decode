@@ -47,12 +47,12 @@ class AutoNumber1 (private val follower: Follower) {
                 Math.toRadians(126.0)
             ).mirrorIfBlue()
             shootPosition = Pose(84.8704156479217, 78.42542787286067).mirrorIfBlue()
-            firstRowControlPoint = Pose(95.64360815100704, 34.50871346338763).mirrorIfBlue()
+            firstRowControlPoint = Pose(88.52921093270324, 84.38190968798261).mirrorIfBlue()
             firstRow = Pose(144 - 6 - ROBOT_LENGTH / 2 - ROBOT_FRONT_PROTRUSION, 83.51).mirrorIfBlue()
-            secondRowControlPoint = Pose(98.84704526273782, 58.43289229694325).mirrorIfBlue()
+            secondRowControlPoint = Pose(71.28169014084506, 57.647887323943664).mirrorIfBlue()
             secondRow = Pose(144 - ROBOT_LENGTH / 2 - ROBOT_FRONT_PROTRUSION - 6, 54.7 + 2.0).mirrorIfBlue()
             thirdRow = Pose(98.30656370656376, 35.80328185328186).mirrorIfBlue()
-            thirdRowControlPoint = Pose(98.4460540393725, 83.38855829763673).mirrorIfBlue()
+            thirdRowControlPoint = Pose(78.64788732394364, 29.640845070422547).mirrorIfBlue()
             thirdRowEndPoint = Pose(
                 144 - ROBOT_LENGTH / 2 - ROBOT_FRONT_PROTRUSION - 6,
                 58.085580304806555
