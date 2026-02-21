@@ -7,7 +7,6 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp
 import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.hardware.DcMotorEx
 import com.qualcomm.robotcore.util.Range
-import org.firstinspires.ftc.teamcode.hardware.Camera
 import org.firstinspires.ftc.teamcode.opmode.Paths
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants
 import com.huskyteers19516.shared.Alliance;
@@ -28,8 +27,6 @@ class LauncherRotator : OpMode() {
     private lateinit var follower: Follower
     private lateinit var paths: Paths
 
-    private lateinit var camera: Camera
-
     private val goal= Pose(144.0,144.0,36.0)
 
 
@@ -38,7 +35,6 @@ class LauncherRotator : OpMode() {
         follower = Constants.createFollower(hardwareMap)
         follower.setStartingPose(Pose(72.0, 72.0))
         turretMotor = hardwareMap.get(DcMotorEx::class.java, "turretMotor")
-        camera = hardwareMap.get(camera::class.java,"BackupCamara")
 
         turretMotor.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
         turretMotor.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER

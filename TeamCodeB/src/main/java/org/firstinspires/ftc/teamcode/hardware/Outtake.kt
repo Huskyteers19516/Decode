@@ -4,7 +4,6 @@ import android.util.Log
 import com.bylazar.telemetry.TelemetryManager
 import com.qualcomm.robotcore.hardware.*
 import org.firstinspires.ftc.teamcode.constants.OuttakeConstants
-import org.firstinspires.ftc.vision.apriltag.AprilTagDetection
 import kotlin.math.abs
 
 class Outtake(hardwareMap: HardwareMap) {
@@ -42,9 +41,10 @@ class Outtake(hardwareMap: HardwareMap) {
     var turretManualAiming= false
     var turretleft = false
     var turretright = false;
+    var turretTrimPower = 0.0
+    var turretTurnLeft =false
+    var turretTurnRight= false
     private var shootOneUntilNs = 0
-
-    private var aprilTagAdjustment = 0
 
     private fun launcherRunning(): Boolean {
         return shooterActive || System.nanoTime() < shootOneUntilNs
@@ -59,7 +59,7 @@ class Outtake(hardwareMap: HardwareMap) {
         telemetry.addData("Outtake velocity", outtakeMotor.velocity)
     }
 
-    fun periodic(telemetry: TelemetryManager,  debugging: Boolean = false, turretAngle: Double? = null, goalTag: AprilTagDetection? = null) {
+    fun periodic(telemetry: TelemetryManager,  debugging: Boolean = false, turretAngle: Double? = null) {
         outtakeMotor.mode = DcMotor.RunMode.RUN_USING_ENCODER
         turretMotor.mode = DcMotor.RunMode.RUN_TO_POSITION
 
@@ -77,9 +77,7 @@ class Outtake(hardwareMap: HardwareMap) {
         }
         if (turretAngle != null) {
             if (turretAutoAiming) {
-                aprilTagAdjustment = goalTag?.ftcPose?.bearing?.toInt() ?: 0
-
-                val targetPosition = (turretAngle + aprilTagAdjustment) * OuttakeConstants.TURRET_TICKS_PER_REV
+                val targetPosition = turretAngle * OuttakeConstants.TURRET_TICKS_PER_REV
                 turretMotor.power = 0.3
                 turretMotor.targetPosition = targetPosition.toInt()
             } else if(turretManualAiming) {
@@ -91,11 +89,23 @@ class Outtake(hardwareMap: HardwareMap) {
             telemetry.addData("Turret target position", turretMotor.targetPosition)
         }
 
-        if(turretleft){
-            turretMotor.power=0.2
+        if(turretTurnLeft){
+            turretMotor.power=0.05
         }
-        if(turretright){
-            turretMotor.power = -0.2
+        if(turretTurnRight){
+            turretMotor.power =-0.05
+        }
+        val manualTurretPower = when {
+            turretleft && !turretright -> 0.2
+            turretright && !turretleft -> -0.2
+            else -> turretTrimPower
+        }
+
+        if (manualTurretPower != 0.0) {
+            turretMotor.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
+            turretMotor.power = manualTurretPower
+        } else {
+            turretMotor.mode = DcMotor.RunMode.RUN_TO_POSITION
         }
 
         val shootOneActive = System.nanoTime() < shootOneUntilNs

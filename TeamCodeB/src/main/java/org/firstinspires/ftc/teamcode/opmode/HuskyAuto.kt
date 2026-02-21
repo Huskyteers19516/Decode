@@ -10,10 +10,10 @@ import com.pedropathing.paths.PathChain
 import com.pedropathing.paths.PathPoint
 import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.hardware.DcMotorEx
+import com.qualcomm.robotcore.hardware.Servo
 import dev.frozenmilk.dairy.mercurial.continuations.Closure
 import dev.frozenmilk.dairy.mercurial.continuations.Continuations.deadline
 import dev.frozenmilk.dairy.mercurial.continuations.Continuations.exec
-import dev.frozenmilk.dairy.mercurial.continuations.Continuations.jumpScope
 import dev.frozenmilk.dairy.mercurial.continuations.Continuations.loop
 import dev.frozenmilk.dairy.mercurial.continuations.Continuations.match
 import dev.frozenmilk.dairy.mercurial.continuations.Continuations.noop
@@ -21,7 +21,6 @@ import dev.frozenmilk.dairy.mercurial.continuations.Continuations.sequence
 import dev.frozenmilk.dairy.mercurial.continuations.Continuations.wait
 import dev.frozenmilk.dairy.mercurial.ftc.Mercurial
 import org.firstinspires.ftc.teamcode.constants.AutoConstants
-import org.firstinspires.ftc.teamcode.hardware.Camera
 import org.firstinspires.ftc.teamcode.hardware.Drive
 import org.firstinspires.ftc.teamcode.hardware.Intake
 import org.firstinspires.ftc.teamcode.hardware.Outtake
@@ -40,7 +39,6 @@ fun createHuskyAuto() = Mercurial.Program {
     //val paths = Autonumber2(drive.follower)
     //val paths =
     val paths = AutoNumber1(drive.follower)
-    val camera = Camera(hardwareMap)
     schedule(
         deadline(
             wait {
@@ -64,6 +62,9 @@ fun createHuskyAuto() = Mercurial.Program {
 
     val outtake = Outtake(hardwareMap)
     val intake = Intake(hardwareMap)
+    val launcherBlockingServo = hardwareMap.get(Servo::class.java, "launcherblockingservo").apply {
+        position = 0.0
+    }
     val transfer = hardwareMap.get(DcMotorEx::class.java, "transfer").apply {
         mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
         zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
@@ -85,13 +86,6 @@ fun createHuskyAuto() = Mercurial.Program {
                     drive.follower.turnTo(radians)
                 },
                 wait { abs(drive.follower.pose.heading - radians) < 0.007 },
-                jumpScope {
-                    loop(exec {
-                        // once it sees the april tag, stops aligning
-                        camera.getTargetTag(alliance)
-                            ?.let { drive.orientTowardsAprilTag(it, false); Log.d(TAG, "found april tag"); jump() }
-                    })
-                },
             )
         )
     )
@@ -142,14 +136,6 @@ fun createHuskyAuto() = Mercurial.Program {
                     shoot(),
                 )
             ),
-        jumpScope {
-            loop(exec {
-                // once it sees the april tag, stops aligning
-                camera.getTargetTag(alliance)
-                    ?.let { drive.orientTowardsAprilTag(it, false); Log.d(TAG, "found april tag"); jump() }
-            })
-        },
-
         )
 
     // todo: empty extras function
@@ -157,9 +143,11 @@ fun createHuskyAuto() = Mercurial.Program {
     fun shootRemaining() = noop()
 
     fun doWithIntake(closure: Closure) = sequence(
+        exec { launcherBlockingServo.position = 1.0 },
         exec(intake::start),
         closure,
         exec(intake::stop),
+        exec { launcherBlockingServo.position = 0.0 },
         exec {
             drive.follower.setMaxPower(1.0);
         }
@@ -223,9 +211,6 @@ fun createHuskyAuto() = Mercurial.Program {
             intake.periodic(telemetryM)
 //            outtake.periodic(telemetryM)
             drive.periodic(telemetryM)
-            if (motif == null) {
-                motif = camera.getObelisk()
-            }
 
             blackboard["x"] = drive.follower.pose.x
             blackboard["y"] = drive.follower.pose.y
