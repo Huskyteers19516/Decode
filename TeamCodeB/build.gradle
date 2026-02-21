@@ -48,7 +48,4 @@ buildscript {
 dependencies {
     implementation project(':FtcRobotController')
     implementation project(':Shared')
-
-    implementation files("../libs/core.jar")
-    implementation files("../libs/ftc-release.aar")
 }

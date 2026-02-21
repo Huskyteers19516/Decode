@@ -13,7 +13,6 @@ import dev.frozenmilk.dairy.mercurial.ftc.Mercurial
 import org.firstinspires.ftc.teamcode.constants.OuttakeConstants
 import org.firstinspires.ftc.teamcode.constants.TeleOpConstants
 import org.firstinspires.ftc.teamcode.hardware.Drive
-import org.firstinspires.ftc.teamcode.hardware.Flippers
 import org.firstinspires.ftc.teamcode.hardware.Intake
 import org.firstinspires.ftc.teamcode.hardware.Outtake
 
@@ -61,7 +60,6 @@ val BigMacBundletesting= Mercurial.teleop("Big Mac Testing", "Testing") {
     val drive = Drive(hardwareMap)
     val outtake = Outtake(hardwareMap)
     val intake = Intake(hardwareMap)
-    val flippers = Flippers(hardwareMap)
 
     val turretMotor = getMotorOrNull("turretMotor")
     turretMotor?.let {
@@ -178,7 +176,6 @@ val BigMacBundletesting= Mercurial.teleop("Big Mac Testing", "Testing") {
 
     bindExec(risingEdge { modeLocked && gamepad1.a }, exec {
         when (mode) {
-            TestMode.SYSTEM -> flippers.raiseFlipper(Slot.A)
             TestMode.TURRET -> {
                 turretMotor?.targetPosition = turretTargetTicks + 500
                 turretTargetTicks += 500
@@ -191,13 +188,8 @@ val BigMacBundletesting= Mercurial.teleop("Big Mac Testing", "Testing") {
         }
     })
 
-    bindExec(risingEdge { modeLocked && !gamepad1.a && mode == TestMode.SYSTEM }, exec {
-        flippers.lowerFlipper(Slot.A)
-    })
-
     bindExec(risingEdge { modeLocked && gamepad1.b }, exec {
         when (mode) {
-            TestMode.SYSTEM -> flippers.raiseFlipper(Slot.B)
             TestMode.TURRET -> {
                 turretMotor?.targetPosition = turretTargetTicks - 500
                 turretTargetTicks -= 500
@@ -210,22 +202,15 @@ val BigMacBundletesting= Mercurial.teleop("Big Mac Testing", "Testing") {
         }
     })
 
-    bindExec(risingEdge { modeLocked && !gamepad1.b && mode == TestMode.SYSTEM }, exec {
-        flippers.lowerFlipper(Slot.B)
-    })
 
     bindExec(risingEdge { modeLocked && gamepad1.x }, exec {
         when (mode) {
-            TestMode.SYSTEM -> flippers.raiseFlipper(Slot.C)
             TestMode.DRIVE -> driveIndividualMode = !driveIndividualMode
             TestMode.LAUNCHER -> hoodMinServoPosCal -= hoodServoCalStep
             else -> {}
         }
     })
 
-    bindExec(risingEdge { modeLocked && !gamepad1.x && mode == TestMode.SYSTEM }, exec {
-        flippers.lowerFlipper(Slot.C)
-    })
 
     bindExec(risingEdge { modeLocked && gamepad1.left_bumper && mode == TestMode.LAUNCHER }, exec {
         targetLauncherRpm += launcherRpmStep
@@ -280,7 +265,6 @@ val BigMacBundletesting= Mercurial.teleop("Big Mac Testing", "Testing") {
                         if (systemVelocityMode) outtake.periodic(telemetryM, true)
                         else outtake.manualPeriodic(-gamepad1.right_stick_y.toDouble(), telemetryM)
                         intake.manualPeriodic(-gamepad2.left_stick_y.toDouble(), telemetryM)
-                        flippers.periodic(telemetryM, true)
                     }
 
                     TestMode.TURRET -> {

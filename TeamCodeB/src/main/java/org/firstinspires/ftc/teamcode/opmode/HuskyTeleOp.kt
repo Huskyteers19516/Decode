@@ -62,8 +62,7 @@ fun createHuskyTeleOp(startPose: Pose, startAlliance: Alliance) = Mercurial.Prog
 
     waitForStart()
     val loopTimer = LoopTimer()
-    val isLaunching = false
-    var shootMode = ShootMode.ONE_SHOT
+    var isLaunching = false
 
     schedule(
         loop(
@@ -76,17 +75,17 @@ fun createHuskyTeleOp(startPose: Pose, startAlliance: Alliance) = Mercurial.Prog
     // Drive controls
 
     bindSpawn(
-        risingEdge { gamepad2.left_bumper },
+        risingEdge { gamepad1.left_bumper },
         exec { drive.throttle = DriveConstants.SLOW_MODE_SPEED }
     )
 
     bindSpawn(
-        risingEdge { !gamepad2.left_bumper },
+        risingEdge { !gamepad1.left_bumper },
         exec { drive.throttle = DriveConstants.NORMAL_MODE_SPEED }
     )
 
     bindSpawn(
-        risingEdge { gamepad2.start },
+        risingEdge { gamepad1.back },
         exec { drive.isRobotCentric = !drive.isRobotCentric }
     )
 
@@ -100,7 +99,7 @@ fun createHuskyTeleOp(startPose: Pose, startAlliance: Alliance) = Mercurial.Prog
 
     bindSpawn(
         risingEdge {
-            gamepad1.dpad_up
+            gamepad2.dpad_up
         }, exec {
             outtake.velocityAdjustmentFactor += TeleOpConstants.OUTTAKE_TARGET_VELOCITY_BIG_ADJUSTMENT_FACTOR
         }
@@ -108,7 +107,7 @@ fun createHuskyTeleOp(startPose: Pose, startAlliance: Alliance) = Mercurial.Prog
 
     bindSpawn(
         risingEdge {
-            gamepad1.dpad_down
+            gamepad2.dpad_down
         }, exec {
             outtake.velocityAdjustmentFactor -= TeleOpConstants.OUTTAKE_TARGET_VELOCITY_BIG_ADJUSTMENT_FACTOR
         }
@@ -116,7 +115,7 @@ fun createHuskyTeleOp(startPose: Pose, startAlliance: Alliance) = Mercurial.Prog
 
     bindSpawn(
         risingEdge {
-            gamepad1.dpad_right
+            gamepad2.dpad_right
         }, exec {
             outtake.velocityAdjustmentFactor += TeleOpConstants.OUTTAKE_TARGET_VELOCITY_SMALL_ADJUSTMENT_FACTOR
         }
@@ -125,92 +124,45 @@ fun createHuskyTeleOp(startPose: Pose, startAlliance: Alliance) = Mercurial.Prog
 
     bindSpawn(
         risingEdge {
-            gamepad1.dpad_left
+            gamepad2.dpad_left
         }, exec {
             outtake.velocityAdjustmentFactor -= TeleOpConstants.OUTTAKE_TARGET_VELOCITY_SMALL_ADJUSTMENT_FACTOR
         }
     )
 
     bindSpawn(
-        risingEdge { gamepad1.a },
+        risingEdge { gamepad1.dpad_down },
         exec {
             outtake.turretAutoAiming = !outtake.turretAutoAiming
         }
     )
 
     bindSpawn(
-        risingEdge { gamepad2.y },
+        risingEdge {
+            gamepad1.a
+        },
         exec {
-            shootMode = if (shootMode == ShootMode.ONE_SHOT) ShootMode.CONTINUOUS else ShootMode.ONE_SHOT
-            if (shootMode == ShootMode.ONE_SHOT) {
-                outtake.stopshoot()
-            }
+            isLaunching = true
+        }
+    )
+    bindSpawn(
+        risingEdge {
+            !gamepad1.a
+        },
+        exec {
+            isLaunching = false
         }
     )
 
     bindSpawn(
-        risingEdge { gamepad2.x },
-        exec{
-            when (shootMode) {
-                ShootMode.ONE_SHOT -> outtake.shootOne()
-                ShootMode.CONTINUOUS -> {
-                    if (outtake.shooterActive) outtake.stopshoot() else outtake.startshoot()
-                }
-            }
+        risingEdge {
+            gamepad2.a
+        }, exec {
+            outtake.shooterActive = !outtake.shooterActive
         }
     )
 
-    bindSpawn(
-        risingEdge { gamepad2.dpad_up },
 
-        exec{
-            telemetry.addLine("manual turret mode")
-            outtake.turretManualAiming= !outtake.turretManualAiming
-        }
-    )
-    bindSpawn(
-        risingEdge { gamepad2.dpadLeftWasPressed()&& outtake.turretManualAiming },
-        exec{
-            outtake.turretleft =true
-        }
-    )
-    bindSpawn(
-        risingEdge { gamepad2.dpadLeftWasReleased()&& outtake.turretManualAiming },
-        exec{
-            outtake.turretleft = false
-        }
-    )
-    bindSpawn(
-        risingEdge { gamepad2.dpadRightWasPressed()&& outtake.turretManualAiming },
-        exec{
-            outtake.turretright = true
-        }
-    )
-    bindSpawn(
-        risingEdge { gamepad2.dpadRightWasReleased()&& outtake.turretManualAiming },
-        exec{
-            outtake.turretright = false
-        }
-    )
-    bindSpawn(
-        risingEdge { gamepad2.a && outtake.turretManualAiming },
-        exec {
-            outtake.turretleft = false
-            outtake.turretright = false
-        }
-    )
-    bindSpawn(
-        risingEdge { gamepad2.rightBumperWasPressed() },
-        exec {
-            outtake.turretTurnRight
-        }
-    )
-    bindSpawn(
-        risingEdge { gamepad2.leftBumperWasPressed() },
-        exec{
-            outtake.turretTurnLeft
-        }
-    )
     //#endregion
 
     drive.follower.startTeleopDrive(TeleOpConstants.TELEOP_BRAKE_MODE)
@@ -218,9 +170,9 @@ fun createHuskyTeleOp(startPose: Pose, startAlliance: Alliance) = Mercurial.Prog
     
     schedule(
         loop(exec {
-            telemetryM.addLine("(Gamepad 2) Slow down: left bumper, (Gamepad 1) reset orientation: start")
-            telemetryM.addLine("(Gamepad 2) Change drive mode: start")
-            measureTime {
+            telemetryM.addLine("(Gamepad 1) Slow down: left bumper, (Gamepad 1) reset orientation: start")
+            telemetryM.addLine("(Gamepad 1) Change drive mode: back")
+            loopTimer.section("Drive") {
                 if (!isLaunching) {
                     telemetryM.addData("is busy", drive.follower.isBusy)
                     drive.manualPeriodic(
@@ -238,34 +190,37 @@ fun createHuskyTeleOp(startPose: Pose, startAlliance: Alliance) = Mercurial.Prog
 
             telemetryM.addData("Is Launching", isLaunching)
             telemetryM.addData("Can Shoot", outtake.canShoot())
-            telemetryM.addData("Shoot Mode", shootMode.name)
 
             telemetryM.addLine("(Gamepad 2) Y: toggle shoot mode")
             telemetryM.addLine("(Gamepad 2) X: shoot action by current mode")
-            telemetryM.addLine("(Gamepad 1) dpad: velocity")
+            telemetryM.addLine("(Gamepad 2) dpad: velocity")
             telemetryM.addLine("(Turret trim, only when NOT auto/manual) G2 LT/RT: +/-0.2, LB/RB: +/-0.05")
 
             loopTimer.section("Outtake") {
                 val turretAngle = Paths.calculateAimHeading(drive.follower.pose, paths.goalLocation)
                 val relativeAngle = turretAngle - drive.follower.pose.heading
-                outtake.turretTrimPower = (gamepad2.left_trigger - gamepad2.right_trigger) * 0.3
+
+                if (isLaunching) {
+                    outtake.outtakeOpen = outtake.canShoot()
+                    outtake.transferActive = true
+                } else {
+                    outtake.outtakeOpen = false
+                    outtake.transferActive = false
+                }
 
 
                 telemetryM.addData("Turret angle", turretAngle)
                 telemetryM.addData("Relative turret angle", relativeAngle)
-                telemetryM.addData("Turret trim power", outtake.turretTrimPower)
                 outtake.periodic(telemetryM, TeleOpConstants.DEBUG_MODE, relativeAngle)
             }
 
             telemetryM.hl()
 
-            telemetryM.addLine("(Gamepad 1) Right bumper: intake in")
+            telemetryM.addLine("(Gamepad 1) Right trigger: intake in")
             loopTimer.section("Intake") {
-                val intakePower = if (gamepad1.right_bumper) 1.0 else 0.0
-                if (intakePower != 0.0) {
-                    outtake.applyIntakeSafetyLock()
-                }
+                val intakePower = gamepad1.right_trigger.toDouble()
                 intake.manualPeriodic(intakePower, telemetryM)
+                outtake.transferActive = true
             }
 
             telemetryM.hl()

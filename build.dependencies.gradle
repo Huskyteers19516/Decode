@@ -48,6 +48,8 @@ dependencies {
     debugImplementation("dev.frozenmilk.sinister:Sloth:0.2.4")
 
     implementation project(":MercurialFTC")
+    implementation files("../libs/core.jar")
+    implementation files("../libs/ftc-release.aar")
 }
 
 // regex
