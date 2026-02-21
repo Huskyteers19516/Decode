@@ -5,7 +5,9 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp
 import com.qualcomm.robotcore.hardware.*
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit
+import org.psilynx.psikit.ftc.autolog.PsiKitNoAutoLog
 
+@PsiKitNoAutoLog
 @TeleOp(name = "Hardware Testing", group = "Testing")
 class HardwareTesting : OpMode() {
     lateinit var crServos: List<CRServo>
@@ -18,6 +20,9 @@ class HardwareTesting : OpMode() {
 
     override fun init() {
         hardwareMap.logDevices()
+    }
+
+    override fun init_loop() {
         crServos = hardwareMap.getAll(CRServo::class.java)
         servos = hardwareMap.getAll(Servo::class.java)
         motors = hardwareMap.getAll(DcMotorEx::class.java)
