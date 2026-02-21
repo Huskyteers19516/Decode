@@ -1,8 +1,6 @@
 package org.firstinspires.ftc.teamcode.opmode.testing
 
-import android.util.Log
 import com.bylazar.telemetry.PanelsTelemetry
-import com.huskyteers19516.shared.Alliance
 import com.huskyteers19516.shared.Slot
 import com.huskyteers19516.shared.hl
 import com.qualcomm.robotcore.hardware.DcMotor
@@ -14,7 +12,6 @@ import dev.frozenmilk.dairy.mercurial.continuations.Continuations.loop
 import dev.frozenmilk.dairy.mercurial.ftc.Mercurial
 import org.firstinspires.ftc.teamcode.constants.OuttakeConstants
 import org.firstinspires.ftc.teamcode.constants.TeleOpConstants
-import org.firstinspires.ftc.teamcode.hardware.Camera
 import org.firstinspires.ftc.teamcode.hardware.Drive
 import org.firstinspires.ftc.teamcode.hardware.Flippers
 import org.firstinspires.ftc.teamcode.hardware.Intake
@@ -24,7 +21,6 @@ private enum class TestMode {
     DRIVE,
     SYSTEM,
     TURRET,
-    CAMERA,
     LAUNCHER
 }
 
@@ -66,7 +62,6 @@ val BigMacBundletesting= Mercurial.teleop("Big Mac Testing", "Testing") {
     val outtake = Outtake(hardwareMap)
     val intake = Intake(hardwareMap)
     val flippers = Flippers(hardwareMap)
-    val camera = Camera(hardwareMap)
 
     val turretMotor = getMotorOrNull("turretMotor")
     turretMotor?.let {
@@ -111,12 +106,6 @@ val BigMacBundletesting= Mercurial.teleop("Big Mac Testing", "Testing") {
     var targetHoodAngleDeg = 0.0
 
     fun boolToPower(a: Boolean) = if (a) 1.0 else 0.0
-
-    schedule(
-        camera.waitForCamera(telemetryM) {
-            telemetryM.update(telemetry)
-        }
-    )
 
     waitForStart()
     drive.follower.startTeleopDrive()
@@ -196,12 +185,6 @@ val BigMacBundletesting= Mercurial.teleop("Big Mac Testing", "Testing") {
                 turretMotor?.mode = DcMotor.RunMode.RUN_TO_POSITION
                 turretMotor?.power = 0.5
                 turretAutoMove = true
-            }
-            TestMode.CAMERA -> {
-                camera.getTargetTag(Alliance.BLUE)?.let {
-                    drive.orientTowardsAprilTag(it, false)
-                    Log.d("TESTING", "found april tag")
-                }
             }
             TestMode.LAUNCHER -> targetHoodAngleDeg += hoodAngleStepDeg
             else -> {}
@@ -298,7 +281,6 @@ val BigMacBundletesting= Mercurial.teleop("Big Mac Testing", "Testing") {
                         else outtake.manualPeriodic(-gamepad1.right_stick_y.toDouble(), telemetryM)
                         intake.manualPeriodic(-gamepad2.left_stick_y.toDouble(), telemetryM)
                         flippers.periodic(telemetryM, true)
-                        camera.debugTelemetry(telemetryM)
                     }
 
                     TestMode.TURRET -> {
@@ -321,16 +303,6 @@ val BigMacBundletesting= Mercurial.teleop("Big Mac Testing", "Testing") {
                             telemetryM.addData("Current Ticks", turretMotor.currentPosition)
                             telemetryM.addData("Estimated Degrees", "%.2f".format(estimatedDegrees))
                             telemetryM.addData("Motor Mode", turretMotor.mode)
-                        }
-                    }
-
-                    TestMode.CAMERA -> {
-                        telemetryM.addLine("Camera: press A to orient to BLUE target tag")
-                        drive.periodic(telemetryM)
-                        try {
-                            camera.debugTelemetry(telemetryM)
-                        } catch (e: Exception) {
-                            telemetryM.addLine("Camera error")
                         }
                     }
 

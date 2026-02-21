@@ -9,6 +9,7 @@ import kotlin.math.abs
 class Outtake(hardwareMap: HardwareMap) {
     private val outtakeMotor: DcMotorEx = hardwareMap.get(DcMotorEx::class.java, "outtake")
     private val hoodServo: Servo = hardwareMap.get(Servo::class.java, "hood")
+    private val outtakeBlockerServo: Servo = hardwareMap.get(Servo::class.java, "blocker")
     private val turretMotor: DcMotorEx = hardwareMap.get(DcMotorEx::class.java, "turret")
 
     init {
@@ -35,7 +36,19 @@ class Outtake(hardwareMap: HardwareMap) {
     var targetVelocity = OuttakeConstants.DEFAULT_TARGET_VELOCITY;
     var velocityAdjustmentFactor = 0.0
     var shooterActive = false
+   
     var turretAutoAiming = false
+    var turretManualAiming= false
+    var turretleft = false
+    var turretright = false;
+    var turretTrimPower = 0.0
+    var turretTurnLeft =false
+    var turretTurnRight= false
+    private var shootOneUntilNs = 0
+
+    private fun launcherRunning(): Boolean {
+        return shooterActive || System.nanoTime() < shootOneUntilNs
+    }
 
     fun manualPeriodic(manualPower: Double, telemetry: TelemetryManager) {
         outtakeMotor.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
@@ -46,7 +59,7 @@ class Outtake(hardwareMap: HardwareMap) {
         telemetry.addData("Outtake velocity", outtakeMotor.velocity)
     }
 
-    fun periodic(telemetry: TelemetryManager, debugging: Boolean = false, turretAngle: Double? = null) {
+    fun periodic(telemetry: TelemetryManager,  debugging: Boolean = false, turretAngle: Double? = null) {
         outtakeMotor.mode = DcMotor.RunMode.RUN_USING_ENCODER
         turretMotor.mode = DcMotor.RunMode.RUN_TO_POSITION
 
@@ -64,26 +77,50 @@ class Outtake(hardwareMap: HardwareMap) {
         }
         if (turretAngle != null) {
             if (turretAutoAiming) {
-                val targetPosition = (turretAngle) * OuttakeConstants.TURRET_TICKS_PER_REV
+                val targetPosition = turretAngle * OuttakeConstants.TURRET_TICKS_PER_REV
                 turretMotor.power = 0.3
                 turretMotor.targetPosition = targetPosition.toInt()
-            } else {
+            } else if(turretManualAiming) {
+                turretAutoAiming= false;
+            }else{
                 turretMotor.targetPosition = 0
             }
             telemetry.addData("Turret current position", turretMotor.currentPosition)
             telemetry.addData("Turret target position", turretMotor.targetPosition)
         }
-        if (shooterActive) {
-            outtakeMotor.velocity = targetVelocity + velocityAdjustmentFactor
+
+        if(turretTurnLeft){
+            turretMotor.power=0.05
+        }
+        if(turretTurnRight){
+            turretMotor.power =-0.05
+        }
+        val manualTurretPower = when {
+            turretleft && !turretright -> 0.2
+            turretright && !turretleft -> -0.2
+            else -> turretTrimPower
+        }
+
+        if (manualTurretPower != 0.0) {
+            turretMotor.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
+            turretMotor.power = manualTurretPower
+        } else {
+            turretMotor.mode = DcMotor.RunMode.RUN_TO_POSITION
+        }
+
+        val shootOneActive = System.nanoTime() < shootOneUntilNs
+        if (shooterActive || shootOneActive) {
+            outtakeMotor.power = 1.0
         } else {
             outtakeMotor.power = 0.0
         }
-        telemetry.addData("Outtake active", shooterActive)
+        telemetry.addData("Outtake active", shooterActive || shootOneActive)
+        telemetry.addData("Outtake shoot one active", shootOneActive)
         val velocity = outtakeMotor.velocity
         telemetry.addData("Outtake velocity", velocity)
-        telemetry.addData("Outtake target velocity", targetVelocity + velocityAdjustmentFactor)
+        telemetry.addData("Outtake target velocity", "disabled (power mode)")
         telemetry.addData("Outtake velocity adjustment factor", velocityAdjustmentFactor)
-        telemetry.addData("Outtake status", if (shooterActive && canShoot()) "CAN SHOOT" else "NOT READY")
+        telemetry.addData("Outtake status", if ((shooterActive || shootOneActive) && canShoot()) "CAN SHOOT" else "NOT READY")
         if (!debugging) return
         telemetry.addData("Outtake power", outtakeMotor.power)
     }
@@ -92,6 +129,37 @@ class Outtake(hardwareMap: HardwareMap) {
         return abs(
             targetVelocity + velocityAdjustmentFactor - (velocity ?: outtakeMotor.velocity)
         ) < OuttakeConstants.ALLOWANCE
+    }
+
+    fun openOuttakeBlocker() {
+        outtakeBlockerServo.position = 1.0
+    }
+    fun closeOuttakeBlocker() {
+        outtakeBlockerServo.position = 0.0
+    }
+
+    fun shootOne() {
+        openOuttakeBlocker()
+        shootOneUntilNs = 1
+    }
+
+    fun startshoot() {
+        shooterActive = true
+        openOuttakeBlocker()
+    }
+
+    fun applyIntakeSafetyLock() {
+        if (!launcherRunning()) {
+            closeOuttakeBlocker()
+            outtakeMotor.power = 0.0
+        }
+    }
+
+    fun stopshoot() {
+        shooterActive = false
+        shootOneUntilNs = 0
+        closeOuttakeBlocker()
+        outtakeMotor.power = 0.0
     }
 
     fun toggle() {
@@ -141,4 +209,5 @@ class Outtake(hardwareMap: HardwareMap) {
         }
 
     }
+
 }

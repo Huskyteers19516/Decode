@@ -13,7 +13,6 @@ import com.pedropathing.paths.PathPoint
 import dev.frozenmilk.dairy.mercurial.continuations.Closure
 import dev.frozenmilk.dairy.mercurial.continuations.Continuations.deadline
 import dev.frozenmilk.dairy.mercurial.continuations.Continuations.exec
-import dev.frozenmilk.dairy.mercurial.continuations.Continuations.jumpScope
 import dev.frozenmilk.dairy.mercurial.continuations.Continuations.loop
 import dev.frozenmilk.dairy.mercurial.continuations.Continuations.match
 import dev.frozenmilk.dairy.mercurial.continuations.Continuations.noop
@@ -39,7 +38,6 @@ fun createHuskyAuto() = Mercurial.Program {
     var alliance = Alliance.RED
     val drive = Drive(hardwareMap)
     val paths = AutoNumber3(drive.follower)
-    val camera = Camera(hardwareMap)
 
     schedule(
         deadline(
@@ -85,13 +83,6 @@ fun createHuskyAuto() = Mercurial.Program {
                     drive.follower.turnTo(radians)
                 },
                 wait { abs(drive.follower.pose.heading - radians) < 0.007 },
-                jumpScope {
-                    loop(exec {
-                        // once it sees the april tag, stops aligning
-                        camera.getTargetTag(alliance)
-                            ?.let { drive.orientTowardsAprilTag(it, false); Log.d(TAG, "found april tag"); jump() }
-                    })
-                },
             )
         )
     )
@@ -134,14 +125,6 @@ fun createHuskyAuto() = Mercurial.Program {
                     shoot(),
                 )
             ),
-        jumpScope {
-            loop(exec {
-                // once it sees the april tag, stops aligning
-                camera.getTargetTag(alliance)
-                    ?.let { drive.orientTowardsAprilTag(it, false); Log.d(TAG, "found april tag"); jump() }
-            })
-        },
-
         )
 
     // todo: empty extras function
@@ -219,9 +202,6 @@ fun createHuskyAuto() = Mercurial.Program {
             intake.periodic(telemetryM)
             outtake.periodic(telemetryM)
             drive.periodic(telemetryM)
-            if (motif == null) {
-                motif = camera.getObelisk()
-            }
 
             blackboard["x"] = drive.follower.pose.x
             blackboard["y"] = drive.follower.pose.y
