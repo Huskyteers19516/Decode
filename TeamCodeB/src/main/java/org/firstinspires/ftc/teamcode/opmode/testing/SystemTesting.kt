@@ -5,11 +5,11 @@ import dev.frozenmilk.dairy.mercurial.continuations.Continuations.exec
 import dev.frozenmilk.dairy.mercurial.continuations.Continuations.loop
 import dev.frozenmilk.dairy.mercurial.ftc.Mercurial
 import org.firstinspires.ftc.teamcode.constants.TeleOpConstants
-import org.firstinspires.ftc.teamcode.hardware.Flippers
 import org.firstinspires.ftc.teamcode.hardware.Intake
 import org.firstinspires.ftc.teamcode.hardware.Outtake
 import com.huskyteers19516.shared.Slot
 import com.huskyteers19516.shared.hl
+import org.firstinspires.ftc.teamcode.constants.OuttakeConstants
 
 @Suppress("unused")
 val systemTesting = Mercurial.teleop("System Testing", "Testing") {
@@ -17,7 +17,6 @@ val systemTesting = Mercurial.teleop("System Testing", "Testing") {
 
     val intake = Intake(hardwareMap)
     val outtake = Outtake(hardwareMap)
-    val flippers = Flippers(hardwareMap)
 
     waitForStart()
 
@@ -29,53 +28,34 @@ val systemTesting = Mercurial.teleop("System Testing", "Testing") {
 
     bindSpawn(
         risingEdge {
+            gamepad1.y
+        },
+        exec {
+            outtake.hoodAngle = (outtake.hoodAngle + 1).coerceIn(OuttakeConstants.HOOD_LOW_ANGLE, OuttakeConstants.HOOD_HIGH_ANGLE)
+        }
+    )
+    bindSpawn(
+        risingEdge {
             gamepad1.a
         },
         exec {
-            flippers.raiseFlipper(Slot.A)
-        }
-    )
-    bindSpawn(
-        risingEdge {
-            !gamepad1.a
-        },
-        exec {
-            flippers.lowerFlipper(Slot.A)
-        }
-    )
-    bindSpawn(
-        risingEdge {
-            gamepad1.b
-        },
-        exec {
-            flippers.raiseFlipper(Slot.B)
-        }
-    )
-    bindSpawn(
-        risingEdge {
-            !gamepad1.b
-        },
-        exec {
-            flippers.lowerFlipper(Slot.B)
-        }
-    )
-    bindSpawn(
-        risingEdge {
-            gamepad1.x
-        },
-        exec {
-            flippers.raiseFlipper(Slot.C)
-        }
-    )
-    bindSpawn(
-        risingEdge {
-            !gamepad1.x
-        },
-        exec {
-            flippers.lowerFlipper(Slot.C)
+            outtake.hoodAngle = (outtake.hoodAngle - 1).coerceIn(OuttakeConstants.HOOD_LOW_ANGLE, OuttakeConstants.HOOD_HIGH_ANGLE)
         }
     )
 
+    bindSpawn(
+        risingEdge {gamepad1.x},
+        exec {
+            outtake.outtakeOpen = true
+        }
+    )
+
+    bindSpawn(
+        risingEdge {!gamepad1.x},
+        exec {
+            outtake.outtakeOpen = false
+        }
+    )
 
     bindSpawn(
         risingEdge {
@@ -115,7 +95,7 @@ val systemTesting = Mercurial.teleop("System Testing", "Testing") {
 
     bindSpawn(
         risingEdge {
-            gamepad1.y
+            gamepad1.b
         },
         exec {
             outtake.toggle()
@@ -142,10 +122,9 @@ val systemTesting = Mercurial.teleop("System Testing", "Testing") {
                     outtake.manualPeriodic(-gamepad1.right_stick_y.toDouble(), telemetryM)
                 }
                 telemetryM.hl()
-                intake.manualPeriodic(-gamepad2.left_stick_y.toDouble(), telemetryM)
+                intake.manualPeriodic(-gamepad1.left_stick_y.toDouble(), telemetryM)
 
                 telemetryM.hl()
-                flippers.periodic(telemetryM, true)
 
                 telemetryM.update(telemetry)
             }

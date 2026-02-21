@@ -3,17 +3,15 @@ package dev.frozenmilk.dairy.mercurial.ftc
 import com.qualcomm.robotcore.hardware.Gamepad
 import com.qualcomm.robotcore.hardware.HardwareMap
 import dev.frozenmilk.dairy.mercurial.continuations.Continuations
-import dev.frozenmilk.dairy.mercurial.continuations.Continuations.deadline
 import dev.frozenmilk.dairy.mercurial.continuations.Continuations.exec
 import dev.frozenmilk.dairy.mercurial.continuations.Continuations.loop
 import dev.frozenmilk.dairy.mercurial.continuations.Continuations.scope
-import dev.frozenmilk.dairy.mercurial.continuations.Continuations.wait
 import dev.frozenmilk.dairy.mercurial.continuations.Fiber
 import dev.frozenmilk.dairy.mercurial.continuations.IntoContinuation
 import dev.frozenmilk.dairy.mercurial.continuations.Scheduler
 import org.firstinspires.ftc.robotcore.external.Telemetry
 import org.firstinspires.ftc.robotcore.internal.opmode.OpModeMeta
-import org.psilynx.psikit.core.Logger
+import java.util.HashMap
 import java.util.function.BooleanSupplier
 import java.util.function.Supplier
 
@@ -26,7 +24,6 @@ open class Context(
     @get:JvmName("gamepad1") val gamepad1: Gamepad,
     @get:JvmName("gamepad2") val gamepad2: Gamepad,
     @get:JvmName("blackboard") val blackboard: HashMap<String, in Any>,
-    val getLastTimestamps: () -> Pair<Double, Double>
 ) {
     @get:JvmName("state")
     val state
@@ -51,40 +48,12 @@ open class Context(
     /**
      * puts the opmode into scheduler mode until start is pressed
      */
-    fun waitForStart() {
-        schedule(
-            deadline(
-                wait { !inInit },
-                loop(exec {
-                    val (beforeUserStart, beforeUserEnd) = getLastTimestamps()
-                    val afterUserStart = Logger.getRealTimestamp()
-                    Logger.periodicAfterUser(
-                        afterUserStart - beforeUserEnd,
-                        beforeUserEnd - beforeUserStart
-                    )
-                })
-            )
-        )
-        scheduler.start(::inInit)
-    }
+    fun waitForStart() = scheduler.start(::inInit)
 
     /**
      * puts the opmode into scheduler mode until it stops
      */
     fun dropToScheduler() {
-        schedule(
-            deadline(
-                wait { !inLoop },
-                loop(exec {
-                    val (beforeUserStart, beforeUserEnd) = getLastTimestamps()
-                    val afterUserStart = Logger.getRealTimestamp()
-                    Logger.periodicAfterUser(
-                        afterUserStart - beforeUserEnd,
-                        beforeUserEnd - beforeUserStart
-                    )
-                })
-            )
-        )
         scheduler.start(::isActive)
         scheduler.shutdown()
     }
@@ -99,7 +68,6 @@ open class Context(
     fun risingEdge(clock: Continuations.Clock, cond: BooleanSupplier) = object : BooleanSupplier {
         private var prev = false
         private var debounceTimer = clock.getTime()
-
         // NOTE: we seem to need a 1ms debounce
         private val duration = clock.convSeconds(0.001)
         override fun getAsBoolean(): Boolean {

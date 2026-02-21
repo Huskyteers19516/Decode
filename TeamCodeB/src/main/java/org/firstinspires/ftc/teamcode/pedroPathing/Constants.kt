@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.pedroPathing
 
 import com.pedropathing.control.FilteredPIDFCoefficients
+import com.pedropathing.control.PIDFCoefficients
 import com.pedropathing.follower.Follower
 import com.pedropathing.follower.FollowerConstants
 import com.pedropathing.ftc.FollowerBuilder
@@ -15,17 +16,20 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
 
 object Constants {
     var followerConstants: FollowerConstants = FollowerConstants()
-        .mass(13.2449)
-        .forwardZeroPowerAcceleration(-31.0)
-        .lateralZeroPowerAcceleration(-76.2)
-        .drivePIDFCoefficients(FilteredPIDFCoefficients(0.02, 0.0, 0.00001, 0.6, 0.01))
+        .mass(12.06556)
+        .forwardZeroPowerAcceleration(-33.47)
+        .lateralZeroPowerAcceleration(-68.594)
+        .translationalPIDFCoefficients(PIDFCoefficients(0.12, 0.0, 0.01, 0.03))
+        .headingPIDFCoefficients(PIDFCoefficients(1.3, 0.0, 0.1, 0.03))
+
+//        .drivePIDFCoefficients(FilteredPIDFCoefficients(0.02, 0.0, 0.00001, 0.6, 0.01))
 
     var pathConstraints: PathConstraints = PathConstraints(0.99, 100.0, 1.0, 1.0)
 
     var driveConstants: MecanumConstants = MecanumConstants()
         .maxPower(1.0)
-        .xVelocity(59.6)
-        .yVelocity(44.3)
+        .xVelocity(70.5)
+        .yVelocity(50.48)
         .rightFrontMotorName("front_right")
         .rightRearMotorName("back_right")
         .leftRearMotorName("back_left")
@@ -36,12 +40,12 @@ object Constants {
         .rightRearMotorDirection(DcMotorSimple.Direction.FORWARD)
 
     var localizerConstants: PinpointConstants = PinpointConstants()
-        .forwardPodY(-6.7905)
-        .strafePodX(2.928)
+        .forwardPodY(-1.25984)
+        .strafePodX(-1.77165)
         .distanceUnit(DistanceUnit.INCH)
         .hardwareMapName("pinpoint")
         .encoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD)
-        .forwardEncoderDirection(GoBildaPinpointDriver.EncoderDirection.REVERSED)
+        .forwardEncoderDirection(GoBildaPinpointDriver.EncoderDirection.FORWARD)
         .strafeEncoderDirection(GoBildaPinpointDriver.EncoderDirection.REVERSED)
 
     @JvmStatic
