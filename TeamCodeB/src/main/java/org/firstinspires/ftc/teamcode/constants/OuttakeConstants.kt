@@ -38,10 +38,10 @@ object OuttakeConstants {
     var TURRET_TICKS_PER_REV = 1400.0 / (2 * Math.PI)
 
     @JvmField
-    var BLOCKER_OPEN_POSITION = 0.34
+    var BLOCKER_OPEN_POSITION = 0.43
 
     @JvmField
-    var BLOCKER_CLOSED_POSITION = 0.44
+    var BLOCKER_CLOSED_POSITION = 0.51
 
     @JvmField
     var HOOD_LOW_ANGLE = 28.0

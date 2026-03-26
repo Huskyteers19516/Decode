@@ -21,11 +21,6 @@ import kotlin.time.measureTime
 
 const val TAG = "HuskyTeleOp"
 
-private enum class ShootMode {
-    ONE_SHOT,
-    CONTINUOUS,
-}
-
 @Suppress("UNUSED")
 fun createHuskyTeleOp(startPose: Pose, startAlliance: Alliance) = Mercurial.Program {
     //#region Pre-Init
@@ -130,30 +125,27 @@ fun createHuskyTeleOp(startPose: Pose, startAlliance: Alliance) = Mercurial.Prog
         }
     )
 
+    bindSpawn(risingEdge {
+        gamepad2.left_bumper
+    },
+        exec {
+            outtake.hoodAngle += 1
+        })
+    bindSpawn(
+        risingEdge {
+            gamepad2.right_bumper
+        },
+        exec {
+            outtake.hoodAngle -= 1
+        }
+    )
+
     bindSpawn(
         risingEdge { gamepad1.dpad_down },
         exec {
             outtake.turretAutoAiming = !outtake.turretAutoAiming
         }
     )
-
-    bindSpawn(
-        risingEdge {
-            gamepad1.a
-        },
-        exec {
-            isLaunching = true
-        }
-    )
-    bindSpawn(
-        risingEdge {
-            !gamepad1.a
-        },
-        exec {
-            isLaunching = false
-        }
-    )
-
     bindSpawn(
         risingEdge {
             gamepad2.a
@@ -176,8 +168,8 @@ fun createHuskyTeleOp(startPose: Pose, startAlliance: Alliance) = Mercurial.Prog
                 if (!isLaunching) {
                     telemetryM.addData("is busy", drive.follower.isBusy)
                     drive.manualPeriodic(
-                        -gamepad1.left_stick_y.toDouble() * TeleOpConstants.FORWARD_MULTIPLIER,
-                        -gamepad1.left_stick_x.toDouble() * TeleOpConstants.STRAFE_MULTIPLIER,
+                        gamepad1.left_stick_y.toDouble() * TeleOpConstants.FORWARD_MULTIPLIER,
+                        gamepad1.left_stick_x.toDouble() * TeleOpConstants.STRAFE_MULTIPLIER,
                         -gamepad1.right_stick_x.toDouble() * TeleOpConstants.TURN_MULTIPLIER,
                         telemetryM
                     )
@@ -198,14 +190,15 @@ fun createHuskyTeleOp(startPose: Pose, startAlliance: Alliance) = Mercurial.Prog
 
             loopTimer.section("Outtake") {
                 val turretAngle = Paths.calculateAimHeading(drive.follower.pose, paths.goalLocation)
-                val relativeAngle = turretAngle - drive.follower.pose.heading
+                val relativeAngle = (turretAngle - drive.follower.totalHeading) % 360.0 - 180.0
 
+                outtake.transferActive = gamepad1.right_trigger_pressed || gamepad2.right_trigger_pressed
+                outtake.outtakeOpen = gamepad2.b
                 if (isLaunching) {
-                    outtake.outtakeOpen = outtake.canShoot()
-                    outtake.transferActive = true
+//                    outtake.outtakeOpen = outtake.canShoot()
                 } else {
-                    outtake.outtakeOpen = false
-                    outtake.transferActive = false
+//                    outtake.outtakeOpen = false
+//                    outtake.transferActive = false
                 }
 
 
@@ -218,7 +211,7 @@ fun createHuskyTeleOp(startPose: Pose, startAlliance: Alliance) = Mercurial.Prog
 
             telemetryM.addLine("(Gamepad 1) Right trigger: intake in")
             loopTimer.section("Intake") {
-                val intakePower = gamepad1.right_trigger.toDouble()
+                val intakePower = gamepad1.right_trigger.toDouble() + gamepad2.right_trigger.toDouble()
                 intake.manualPeriodic(intakePower, telemetryM)
                 outtake.transferActive = true
             }

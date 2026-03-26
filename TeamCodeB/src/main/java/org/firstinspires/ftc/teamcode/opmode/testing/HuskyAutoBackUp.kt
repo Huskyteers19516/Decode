@@ -214,4 +214,4 @@ fun createHuskyAuto() = Mercurial.Program {
     dropToScheduler()
 }
 
-val HuskyAuto = Mercurial.autonomous("Husky Auto", "Huskyteers", "Husky TeleOp", createHuskyAuto())
+//val HuskyAuto = Mercurial.autonomous("Husky Auto", "Huskyteers", "Husky TeleOp", createHuskyAuto())

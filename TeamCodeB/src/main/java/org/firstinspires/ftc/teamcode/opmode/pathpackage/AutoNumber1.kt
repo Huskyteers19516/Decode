@@ -46,20 +46,20 @@ class AutoNumber1 (private val follower: Follower) {
                 130.046 - ROBOT_WIDTH / sqrt(2.0) / 2,
                 Math.toRadians(126.0)
             ).mirrorIfBlue()
-            shootPosition = Pose(84.8704156479217, 78.42542787286067).mirrorIfBlue()
-            firstRowControlPoint = Pose(88.52921093270324, 84.38190968798261).mirrorIfBlue()
-            firstRow = Pose(144 - 6 - ROBOT_LENGTH / 2 - ROBOT_FRONT_PROTRUSION, 83.51).mirrorIfBlue()
-            secondRowControlPoint = Pose(71.28169014084506, 57.647887323943664).mirrorIfBlue()
-            secondRow = Pose(144 - ROBOT_LENGTH / 2 - ROBOT_FRONT_PROTRUSION - 6, 54.7 + 2.0).mirrorIfBlue()
-            thirdRow = Pose(98.30656370656376, 35.80328185328186).mirrorIfBlue()
-            thirdRowControlPoint = Pose(78.64788732394364, 29.640845070422547).mirrorIfBlue()
-            thirdRowEndPoint = Pose(
-                144 - ROBOT_LENGTH / 2 - ROBOT_FRONT_PROTRUSION - 6,
-                58.085580304806555
-            ).mirrorIfBlue()
-
-            endLocation = Pose(96.23212192262602, 45.465416178194616).mirrorIfBlue()
-            val pickupHeading = if (alliance == Alliance.RED) 0.0 else Math.toRadians(180.0)
+            shootPosition = Pose(93.85, 57.29).mirrorIfBlue()
+//            firstRowControlPoint = Pose(88.52921093270324, 84.38190968798261).mirrorIfBlue()
+//            firstRow = Pose(144 - 6 - ROBOT_LENGTH / 2 - ROBOT_FRONT_PROTRUSION, 83.51).mirrorIfBlue()
+//            secondRowControlPoint = Pose(71.28169014084506, 57.647887323943664).mirrorIfBlue()
+//            secondRow = Pose(144 - ROBOT_LENGTH / 2 - ROBOT_FRONT_PROTRUSION - 6, 54.7 + 2.0).mirrorIfBlue()
+//            thirdRow = Pose(98.30656370656376, 35.80328185328186).mirrorIfBlue()
+//            thirdRowControlPoint = Pose(78.64788732394364, 29.640845070422547).mirrorIfBlue()
+//            thirdRowEndPoint = Pose(
+//                144 - ROBOT_LENGTH / 2 - ROBOT_FRONT_PROTRUSION - 6,
+//                58.085580304806555
+//            ).mirrorIfBlue()
+//
+//            endLocation = Pose(96.23212192262602, 45.465416178194616).mirrorIfBlue()
+//            val pickupHeading = if (alliance == Alliance.RED) 0.0 else Math.toRadians(180.0)
 
 
             val goalLocation = Pose(138.0, 144.0).mirrorIfBlue()
@@ -69,43 +69,43 @@ class AutoNumber1 (private val follower: Follower) {
                 BezierLine(startPosition, shootPosition)
             ).build()
 
-            pickUpFirstRow = follower.pathBuilder()
-                .addPath(BezierCurve(shootPosition, firstRowControlPoint, firstRow))
-                .setConstantHeadingInterpolation(pickupHeading)
-                .setReversed()
-                .addPoseCallback(Pose(101.749, 82.334).mirrorIfBlue(), {
-                    follower.setMaxPower(AutoConstants.MAX_POWER_WHEN_RUNNING_INTAKE)
-                }, 0.5)
-                .build()
-
-            firstRowToShoot = follower.pathBuilder()
-                .addPath(BezierLine(firstRow, shootPosition))
-                .setLinearHeadingInterpolation(pickupHeading, aimHeading)
-                .build()
-
-            pickUpSecondRow = follower.pathBuilder()
-                .addPath(BezierCurve(shootPosition, secondRowControlPoint, secondRow))
-                .setConstantHeadingInterpolation(pickupHeading)
-                .setReversed()
-                .addPoseCallback(Pose(111.02, 60.0).mirrorIfBlue(), {
-                    follower.setMaxPower(AutoConstants.MAX_POWER_WHEN_RUNNING_INTAKE)
-                }, 0.5)
-                .build()
-
-            secondRowToShoot = follower.pathBuilder()
-                .addPath(BezierCurve(secondRow, secondRowControlPoint, shootPosition))
-                .setLinearHeadingInterpolation(pickupHeading, aimHeading)
-                .build()
-
-            pickUpThirdRow = follower.pathBuilder()
-                .addPaths(
-                    BezierCurve(shootPosition, thirdRowControlPoint, thirdRow),
-                    BezierLine(thirdRow, thirdRowEndPoint)
-                )
-                .setGlobalTangentHeadingInterpolation()
-                .setGlobalReversed()
-                .build()
-        }
+//            pickUpFirstRow = follower.pathBuilder()
+//                .addPath(BezierCurve(shootPosition, firstRowControlPoint, firstRow))
+//                .setConstantHeadingInterpolation(pickupHeading)
+//                .setReversed()
+//                .addPoseCallback(Pose(101.749, 82.334).mirrorIfBlue(), {
+//                    follower.setMaxPower(AutoConstants.MAX_POWER_WHEN_RUNNING_INTAKE)
+//                }, 0.5)
+//                .build()
+//
+//            firstRowToShoot = follower.pathBuilder()
+//                .addPath(BezierLine(firstRow, shootPosition))
+//                .setLinearHeadingInterpolation(pickupHeading, aimHeading)
+//                .build()
+//
+//            pickUpSecondRow = follower.pathBuilder()
+//                .addPath(BezierCurve(shootPosition, secondRowControlPoint, secondRow))
+//                .setConstantHeadingInterpolation(pickupHeading)
+//                .setReversed()
+//                .addPoseCallback(Pose(111.02, 60.0).mirrorIfBlue(), {
+//                    follower.setMaxPower(AutoConstants.MAX_POWER_WHEN_RUNNING_INTAKE)
+//                }, 0.5)
+//                .build()
+//
+//            secondRowToShoot = follower.pathBuilder()
+//                .addPath(BezierCurve(secondRow, secondRowControlPoint, shootPosition))
+//                .setLinearHeadingInterpolation(pickupHeading, aimHeading)
+//                .build()
+//
+//            pickUpThirdRow = follower.pathBuilder()
+//                .addPaths(
+//                    BezierCurve(shootPosition, thirdRowControlPoint, thirdRow),
+//                    BezierLine(thirdRow, thirdRowEndPoint)
+//                )
+//                .setGlobalTangentHeadingInterpolation()
+//                .setGlobalReversed()
+//                .build()
+       }
 
         companion object {
             fun calculateAimHeading(robot: Pose, goal: Pose): Double {

@@ -23,7 +23,8 @@ class Outtake(hardwareMap: HardwareMap) {
             OuttakeConstants.SHOOTER_KS
         )
         outtakeMotor.power = 0.0
-        outtakeMotor.direction = DcMotorSimple.Direction.FORWARD
+        outtakeMotor.direction = DcMotorSimple.Direction.REVERSE
+        transferMotor.direction = DcMotorSimple.Direction.REVERSE
 
 
 
@@ -37,24 +38,23 @@ class Outtake(hardwareMap: HardwareMap) {
         turretMotor.targetPosition = 0
 
         hoodServo.direction = Servo.Direction.REVERSE
-        transferMotor.direction = DcMotorSimple.Direction.REVERSE
     }
 
 
     var hoodAngle = OuttakeConstants.HOOD_LOW_ANGLE
     var transferActive = false
-
-    fun convertAngleToPosition(angle: Double): Double {
-        return (angle - OuttakeConstants.HOOD_LOW_ANGLE) / (OuttakeConstants.HOOD_HIGH_ANGLE - OuttakeConstants.HOOD_LOW_ANGLE)
-    }
-
-
+    var outtakeOpen = false
+    var turretAdustmentFactor = 0
 
     var targetVelocity = OuttakeConstants.DEFAULT_TARGET_VELOCITY;
     var velocityAdjustmentFactor = 0.0
     var shooterActive = false
    
     var turretAutoAiming = false
+
+    fun convertAngleToPosition(angle: Double): Double {
+        return ((angle - OuttakeConstants.HOOD_LOW_ANGLE) / (OuttakeConstants.HOOD_HIGH_ANGLE - OuttakeConstants.HOOD_LOW_ANGLE)).coerceIn(0.0, 1.0)
+    }
 
     fun manualPeriodic(manualPower: Double, telemetry: TelemetryManager) {
         outtakeMotor.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
@@ -98,9 +98,9 @@ class Outtake(hardwareMap: HardwareMap) {
             if (turretAutoAiming) {
                 val targetPosition = turretAngle * OuttakeConstants.TURRET_TICKS_PER_REV
                 turretMotor.power = 0.3
-                turretMotor.targetPosition = targetPosition.toInt()
+                turretMotor.targetPosition = targetPosition.toInt() + turretAdustmentFactor
             } else {
-                turretMotor.targetPosition = 0
+                turretMotor.targetPosition = turretAdustmentFactor
             }
             telemetry.addData("Turret current position", turretMotor.currentPosition)
             telemetry.addData("Turret target position", turretMotor.targetPosition)
@@ -118,7 +118,7 @@ class Outtake(hardwareMap: HardwareMap) {
         telemetry.addData("Outtake velocity", velocity)
         telemetry.addData("Outtake velocity adjustment factor", velocityAdjustmentFactor)
         telemetry.addData("Outtake status", if ((shooterActive) && canShoot()) "CAN SHOOT" else "NOT READY")
-        if (!debugging) return
+        telemetry.addData("Blocker position", outtakeBlockerServo.position)
         telemetry.addData("Hood position", hoodServo.position)
         telemetry.addData("Outtake power", outtakeMotor.power)
     }
@@ -129,7 +129,6 @@ class Outtake(hardwareMap: HardwareMap) {
         ) < OuttakeConstants.ALLOWANCE
     }
 
-    var outtakeOpen = false
 
     fun toggle() {
         shooterActive = !shooterActive
