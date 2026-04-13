@@ -47,9 +47,8 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 /*
  * This file includes a teleop (driver-controlled) file for the goBILDA® StarterBot for the
- * 2025-2026 FIRST® Tech Challenge season DECODE™. It leverages a differential/Skid-Steer
- * system for robot mobility, one high-speed motor driving two "launcher wheels", and two servos
- * which feed that launcher.
+ * 2025-2026 FIRST® Tech Challenge season DECODE™. It focuses on launcher wheel and feeder
+ * control.
  *
  * Likely the most niche concept we'll use in this example is closed-loop motor velocity control.
  * This control method reads the current speed as reported by the motor's encoder and applies a varying
@@ -118,10 +117,6 @@ public class StarterBotTeleop extends OpMode {
 
     private LaunchState launchState;
 
-    // Setup a variable for each drive wheel to save power level for telemetry
-    double leftPower;
-    double rightPower;
-
     /*
      * Code to run ONCE when the driver hits INIT
      */
@@ -139,16 +134,6 @@ public class StarterBotTeleop extends OpMode {
         launcher = hardwareMap.get(DcMotorEx.class, "launcher");
         leftFeeder = hardwareMap.get(CRServo.class, "left_feeder");
         rightFeeder = hardwareMap.get(CRServo.class, "right_feeder");
-
-        /*
-         * To drive forward, most robots need the motor on one side to be reversed,
-         * because the axles point in opposite directions. Pushing the left stick forward
-         * MUST make robot go forward. So adjust these two lines based on your first test drive.
-         * Note: The settings here assume direct drive on left and right wheels. Gear
-         * Reduction or 90 Deg drives may require direction flips
-         */
-        leftDrive.setDirection(DcMotor.Direction.REVERSE);
-        rightDrive.setDirection(DcMotor.Direction.FORWARD);
 
         /*
          * Here we set our launcher to the RUN_USING_ENCODER runmode.
@@ -208,17 +193,6 @@ public class StarterBotTeleop extends OpMode {
     @Override
     public void loop() {
         /*
-         * Here we call a function called arcadeDrive. The arcadeDrive function takes the input from
-         * the joysticks, and applies power to the left and right drive motor to move the robot
-         * as requested by the driver. "arcade" refers to the control style we're using here.
-         * Much like a classic arcade game, when you move the left joystick forward both motors
-         * work to drive the robot forward, and when you move the right joystick left and right
-         * both motors work to rotate the robot. Combinations of these inputs can be used to create
-         * more complex maneuvers.
-         */
-        arcadeDrive(-gamepad1.left_stick_y, gamepad1.right_stick_x);
-
-        /*
          * Here we give the user control of the speed of the launcher motor without automatically
          * queuing a shot.
          */
@@ -234,10 +208,9 @@ public class StarterBotTeleop extends OpMode {
         launch(gamepad1.rightBumperWasPressed());
 
         /*
-         * Show the state and motor powers
+         * Show the state and motor speed
          */
         telemetry.addData("State", launchState);
-        telemetry.addData("Motors", "left (%.2f), right (%.2f)", leftPower, rightPower);
         telemetry.addData("motorSpeed", launcher.getVelocity());
 
     }
@@ -247,17 +220,6 @@ public class StarterBotTeleop extends OpMode {
      */
     @Override
     public void stop() {
-    }
-
-    void arcadeDrive(double forward, double rotate) {
-        leftPower = forward + rotate;
-        rightPower = forward - rotate;
-
-        /*
-         * Send calculated power to wheels
-         */
-        leftDrive.setPower(leftPower);
-        rightDrive.setPower(rightPower);
     }
 
     void launch(boolean shotRequested) {
